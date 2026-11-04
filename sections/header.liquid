@@ -135,6 +135,16 @@
     render 'search', style: search_style, class: search_class, display_style: section.settings.actions_display_style
   endcapture
 
+  # APEX: secondary links (Wholesale, Stockists) sit just before the search icon on the right
+  capture apex_links
+    render 'apex-header-links', linklist: section.settings.apex_secondary_menu, highlight_first: section.settings.apex_highlight_first_link
+  endcapture
+  if section.settings.search_position == 'right' and section.settings.search_row == 'top'
+    assign search = apex_links | append: search
+  else
+    assign actions = apex_links | append: actions
+  endif
+
   # Skip drawer search under specific conditions:
   # Always render if search_row is bottom
   # Don't render when shop.customer_accounts_enabled is false and search_position is left and search_style is not none
@@ -1338,6 +1348,18 @@
         }
       ],
       "default": "top"
+    },
+    {
+      "type": "link_list",
+      "id": "apex_secondary_menu",
+      "label": "Secondary links",
+      "info": "Shown on the right, before the search icon (Wholesale, Stockists)."
+    },
+    {
+      "type": "checkbox",
+      "id": "apex_highlight_first_link",
+      "label": "Show the first secondary link in amber",
+      "default": true
     },
     {
       "type": "header",

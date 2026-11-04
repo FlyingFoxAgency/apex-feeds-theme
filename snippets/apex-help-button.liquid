@@ -1,0 +1,15 @@
+{% doc %}
+  Floating help button (Figma "Help floating button"): a 53px burrow circle with the
+  message-question icon, fixed to the bottom right of the page content.
+  Turned on and linked from Theme settings > APEX Feeds.
+
+  @example
+  {% render 'apex-help-button' %}
+{% enddoc %}
+{%- if settings.apex_show_help_button -%}
+  {%- assign help_link = settings.apex_help_link | default: '/pages/help-centre' -%}
+  <a class="apex-help-button" href="{{ help_link }}">
+    <span class="svg-wrapper">{{ 'apex-icon-help.svg' | inline_asset_content }}</span>
+    <span class="visually-hidden">Help Centre</span>
+  </a>
+{%- endif -%}

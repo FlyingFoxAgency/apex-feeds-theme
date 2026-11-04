@@ -1,0 +1,30 @@
+{% doc %}
+  APEX: the header's secondary links (Wholesale, Stockists), added to the end of the mobile
+  menu drawer list so they're reachable when the desktop links are hidden.
+
+  @param {object} section - The header section
+  @param {string} drawer_type - Only renders for 'mobile-drawer'
+  @param {number} [start_index] - Animation index to continue from
+
+  @example
+  {% render 'apex-drawer-links', section: section, drawer_type: 'mobile-drawer', start_index: 4 %}
+{% enddoc %}
+{%- assign linklist = section.settings.apex_secondary_menu -%}
+{%- if drawer_type == 'mobile-drawer' and linklist != blank -%}
+  {%- for link in linklist.links -%}
+    <li
+      class="menu-drawer__list-item"
+      style="--menu-drawer-animation-index: {{ start_index | default: 0 | plus: forloop.index }};"
+    >
+      <a
+        href="{{ link.url }}"
+        class="menu-drawer__menu-item menu-drawer__menu-item--mainlist menu-drawer__animated-element{% if forloop.first and section.settings.apex_highlight_first_link %} apex-drawer-link--highlight{% endif %}"
+        {% if link.current %}
+          aria-current="page"
+        {% endif %}
+      >
+        <span class="menu-drawer__menu-item-text wrap-text">{{ link.title | escape }}</span>
+      </a>
+    </li>
+  {%- endfor -%}
+{%- endif -%}

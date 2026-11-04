@@ -81,15 +81,10 @@
         {% if block_settings.display_type == 'text' %}
           {{ block_settings.label }}
         {% else %}
-          <svg
-            viewBox="0 0 20 20"
-            xmlns="http://www.w3.org/2000/svg"
-            focusable="false"
-            aria-hidden="true"
-            class="email-signup__button-icon"
-          >
-            {% render 'icon', icon: 'arrow' %}
-          </svg>
+          {%- comment -%} APEX: Figma arrow-right icon (vuesax linear) {%- endcomment -%}
+          <span class="svg-wrapper email-signup__button-icon">
+            {{- 'apex-icon-arrow.svg' | inline_asset_content -}}
+          </span>
         {% endif %}
       </button>
     </div>
