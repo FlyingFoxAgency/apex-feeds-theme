@@ -23,6 +23,9 @@ body {
   background-size: max(100%, 1440px) auto;
   /* .page-wrapper is the scroll container from 990px up, so the texture has to scroll with it */
   background-attachment: local;
+  /* Section backgrounds use a negative z-index. Without a stacking context here they would paint
+     underneath this texture (the announcement bar showed white). */
+  isolation: isolate;
 }
 
 /* Sections without their own background colour sit on the texture */
