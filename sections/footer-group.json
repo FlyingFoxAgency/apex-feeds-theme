@@ -243,14 +243,18 @@
           "blocks": {}
         },
         "apex_payment": {
-          "type": "payment-icons",
+          "type": "apex-payment-icons",
           "settings": {
             "horizontal_alignment": "center",
             "gap": 10,
-            "padding-block-start": 0,
-            "padding-block-end": 0,
-            "padding-inline-start": 0,
-            "padding-inline-end": 0
+            "show_afterpay": true,
+            "show_visa": true,
+            "show_amex": true,
+            "show_mastercard": true,
+            "show_stripe": true,
+            "show_paypal": true,
+            "show_googlepay": true,
+            "show_applepay": true
           },
           "blocks": {}
         },
