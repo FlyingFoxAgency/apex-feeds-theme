@@ -1,8 +1,9 @@
 {% doc %}
   Floating help button (Figma "Help floating button"): a 53px burrow circle with the
   message-question icon, fixed to the bottom right of the page content.
-  It never sits lower than 30px above the top line of the footer bottom bar: near the end of
-  the page it rides up with that line, so it doesn't cover the copyright and credit text.
+  It never sits lower than 30px above the top edge of the footer (the burrow section with the
+  sign-up and menu links): near the end of the page it rides up with that edge, so it never
+  covers the footer.
   Turned on and linked from Theme settings > APEX Feeds.
 
   @example
@@ -17,7 +18,10 @@
   <script>
     (() => {
       const button = document.querySelector('.apex-help-button');
-      const line = document.querySelector('[data-testid="footer-utilities"]')?.closest('.shopify-section');
+      const line = (
+        document.querySelector('.shopify-section-group-footer-group .footer-content') ||
+        document.querySelector('[data-testid="footer-utilities"]')
+      )?.closest('.shopify-section');
       if (!button || !line) return;
       const clearance = 30;
       let queued = false;

@@ -484,8 +484,9 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
 
 .apex-help-button {
   /* --apex-help-lift is set by the help button script: how far the button must sit from the
-     viewport bottom to stay 30px above the footer bottom bar's top line */
-  --apex-help-rest: var(--apex-space-32);
+     viewport bottom to stay 30px above the top edge of the footer */
+  /* Ell: 50px off the bottom of the screen on every screen size */
+  --apex-help-rest: 50px;
 
   position: fixed;
   z-index: var(--layer-sticky);
@@ -526,7 +527,6 @@ html:has(.menu-drawer-container[open]) .apex-help-button {
 
 @media screen and (max-width: 749px) {
   .apex-help-button {
-    --apex-help-rest: var(--apex-space-16);
     width: 48px;
     height: 48px;
   }
