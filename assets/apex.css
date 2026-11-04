@@ -437,7 +437,7 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
   .footer-content:has(.apex-dedication) > .apex-dedication {
     position: absolute;
     inset-inline-end: 0;
-    inset-block-end: 0;
+    inset-block-end: 30px;
     padding: 0;
   }
 }
