@@ -433,11 +433,12 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
     padding-inline-end: var(--apex-space-24);
   }
 
+  /* Bottom aligned with the social icons: same bottom padding, plus 2px to centre the 20px mark on the 24px icons */
   .footer-content:has(.apex-dedication) > :last-child:has(.apex-dedication),
   .footer-content:has(.apex-dedication) > .apex-dedication {
     position: absolute;
     inset-inline-end: 0;
-    inset-block-end: 30px;
+    inset-block-end: calc(var(--padding-block-end, 0px) + 2px);
     padding: 0;
   }
 }
