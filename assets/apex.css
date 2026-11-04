@@ -196,25 +196,47 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
   white-space: nowrap;
   color: var(--color-foreground);
   text-decoration: none;
-  transition: color var(--animation-speed) var(--animation-easing);
 }
 
-/* Every link is burrow. Amber marks the page you're on (Ell, 2026-11-05). Hovering a link dims
-   the others, matching Horizon's main menu. */
-.apex-header-links__list:has(.apex-header-links__link:hover)
-  .apex-header-links__link:not(:hover) {
-  color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text));
-}
-
-#header-component
-  .menu-list:not(
-    :has(.menu-list__list-item:hover, .menu-list__list-item:focus-within)
-  )
-  .menu-list__link {
+/* Every link is burrow and keeps its colour on hover; amber marks the page you're on.
+   Hovering grows the link very slightly instead (Ell, 2026-11-05). This also stops Horizon
+   dimming the other menu links on hover. */
+#header-component .menu-list .menu-list__list-item .menu-list__link {
   color: var(--menu-top-level-font-color);
 }
 
-/* More specific than the reset above (the :not adds weight), so the current page stays amber */
+#header-component .menu-list__link-title,
+.apex-header-links__link,
+.footer-content:has(.apex-dedication) .menu__item a,
+.shopify-section-group-footer-group .utilities a {
+  display: inline-block;
+  transition: transform 0.2s var(--ease-out-cubic, ease-out);
+}
+
+#header-component
+  .menu-list__list-item:is(:hover, :focus-within)
+  .menu-list__link-title,
+.apex-header-links__link:is(:hover, :focus-visible),
+.footer-content:has(.apex-dedication) .menu__item a:is(:hover, :focus-visible),
+.shopify-section-group-footer-group .utilities a:is(:hover, :focus-visible) {
+  transform: scale(1.06);
+}
+
+/* Footer lists are left-aligned, so grow from the left edge */
+.footer-content:has(.apex-dedication) .menu__item a {
+  transform-origin: left center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #header-component .menu-list__link-title,
+  .apex-header-links__link,
+  .footer-content:has(.apex-dedication) .menu__item a,
+  .shopify-section-group-footer-group .utilities a {
+    transition: none;
+  }
+}
+
+/* More specific than the colour rule above, so the current page stays amber */
 #header-component
   .menu-list:not(.x)
   .menu-list__list-item
@@ -292,10 +314,6 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
 .footer-content:has(.apex-dedication) .menu__item a {
   font-size: 1rem;
   line-height: 1.5rem;
-}
-
-.footer-content:has(.apex-dedication) .menu__item a:hover {
-  color: var(--apex-amber);
 }
 
 /* Sign-up column: heading 64px, text, email field, social icons at the bottom */
@@ -449,10 +467,6 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
 
 .shopify-section-group-footer-group .utilities a {
   text-decoration: none;
-}
-
-.shopify-section-group-footer-group .utilities a:hover {
-  color: var(--apex-amber);
 }
 
 .shopify-section-group-footer-group .footer-utilities__text > a:first-child {
