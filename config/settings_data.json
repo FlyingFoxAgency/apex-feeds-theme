@@ -99,7 +99,7 @@
     "palette_primary_button_border": "{{ settings.color_palette.color4 }}",
     "palette_secondary_button_background": "rgba(0,0,0,0)",
     "palette_secondary_button_text": "{{ settings.color_palette.foreground }}",
-    "palette_secondary_button_border": "{{ settings.color_palette.foreground }}",
+    "palette_secondary_button_border": "{{ settings.color_palette.color4 }}",
     "palette_input_background": "{{ settings.color_palette.color2 }}",
     "palette_input_text": "{{ settings.color_palette.foreground }}",
     "type_font_button_primary": "body",
