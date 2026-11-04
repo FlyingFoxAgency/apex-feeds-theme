@@ -1,0 +1,122 @@
+{% doc %}
+  APEX Feeds brand layer. Rendered after Horizon's theme-styles-variables and color-palette,
+  so anything declared here wins over Horizon's defaults.
+
+  Values come from the Figma file "AI - APEX FEEDS" (variables: Brand colours, Colour roles,
+  Spacing, Radius; text styles: Heading/*, Body/*, Label, Nav, Caption/*).
+
+  Headings use Dharma Gothic C ExBold. The webfont is licensed separately, so the file has to be
+  added to assets/ as dharma-gothic-c-exbold.woff2 (and .woff). Until it is, headings fall back
+  to the heading font picked in theme settings (Oswald Bold).
+{% enddoc %}
+{% style %}
+  {% # theme-check-disable MissingAsset %}
+  @font-face {
+    font-family: 'Dharma Gothic C';
+    src: url('{{ 'dharma-gothic-c-exbold.woff2' | asset_url }}') format('woff2'),
+      url('{{ 'dharma-gothic-c-exbold.woff' | asset_url }}') format('woff');
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+  }
+  {% # theme-check-enable MissingAsset %}
+
+  :root {
+    /* Brand colours */
+    --apex-burrow: #40443d;
+    --apex-sandstone: #eaddc6;
+    --apex-amber: #e69640;
+    --apex-dried-moss: #898671;
+    --apex-olive: #646935;
+    --apex-onyx: #242623;
+    --apex-sandstone-light: #f8f2e8;
+    --apex-sandstone-glow: #fff0d6;
+    --apex-stone-100: #ecebe5;
+    --apex-stone-100-alt: #edede6;
+    --apex-stone-200: #ddddd1;
+    --apex-border-grey: #d9d9d9;
+    --apex-slate-blue: #7b95b7;
+
+    /* Colour roles */
+    --apex-bg-page: #ffffff;
+    --apex-bg-soft: var(--apex-stone-100);
+    --apex-bg-panel: var(--apex-stone-200);
+    --apex-bg-card: var(--apex-stone-100-alt);
+    --apex-bg-inverse: var(--apex-burrow);
+    --apex-text: var(--apex-burrow);
+    --apex-text-heading: var(--apex-olive);
+    --apex-text-muted: var(--apex-dried-moss);
+    --apex-text-on-dark: var(--apex-sandstone);
+    --apex-border: var(--apex-border-grey);
+    --apex-border-strong: var(--apex-dried-moss);
+
+    /* Spacing */
+    --apex-space-4: 4px;
+    --apex-space-8: 8px;
+    --apex-space-12: 12px;
+    --apex-space-16: 16px;
+    --apex-space-20: 20px;
+    --apex-space-24: 24px;
+    --apex-space-32: 32px;
+    --apex-space-40: 40px;
+    --apex-space-48: 48px;
+    --apex-space-64: 64px;
+    --apex-space-96: 96px;
+
+    /* Radius */
+    --apex-radius-sm: 4px;
+    --apex-radius-md: 10px;
+    --apex-radius-lg: 16px;
+    --apex-radius-xl: 40px;
+    --apex-radius-pill: 999px;
+
+    /* Page width: 1244px of content inside a 1440px design */
+    --narrow-page-width: 77.75rem;
+
+    /* Headings: Dharma Gothic C ExBold, upper case */
+    --font-heading--family: 'Dharma Gothic C', {{ settings.type_heading_font.family }}, {{ settings.type_heading_font.fallback_families }};
+    --font-heading--weight: 800;
+    --font-heading--style: normal;
+
+    /* Figma sizes. H1 96, H2 64, H3 48, H4 40, scaling down on small screens */
+    --font-size--h1: clamp(3.5rem, 6.7vw, 6rem);
+    --font-size--h2: clamp(2.75rem, 4.45vw, 4rem);
+    --font-size--h3: clamp(2.25rem, 3.35vw, 3rem);
+    --font-size--h4: clamp(2rem, 2.8vw, 2.5rem);
+    --font-h1--line-height: 0.95;
+    --font-h2--line-height: 0.95;
+    --font-h3--line-height: 0.96;
+    --font-h4--line-height: 1;
+
+    /* Body/Regular 16/24 */
+    --font-paragraph--line-height: 1.5;
+
+    /* Buttons: Figma Button style, 15/24 semibold, 0.5px tracking */
+    --button-font-weight-primary: 600;
+    --button-font-weight-secondary: 600;
+
+    /* Display, 128/102, for page heroes */
+    --apex-font-size-display: clamp(4rem, 8.9vw, 8rem);
+    --apex-line-height-display: 0.8;
+  }
+
+  /* Display title used on page heroes (Figma Heading/Display) */
+  .apex-display {
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: var(--apex-font-size-display);
+    line-height: var(--apex-line-height-display);
+    text-transform: uppercase;
+  }
+
+  /* Eyebrow above titles (Figma Nav, 13/16 bold, olive, upper case) */
+  .apex-eyebrow {
+    font-family: var(--font-body--family);
+    font-weight: 700;
+    font-size: 0.8125rem;
+    line-height: 1rem;
+    text-transform: uppercase;
+    color: var(--apex-olive);
+  }
+
+{% endstyle %}
