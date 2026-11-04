@@ -477,11 +477,6 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
     transform var(--animation-speed) var(--animation-easing);
 }
 
-/* The mobile menu drawer opens inside the page, so keep the button out of its way */
-html:has(.menu-drawer-container[open]) .apex-help-button {
-  display: none;
-}
-
 .apex-help-button:hover {
   background-color: var(--apex-olive);
   transform: translateY(-2px);
