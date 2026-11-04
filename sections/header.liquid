@@ -137,7 +137,7 @@
 
   # APEX: secondary links (Wholesale, Stockists) sit just before the search icon on the right
   capture apex_links
-    render 'apex-header-links', linklist: section.settings.apex_secondary_menu, highlight_first: section.settings.apex_highlight_first_link
+    render 'apex-header-links', linklist: section.settings.apex_secondary_menu
   endcapture
   if section.settings.search_position == 'right' and section.settings.search_row == 'top'
     assign search = apex_links | append: search
@@ -1354,12 +1354,6 @@
       "id": "apex_secondary_menu",
       "label": "Secondary links",
       "info": "Shown on the right, before the search icon (Wholesale, Stockists)."
-    },
-    {
-      "type": "checkbox",
-      "id": "apex_highlight_first_link",
-      "label": "Show the first secondary link in amber",
-      "default": true
     },
     {
       "type": "header",

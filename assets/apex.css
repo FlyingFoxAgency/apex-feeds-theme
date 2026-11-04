@@ -199,17 +199,29 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
   transition: color var(--animation-speed) var(--animation-easing);
 }
 
-.apex-header-links__link--highlight,
-.apex-drawer-link--highlight {
+/* Every link is burrow. Amber marks the page you're on (Ell, 2026-11-05). Hovering a link dims
+   the others, matching Horizon's main menu. */
+.apex-header-links__list:has(.apex-header-links__link:hover)
+  .apex-header-links__link:not(:hover) {
+  color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text));
+}
+
+#header-component
+  .menu-list:not(
+    :has(.menu-list__list-item:hover, .menu-list__list-item:focus-within)
+  )
+  .menu-list__link {
+  color: var(--menu-top-level-font-color);
+}
+
+/* More specific than the reset above (the :not adds weight), so the current page stays amber */
+#header-component
+  .menu-list:not(.x)
+  .menu-list__list-item
+  .menu-list__link.menu-list__link--active,
+#header-component .apex-header-links__link[aria-current="page"],
+#header-component .menu-drawer__menu-item[aria-current="page"] {
   color: var(--apex-amber);
-}
-
-.apex-header-links__link:hover {
-  color: var(--apex-olive);
-}
-
-.apex-header-links__link--highlight:hover {
-  color: var(--apex-burrow);
 }
 
 @media screen and (max-width: 749px) {
@@ -475,6 +487,11 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
   transition:
     background-color var(--animation-speed) var(--animation-easing),
     transform var(--animation-speed) var(--animation-easing);
+}
+
+/* The mobile menu drawer opens inside the page, so keep the button out of its way */
+html:has(.menu-drawer-container[open]) .apex-help-button {
+  display: none;
 }
 
 .apex-help-button:hover {

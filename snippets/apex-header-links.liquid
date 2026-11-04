@@ -1,12 +1,11 @@
 {% doc %}
-  Secondary header links on the right of the APEX header (Figma: WHOLESALE in amber, STOCKISTS).
-  Shown on desktop only. The same links are added to the mobile menu drawer.
+  Secondary header links on the right of the APEX header (Wholesale, Stockists).
+  Burrow like the main menu, amber for the current page. Shown on desktop only. The same links are added to the mobile menu drawer.
 
   @param {object} linklist - The menu to render
-  @param {boolean} [highlight_first] - Show the first link in amber
 
   @example
-  {% render 'apex-header-links', linklist: section.settings.apex_secondary_menu, highlight_first: true %}
+  {% render 'apex-header-links', linklist: section.settings.apex_secondary_menu %}
 {% enddoc %}
 {%- if linklist != blank and linklist.links.size > 0 -%}
   <nav class="apex-header-links" aria-label="{{ linklist.title | escape }}">
@@ -15,7 +14,7 @@
         <li>
           <a
             href="{{ link.url }}"
-            class="apex-header-links__link{% if forloop.first and highlight_first %} apex-header-links__link--highlight{% endif %}"
+            class="apex-header-links__link"
             {% if link.current %}
               aria-current="page"
             {% endif %}
