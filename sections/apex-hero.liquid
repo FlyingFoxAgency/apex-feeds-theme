@@ -96,7 +96,7 @@
                 | image_tag:
                   loading: loading,
                   fetchpriority: priority,
-                  sizes: '(min-width: 1200px) 76vw, 100vw',
+                  sizes: '(min-width: 1440px) 1400px, (min-width: 1200px) 97vw, 100vw',
                   widths: '600, 900, 1200, 1600, 2000',
                   alt: block.settings.image.alt
               }}
@@ -183,9 +183,9 @@
     max-width: none;
     height: 100%;
     translate: -50% 0;
-    /* Trim a hairline off each edge: resized PNGs can pick up a light fringe there. The pattern's
-       edges are the panel colour, so nothing visible is lost. */
-    clip-path: inset(2px);
+    /* Trim a hairline off the left and right edges: resized PNGs can pick up a light fringe
+       there. The pattern's sides are the panel colour, so nothing visible is lost. */
+    clip-path: inset(0 2px);
     pointer-events: none;
   }
 
@@ -289,9 +289,10 @@
       min-height: 34.17cqw;
     }
 
+    /* Panel is 492px tall at 1440: min-height excludes the padding (content-box) */
     .apex-hero__content {
       max-width: 33cqw;
-      min-height: 34.17cqw;
+      min-height: calc(34.17cqw - var(--apex-space-24) - var(--apex-space-48));
       justify-content: center;
       padding-block: var(--apex-space-24) var(--apex-space-48);
       padding-inline-start: 13.47cqw;
@@ -302,14 +303,16 @@
       max-width: min(383px, 26.6cqw);
     }
 
-    /* The whole image, including its clear margin, as Figma places it before cropping
-       (1083 x 615 at x 462): the jars hang just below the panel */
+    /* Sized for the Photoshop export with contact shadows, so the jars land where Figma has
+       them: 678px across from x 649, lids 79px below the panel top, hanging about 50px below
+       the panel. The image's clear margin can overlap the shop nav, so it ignores clicks. */
     .apex-hero__media {
       position: absolute;
       z-index: 1;
-      inset-block-start: -0.07cqw;
-      inset-inline-start: 32.12cqw;
-      width: 75.18cqw;
+      inset-block-start: 3.7cqw;
+      inset-inline-start: 20.46cqw;
+      width: 96.9cqw;
+      pointer-events: none;
     }
 
     .apex-hero__dots {
@@ -407,7 +410,7 @@
           "type": "image_picker",
           "id": "image",
           "label": "Product image",
-          "info": "Transparent PNG with its clear margin left in, about 1482 x 842px or larger (the uncropped Figma image \"Group-Mockup-Labels-Basic 1\")."
+          "info": "Transparent PNG of the jars with their contact shadows (the Photoshop export). Placed to match Figma \"Group-Mockup-Labels-Basic 1\"."
         },
         {
           "type": "text",
