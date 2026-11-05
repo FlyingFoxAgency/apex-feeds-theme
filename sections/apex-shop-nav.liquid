@@ -1,8 +1,7 @@
 {% comment %}
-  APEX shop nav (Figma "Shop Nav"): category links. From 1200px wide it floats at the bottom of
-  the screen, level with the help button: on load the links spread across the screen with no
-  background, and once the page scrolls they draw in to Figma's soft olive bar. Narrower screens
-  show the bar under the hero. The current category gets the white highlight and amber
+  APEX shop nav (Figma "Shop Nav"): category links under the hero. From 1200px wide the links
+  spread across the screen with no background on load, and once the page scrolls they draw in
+  to Figma's soft olive bar, then scroll away with the page. Narrower screens show the bar. The current category gets the white highlight and amber
   underline from Figma.
 {% endcomment %}
 {%- assign menu = section.settings.menu -%}
@@ -48,7 +47,7 @@
 </apex-shop-nav>
 
 <script type="module">
-  // Draws the floating nav in once the page has scrolled. From 990px the page scrolls inside
+  // Draws the nav in once the page has scrolled. From 990px the page scrolls inside
   // .page-wrapper, so listen on the document in the capture phase to hear either.
   if (!customElements.get('apex-shop-nav')) {
     customElements.define(
@@ -176,34 +175,26 @@
     background-color: var(--apex-amber);
   }
 
-  /* Floating at the bottom of the screen */
+  /* Under the hero, about 170px below the panel (the hero keeps 134px for the hanging jars) */
   @media screen and (min-width: 1200px) {
     .apex-shop-nav {
-      /* Clear of the help button (50px in, 53px wide) plus 24px */
+      /* Spread out, the links stay clear of the help button (50px in, 53px wide) plus 24px */
       --apex-shop-nav-clear: 127px;
       --apex-shop-nav-max: calc(100vw - 2 * var(--apex-shop-nav-clear));
 
-      position: fixed;
-      z-index: var(--layer-sticky, 10);
-      inset-inline: 0;
-      /* Centred on the help button, and rising with it near the footer */
-      inset-block-end: calc(max(50px, var(--apex-help-lift, 0px)) + 26.5px - 40px);
       display: flex;
       justify-content: center;
       width: auto;
       margin: 0;
-      padding: 0;
-      pointer-events: none;
+      padding: 36px 0 0;
     }
 
     .apex-shop-nav__bar {
       width: var(--apex-shop-nav-max);
       background-color: transparent;
-      pointer-events: auto;
       transition:
         width 0.5s var(--ease-out-cubic, ease-out),
-        background-color 0.4s ease,
-        backdrop-filter 0.4s ease;
+        background-color 0.4s ease;
     }
 
     .apex-shop-nav__list {
@@ -216,9 +207,6 @@
     .apex-shop-nav[data-condensed] .apex-shop-nav__bar {
       width: min(var(--apex-shop-nav-max), var(--apex-shop-nav-fit, 100vw));
       background-color: rgb(100 105 53 / 0.2);
-      /* Blur keeps the links readable over whatever scrolls behind */
-      -webkit-backdrop-filter: blur(var(--apex-glass-blur));
-      backdrop-filter: blur(var(--apex-glass-blur));
     }
 
     .apex-shop-nav[data-condensed] .apex-shop-nav__list {
