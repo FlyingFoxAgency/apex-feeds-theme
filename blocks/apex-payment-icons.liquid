@@ -1,0 +1,101 @@
+{% doc %}
+  APEX payment icons: the Figma footer set (35x24 white tiles with a grey border), in the
+  Figma order. Each method has its own switch, so the footer can match what the store accepts.
+  Replaces Horizon's payment-icons block, whose Shopify icons have no tile and no Afterpay.
+{% enddoc %}
+{%- liquid
+  assign methods = 'afterpay,visa,amex,mastercard,stripe,paypal,googlepay,applepay' | split: ','
+  assign labels = 'Afterpay,Visa,American Express,Mastercard,Stripe,PayPal,Google Pay,Apple Pay' | split: ','
+-%}
+<div
+  class="apex-payment-icons"
+  style="--icon-gap: {{ block.settings.gap }}px; --alignment: {{ block.settings.horizontal_alignment }};"
+  {{ block.shopify_attributes }}
+>
+  <span class="visually-hidden">{{ 'blocks.payment_methods' | t }}</span>
+  <ul class="apex-payment-icons__list list-unstyled" role="list">
+    {%- for method in methods -%}
+      {%- assign setting_id = 'show_' | append: method -%}
+      {%- if block.settings[setting_id] -%}
+        {%- assign icon = 'apex-pay-' | append: method | append: '.svg' -%}
+        <li class="apex-payment-icons__item">
+          <span class="apex-payment-icons__icon" aria-hidden="true">{{ icon | inline_asset_content }}</span>
+          <span class="visually-hidden">{{ labels[forloop.index0] }}</span>
+        </li>
+      {%- endif -%}
+    {%- endfor -%}
+  </ul>
+</div>
+
+{% stylesheet %}
+  .apex-payment-icons {
+    width: 100%;
+  }
+
+  .apex-payment-icons__list {
+    display: flex;
+    align-items: center;
+    justify-content: var(--alignment);
+    flex-wrap: wrap;
+    gap: var(--icon-gap);
+    margin: 0;
+    padding: 0;
+  }
+
+  .apex-payment-icons__item,
+  .apex-payment-icons__icon {
+    display: flex;
+  }
+
+  .apex-payment-icons__icon svg {
+    width: 35px;
+    height: 24px;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX payment icons",
+  "tag": null,
+  "settings": [
+    {
+      "type": "select",
+      "id": "horizontal_alignment",
+      "label": "t:settings.alignment",
+      "options": [
+        { "value": "flex-start", "label": "t:options.direction_start" },
+        { "value": "center", "label": "t:options.direction_center" },
+        { "value": "flex-end", "label": "t:options.direction_end" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "gap",
+      "label": "t:settings.gap",
+      "min": 0,
+      "max": 30,
+      "step": 1,
+      "unit": "px",
+      "default": 10
+    },
+    {
+      "type": "header",
+      "content": "Payment methods"
+    },
+    { "type": "checkbox", "id": "show_afterpay", "label": "Afterpay", "default": true },
+    { "type": "checkbox", "id": "show_visa", "label": "Visa", "default": true },
+    { "type": "checkbox", "id": "show_amex", "label": "American Express", "default": true },
+    { "type": "checkbox", "id": "show_mastercard", "label": "Mastercard", "default": true },
+    { "type": "checkbox", "id": "show_stripe", "label": "Stripe", "default": true },
+    { "type": "checkbox", "id": "show_paypal", "label": "PayPal", "default": true },
+    { "type": "checkbox", "id": "show_googlepay", "label": "Google Pay", "default": true },
+    { "type": "checkbox", "id": "show_applepay", "label": "Apple Pay", "default": true }
+  ],
+  "presets": [
+    {
+      "name": "APEX payment icons"
+    }
+  ]
+}
+{% endschema %}
