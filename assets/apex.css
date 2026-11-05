@@ -243,6 +243,30 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
   transform: scale(1.06);
 }
 
+/* Footer icons grow the same way: social icons, the LH dedication mark and the round email
+   arrow. These use the scale property, so they don't clash with transforms used to place them. */
+.shopify-section-group-footer-group .social-icons__icon,
+.apex-dedication .svg-wrapper,
+.footer-content:has(.apex-dedication) .email-signup__button--arrow {
+  transition: scale 0.2s var(--ease-out-cubic, ease-out);
+}
+
+.shopify-section-group-footer-group
+  .social-icons__icon-wrapper
+  a:is(:hover, :focus-visible)
+  .social-icons__icon,
+.apex-dedication:is(:hover, :focus-visible) .svg-wrapper,
+.footer-content:has(.apex-dedication)
+  .email-signup__button--arrow:is(:hover, :focus-visible) {
+  scale: 1.06;
+}
+
+/* The arrow button keeps its colours on hover */
+.footer-content:has(.apex-dedication) .email-signup__button--arrow:hover {
+  background-color: var(--apex-sandstone);
+  color: var(--apex-burrow);
+}
+
 /* Footer lists are left-aligned, so grow from the left edge */
 .footer-content:has(.apex-dedication) .menu__item a {
   transform-origin: left center;
@@ -254,7 +278,10 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
   .footer-content:has(.apex-dedication) .menu__item a,
   .shopify-section-group-footer-group .utilities a,
   #header-component :is(.search-action, header-actions) .svg-wrapper,
-  #header-component .account-button__icon {
+  #header-component .account-button__icon,
+  .shopify-section-group-footer-group .social-icons__icon,
+  .apex-dedication .svg-wrapper,
+  .footer-content:has(.apex-dedication) .email-signup__button--arrow {
     transition: none;
   }
 }
