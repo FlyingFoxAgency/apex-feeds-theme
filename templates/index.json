@@ -22,7 +22,10 @@
             "button_label": "Shop NutriCore range",
             "button_link": "",
             "button_2_label": "Explore",
-            "button_2_link": ""
+            "button_2_link": "",
+            "background_color": "",
+            "pattern_position_custom": false,
+            "pattern_position": 67
           }
         },
         "slide_2": {
@@ -34,7 +37,10 @@
             "button_label": "Shop NutriCore range",
             "button_link": "",
             "button_2_label": "Explore",
-            "button_2_link": ""
+            "button_2_link": "",
+            "background_color": "",
+            "pattern_position_custom": false,
+            "pattern_position": 67
           }
         },
         "slide_3": {
@@ -46,7 +52,10 @@
             "button_label": "Shop NutriCore range",
             "button_link": "",
             "button_2_label": "Explore",
-            "button_2_link": ""
+            "button_2_link": "",
+            "background_color": "",
+            "pattern_position_custom": false,
+            "pattern_position": 67
           }
         },
         "slide_4": {
@@ -58,7 +67,10 @@
             "button_label": "Shop NutriCore range",
             "button_link": "",
             "button_2_label": "Explore",
-            "button_2_link": ""
+            "button_2_link": "",
+            "background_color": "",
+            "pattern_position_custom": false,
+            "pattern_position": 67
           }
         }
       },
@@ -69,11 +81,11 @@
         "slide_4"
       ],
       "settings": {
+        "indicator_label": "Featured",
+        "autoplay_speed": 6,
         "background_color": "#898671",
         "pattern": "shopify://shop_images/Snake-skin-pattern-gradient.png",
-        "autoplay_speed": 6,
-        "indicator_label": "Featured",
-        "pattern_position": 67
+        "pattern_position": 68
       }
     },
     "apex_shop_nav": {
@@ -88,6 +100,7 @@
     "apex_feature": {
       "type": "apex-feature",
       "settings": {
+        "indicator_label": "Superblend",
         "title": "Shop premium Superblend range",
         "eyebrow": "Premium animal supplements",
         "heading": "Superblend\ndietary supplement",
@@ -95,8 +108,7 @@
         "button_label": "Shop premium range",
         "button_link": "",
         "gradient_from": "#40443d",
-        "gradient_to": "#a0aa98",
-        "indicator_label": "Superblend"
+        "gradient_to": "#a0aa98"
       }
     },
     "apex_animals": {
@@ -139,17 +151,17 @@
         "card_invertebrates"
       ],
       "settings": {
-        "title": "Shop by animals",
-        "indicator_label": "Shop by animals"
+        "indicator_label": "Shop by animals",
+        "title": "Shop by animals"
       }
     },
     "apex_best_sellers": {
       "type": "apex-product-carousel",
       "settings": {
+        "indicator_label": "Best sellers",
         "title": "Best sellers",
         "collection": "",
-        "products_to_show": 8,
-        "indicator_label": "Best sellers"
+        "products_to_show": 8
       }
     },
     "apex_story": {
@@ -195,8 +207,8 @@
         "tab_passion"
       ],
       "settings": {
-        "label": "About APEX Feeds",
-        "indicator_label": "About us"
+        "indicator_label": "About us",
+        "label": "About APEX Feeds"
       }
     }
   },
