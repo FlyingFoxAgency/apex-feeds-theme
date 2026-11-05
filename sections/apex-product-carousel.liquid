@@ -7,7 +7,9 @@
 
 {%- assign collection = section.settings.collection -%}
 
-<div class="apex-product-carousel">
+<div class="apex-product-carousel"
+  {% if section.settings.indicator_label != blank %} data-apex-indicator-label="{{ section.settings.indicator_label | escape }}"{% endif %}
+>
   {%- if section.settings.decoration != blank -%}
     <div class="apex-decoration apex-product-carousel__decoration" aria-hidden="true">
       {{ section.settings.decoration | image_url: width: 1200 | image_tag: loading: 'lazy', alt: '' }}
@@ -183,6 +185,13 @@
   "tag": "section",
   "class": "apex-product-carousel-section",
   "settings": [
+    {
+      "type": "text",
+      "id": "indicator_label",
+      "label": "Name in the page indicator",
+      "default": "Best sellers",
+      "info": "Shown next to this section's dot on the left. Leave blank to leave it out."
+    },
     {
       "type": "text",
       "id": "title",

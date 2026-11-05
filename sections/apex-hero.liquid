@@ -1,29 +1,63 @@
 {% comment %}
-  APEX hero slideshow (Figma "Hero"). A dried moss panel with the snake skin pattern on the
-  right, a product image that breaks out below the panel, and a timeline of dots on the left
-  that picks the slide. Each slide is a block.
+  APEX hero slideshow (Figma "Hero"). Each slide is a block with its own panel colour, snake
+  skin (or other) pattern, product image, text and buttons, so the panel can change with what's
+  being promoted. The pattern shows once, centred where "Pattern position" says (67% puts it a
+  third of the way right of centre). The product image breaks out below the panel.
+  Small dots under the panel pick the slide. The page indicator on the left is separate
+  (snippets/apex-page-indicator.liquid).
 {% endcomment %}
 <script src="{{ 'apex-home.js' | asset_url }}" type="module"></script>
 
-{%- liquid
-  assign slides = section.blocks | where: 'type', 'slide'
-  if section.settings.pattern != blank
-    assign pattern_url = section.settings.pattern | image_url: width: 1600
-  endif
--%}
+{%- assign slides = section.blocks | where: 'type', 'slide' -%}
 
 <div
   class="apex-hero"
-  style="--apex-hero-bg: {{ section.settings.background_color }};{% if pattern_url %} --apex-hero-pattern: url('{{ pattern_url }}');{% endif %}"
+  {% if section.settings.indicator_label != blank %}
+    data-apex-indicator-label="{{ section.settings.indicator_label | escape }}"
+  {% endif %}
 >
   <apex-hero class="apex-hero__stage" data-autoplay="{{ section.settings.autoplay_speed }}">
     <div class="apex-hero__slides">
       {%- for block in slides -%}
+        {%- liquid
+          assign slide_bg = block.settings.background_color
+          if slide_bg == blank or slide_bg.alpha == 0
+            assign slide_bg = section.settings.background_color
+          endif
+          assign slide_pattern = block.settings.pattern | default: section.settings.pattern
+          assign slide_position = block.settings.pattern_position
+          if block.settings.pattern_position_custom == false
+            assign slide_position = section.settings.pattern_position
+          endif
+          if forloop.first
+            assign loading = 'eager'
+            assign priority = 'high'
+          else
+            assign loading = 'lazy'
+            assign priority = 'auto'
+          endif
+        -%}
         <div
           class="apex-hero__slide{% if forloop.first %} is-active{% endif %}"
+          style="--apex-hero-bg: {{ slide_bg }}; --apex-hero-pattern-x: {{ slide_position }}%;"
           data-slide
           {{ block.shopify_attributes }}
         >
+          <div class="apex-hero__panel" aria-hidden="true">
+            {%- if slide_pattern != blank -%}
+              {{
+                slide_pattern
+                | image_url: width: 1400
+                | image_tag:
+                  class: 'apex-hero__pattern',
+                  loading: loading,
+                  sizes: '700px',
+                  widths: '700, 1050, 1400',
+                  alt: ''
+              }}
+            {%- endif -%}
+          </div>
+
           <div class="apex-hero__content">
             {%- if block.settings.eyebrow != blank -%}
               <p class="apex-hero__eyebrow apex-eyebrow">{{ block.settings.eyebrow }}</p>
@@ -56,15 +90,6 @@
 
           {%- if block.settings.image != blank -%}
             <div class="apex-hero__media">
-              {%- liquid
-                if forloop.first
-                  assign loading = 'eager'
-                  assign priority = 'high'
-                else
-                  assign loading = 'lazy'
-                  assign priority = 'auto'
-                endif
-              -%}
               {{
                 block.settings.image
                 | image_url: width: 2000
@@ -85,18 +110,14 @@
       {%- endfor -%}
 
       {%- if slides.size > 1 -%}
-        <div class="apex-hero__timeline" role="group" aria-label="Choose a slide">
+        <div class="apex-hero__dots" role="group" aria-label="Choose a slide">
           {%- for block in slides -%}
             <button
               type="button"
               class="apex-hero__dot{% if forloop.first %} is-active{% endif %}"
               data-dot
-              aria-label="Slide {{ forloop.index }}{% if block.settings.label != blank %}: {{ block.settings.label | escape }}{% endif %}"
-            >
-              {%- if block.settings.label != blank -%}
-                <span class="apex-hero__dot-label" aria-hidden="true">{{ block.settings.label | escape }}</span>
-              {%- endif -%}
-            </button>
+              aria-label="Slide {{ forloop.index }} of {{ slides.size }}"
+            ></button>
           {%- endfor -%}
         </div>
       {%- endif -%}
@@ -126,22 +147,6 @@
     isolation: isolate;
   }
 
-  /* Panel colour and snake skin pattern run to both edges of the screen */
-  .apex-hero__slides::before,
-  .apex-hero__slides::after {
-    content: '';
-    position: absolute;
-    z-index: -1;
-    inset-block: 0;
-    inset-inline: calc((100cqw - 100vw) / 2);
-    background-color: var(--apex-hero-bg, var(--apex-dried-moss));
-  }
-
-  .apex-hero__slides::after {
-    inset-inline-start: 40.69cqw;
-    background: var(--apex-hero-pattern, none) right top / auto 100% repeat-x;
-  }
-
   .apex-hero__slide {
     grid-area: 1 / 1;
     position: relative;
@@ -153,9 +158,32 @@
   }
 
   .apex-hero__slide.is-active {
+    z-index: 1;
     opacity: 1;
     visibility: visible;
     transition: opacity 0.6s var(--ease-out-cubic, ease-out);
+  }
+
+  /* Each slide's panel runs to both edges of the screen */
+  .apex-hero__panel {
+    position: absolute;
+    z-index: -1;
+    inset-block: 0;
+    inset-inline: calc((100cqw - 100vw) / 2);
+    overflow: hidden;
+    background-color: var(--apex-hero-bg, var(--apex-dried-moss));
+  }
+
+  /* Pattern shows once at the panel's full height, centred at --apex-hero-pattern-x */
+  .apex-hero__pattern {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: var(--apex-hero-pattern-x, 67%);
+    width: auto;
+    max-width: none;
+    height: 100%;
+    translate: -50% 0;
+    pointer-events: none;
   }
 
   .apex-hero__content {
@@ -206,8 +234,8 @@
     fill: rgb(255 240 214 / 0.3);
   }
 
-  /* Timeline: sandstone line with a dot per slide, the current one amber with its label */
-  .apex-hero__timeline {
+  /* Slide dots: small sandstone dots, the current one amber */
+  .apex-hero__dots {
     position: relative;
     z-index: 3;
     display: flex;
@@ -216,8 +244,8 @@
 
   .apex-hero__dot {
     position: relative;
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     padding: 0;
     border: 0;
     border-radius: 50%;
@@ -226,7 +254,7 @@
     transition: scale 0.2s var(--ease-out-cubic, ease-out);
   }
 
-  /* Bigger touch target than the 10px dot */
+  /* Bigger touch target than the dot */
   .apex-hero__dot::before {
     content: '';
     position: absolute;
@@ -241,21 +269,6 @@
     background-color: var(--apex-amber);
   }
 
-  .apex-hero__dot-label {
-    position: absolute;
-    inset-block-start: 50%;
-    inset-inline-end: calc(100% + 14px);
-    translate: 0 -50%;
-    display: none;
-    padding: 0 8px;
-    border-radius: var(--apex-radius-sm);
-    background-color: var(--apex-amber);
-    color: var(--apex-burrow);
-    font-size: 0.6875rem;
-    line-height: 1rem;
-    white-space: nowrap;
-  }
-
   /* Desktop: Figma layout on the 1440 stage */
   @media screen and (min-width: 1200px) {
     .apex-hero__stage {
@@ -267,10 +280,10 @@
       min-height: 34.17cqw;
     }
 
-    .apex-hero__slides::before,
-    .apex-hero__slides::after {
+    .apex-hero__panel {
       inset-block-end: auto;
-      height: max(100%, 34.17cqw);
+      height: 100%;
+      min-height: 34.17cqw;
     }
 
     .apex-hero__content {
@@ -294,25 +307,10 @@
       width: 69.24cqw;
     }
 
-    .apex-hero__timeline {
+    .apex-hero__dots {
       position: absolute;
-      inset-block: 30px calc(100% - 409px);
-      inset-inline-start: calc(6.39cqw - 5px);
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .apex-hero__timeline::before {
-      content: '';
-      position: absolute;
-      inset-block: 7px;
-      inset-inline-start: 4px;
-      width: 2px;
-      background-color: var(--apex-sandstone);
-    }
-
-    .apex-hero__dot.is-active .apex-hero__dot-label {
-      display: block;
+      inset-block-end: var(--apex-space-20);
+      inset-inline-start: 13.47cqw;
     }
   }
 
@@ -327,7 +325,7 @@
       margin: var(--apex-space-24) auto 0;
     }
 
-    .apex-hero__timeline {
+    .apex-hero__dots {
       justify-content: center;
       padding-block: var(--apex-space-16) var(--apex-space-24);
     }
@@ -349,16 +347,11 @@
   "class": "apex-hero-section",
   "settings": [
     {
-      "type": "color",
-      "id": "background_color",
-      "label": "Panel colour",
-      "default": "#898671"
-    },
-    {
-      "type": "image_picker",
-      "id": "pattern",
-      "label": "Pattern on the right",
-      "info": "Figma layer \"Asset 2\" (snake skin). It repeats across to the right edge."
+      "type": "text",
+      "id": "indicator_label",
+      "label": "Name in the page indicator",
+      "default": "Featured",
+      "info": "Shown next to this section's dot on the left. Leave blank to leave it out."
     },
     {
       "type": "range",
@@ -370,6 +363,34 @@
       "unit": "s",
       "default": 6,
       "info": "0 turns auto-play off."
+    },
+    {
+      "type": "header",
+      "content": "Default panel",
+      "info": "Used by any slide that doesn't set its own."
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Panel colour",
+      "default": "#898671"
+    },
+    {
+      "type": "image_picker",
+      "id": "pattern",
+      "label": "Pattern",
+      "info": "Shown once, at the panel's full height."
+    },
+    {
+      "type": "range",
+      "id": "pattern_position",
+      "label": "Pattern position",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 67,
+      "info": "Where the centre of the pattern sits across the screen. 67% is a third of the way right of centre."
     }
   ],
   "blocks": [
@@ -377,12 +398,6 @@
       "type": "slide",
       "name": "Slide",
       "settings": [
-        {
-          "type": "text",
-          "id": "label",
-          "label": "Timeline label",
-          "default": "Featured"
-        },
         {
           "type": "image_picker",
           "id": "image",
@@ -428,6 +443,38 @@
           "type": "url",
           "id": "button_2_link",
           "label": "Outline button link"
+        },
+        {
+          "type": "header",
+          "content": "Panel",
+          "info": "Leave these blank to use the section's default panel."
+        },
+        {
+          "type": "color",
+          "id": "background_color",
+          "label": "Panel colour"
+        },
+        {
+          "type": "image_picker",
+          "id": "pattern",
+          "label": "Pattern"
+        },
+        {
+          "type": "checkbox",
+          "id": "pattern_position_custom",
+          "label": "Set this slide's pattern position",
+          "default": false
+        },
+        {
+          "type": "range",
+          "id": "pattern_position",
+          "label": "Pattern position",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%",
+          "default": 67,
+          "visible_if": "{{ block.settings.pattern_position_custom }}"
         }
       ]
     }
@@ -435,12 +482,7 @@
   "presets": [
     {
       "name": "APEX hero",
-      "blocks": [
-        { "type": "slide" },
-        { "type": "slide" },
-        { "type": "slide" },
-        { "type": "slide" }
-      ]
+      "blocks": [{ "type": "slide" }, { "type": "slide" }]
     }
   ]
 }

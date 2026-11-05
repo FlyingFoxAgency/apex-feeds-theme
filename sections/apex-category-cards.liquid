@@ -3,7 +3,9 @@
   has a rounded dried moss panel with a large faded word (or a photo), a label and an outline
   button. Each card is a block.
 {% endcomment %}
-<div class="apex-category-cards apex-container">
+<div class="apex-category-cards apex-container"
+  {% if section.settings.indicator_label != blank %} data-apex-indicator-label="{{ section.settings.indicator_label | escape }}"{% endif %}
+>
   {%- if section.settings.title != blank -%}
     <h2 class="apex-section-title">{{ section.settings.title | escape }}</h2>
   {%- endif -%}
@@ -149,6 +151,13 @@
   "class": "apex-category-cards-section",
   "max_blocks": 6,
   "settings": [
+    {
+      "type": "text",
+      "id": "indicator_label",
+      "label": "Name in the page indicator",
+      "default": "Shop by animals",
+      "info": "Shown next to this section's dot on the left. Leave blank to leave it out."
+    },
     {
       "type": "text",
       "id": "title",

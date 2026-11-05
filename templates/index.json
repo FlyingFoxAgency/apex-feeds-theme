@@ -15,7 +15,6 @@
         "slide_1": {
           "type": "slide",
           "settings": {
-            "label": "Featured",
             "image": "shopify://shop_images/Nutricore-group-mockup_b39044d0-3e92-4c40-926d-ad7897b0fc1b.png",
             "eyebrow": "Premium animal supplements",
             "title": "Nutrition\nyou can see",
@@ -29,7 +28,6 @@
         "slide_2": {
           "type": "slide",
           "settings": {
-            "label": "NutriCore",
             "eyebrow": "Premium animal supplements",
             "title": "Nutrition\nyou can see",
             "text": "<p>Welcome to Burger Bliss, where we take your cravings to a whole new level!</p>",
@@ -42,7 +40,6 @@
         "slide_3": {
           "type": "slide",
           "settings": {
-            "label": "Superblend",
             "eyebrow": "Premium animal supplements",
             "title": "Nutrition\nyou can see",
             "text": "<p>Welcome to Burger Bliss, where we take your cravings to a whole new level!</p>",
@@ -55,7 +52,6 @@
         "slide_4": {
           "type": "slide",
           "settings": {
-            "label": "Insects",
             "eyebrow": "Premium animal supplements",
             "title": "Nutrition\nyou can see",
             "text": "<p>Welcome to Burger Bliss, where we take your cravings to a whole new level!</p>",
@@ -75,7 +71,9 @@
       "settings": {
         "background_color": "#898671",
         "pattern": "shopify://shop_images/Snake-skin-pattern-gradient.png",
-        "autoplay_speed": 6
+        "autoplay_speed": 6,
+        "indicator_label": "Featured",
+        "pattern_position": 67
       }
     },
     "apex_shop_nav": {
@@ -97,7 +95,8 @@
         "button_label": "Shop premium range",
         "button_link": "",
         "gradient_from": "#40443d",
-        "gradient_to": "#a0aa98"
+        "gradient_to": "#a0aa98",
+        "indicator_label": "Superblend"
       }
     },
     "apex_animals": {
@@ -140,7 +139,8 @@
         "card_invertebrates"
       ],
       "settings": {
-        "title": "Shop by animals"
+        "title": "Shop by animals",
+        "indicator_label": "Shop by animals"
       }
     },
     "apex_best_sellers": {
@@ -148,7 +148,8 @@
       "settings": {
         "title": "Best sellers",
         "collection": "",
-        "products_to_show": 8
+        "products_to_show": 8,
+        "indicator_label": "Best sellers"
       }
     },
     "apex_story": {
@@ -194,7 +195,8 @@
         "tab_passion"
       ],
       "settings": {
-        "label": "About APEX Feeds"
+        "label": "About APEX Feeds",
+        "indicator_label": "About us"
       }
     }
   },

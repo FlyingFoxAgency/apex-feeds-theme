@@ -5,6 +5,7 @@
 {% endcomment %}
 <div
   class="apex-feature"
+  {% if section.settings.indicator_label != blank %} data-apex-indicator-label="{{ section.settings.indicator_label | escape }}"{% endif %}
   style="--apex-feature-from: {{ section.settings.gradient_from }}; --apex-feature-to: {{ section.settings.gradient_to }};"
 >
   <div class="apex-feature__stage">
@@ -224,6 +225,13 @@
   "tag": "section",
   "class": "apex-feature-section",
   "settings": [
+    {
+      "type": "text",
+      "id": "indicator_label",
+      "label": "Name in the page indicator",
+      "default": "Superblend",
+      "info": "Shown next to this section's dot on the left. Leave blank to leave it out."
+    },
     {
       "type": "text",
       "id": "title",
