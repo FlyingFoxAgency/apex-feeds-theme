@@ -1,0 +1,191 @@
+{% doc %}
+  APEX product card (Figma best seller card): glass card with a white image area, a rating pill,
+  then category, title, price and a short note.
+
+  The category is the product type. The note comes from the product metafield
+  custom.card_note when it's filled in. The rating uses the standard reviews.rating
+  metafield that review apps fill in, and is hidden without one.
+
+  @param {object} product - The product to show
+  @param {string} [sizes] - The image sizes attribute
+
+  @example
+  {% render 'apex-product-card', product: product %}
+{% enddoc %}
+{%- liquid
+  assign rating = product.metafields.reviews.rating.value.rating
+  assign note = product.metafields.custom.card_note.value
+  assign image = product.featured_media.preview_image
+-%}
+<article class="apex-product-card">
+  <a class="apex-product-card__link" href="{{ product.url }}">
+    <div class="apex-product-card__media">
+      {%- if image != blank -%}
+        {{
+          image
+          | image_url: width: 640
+          | image_tag:
+            loading: 'lazy',
+            sizes: sizes | default: '(min-width: 990px) 300px, 70vw',
+            widths: '300, 450, 640',
+            alt: image.alt | default: product.title
+        }}
+      {%- else -%}
+        {{ 'product-1' | placeholder_svg_tag: 'apex-product-card__placeholder' }}
+      {%- endif -%}
+
+      {%- if rating != blank -%}
+        <span class="apex-product-card__rating">
+          <span class="apex-product-card__star" aria-hidden="true">{{ 'apex-icon-star.svg' | inline_asset_content }}</span>
+          <span class="visually-hidden">Rated</span>
+          {{ rating | round: 1 }}
+          <span class="visually-hidden">out of 5</span>
+        </span>
+      {%- endif -%}
+    </div>
+
+    <div class="apex-product-card__info">
+      {%- if product.type != blank -%}
+        <p class="apex-product-card__category">{{ product.type | escape }}</p>
+      {%- endif -%}
+      <div class="apex-product-card__row">
+        <h3 class="apex-product-card__title">{{ product.title | escape }}</h3>
+        <p class="apex-product-card__price">
+          {%- if product.price_varies -%}
+            <span class="visually-hidden">From</span>
+          {%- endif -%}
+          {{ product.price | money }}
+        </p>
+      </div>
+      {%- if note != blank -%}
+        <p class="apex-product-card__note">{{ note | escape }}</p>
+      {%- endif -%}
+    </div>
+  </a>
+</article>
+
+{% stylesheet %}
+  .apex-product-card {
+    height: 100%;
+  }
+
+  .apex-product-card__link {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    border-radius: var(--apex-radius-lg);
+    background-color: var(--apex-glass-bg);
+    -webkit-backdrop-filter: blur(var(--apex-glass-blur));
+    backdrop-filter: blur(var(--apex-glass-blur));
+    color: var(--apex-olive);
+    text-decoration: none;
+  }
+
+  .apex-product-card__media {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    aspect-ratio: 288 / 245;
+    padding: var(--apex-space-12) var(--apex-space-12) 0;
+    border-radius: 15px 15px 0 0;
+    background-color: var(--apex-bg-page);
+  }
+
+  .apex-product-card__media img {
+    width: 82%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center bottom;
+    transition: scale 0.3s var(--ease-out-cubic, ease-out);
+  }
+
+  .apex-product-card__link:is(:hover, :focus-visible) .apex-product-card__media img {
+    scale: 1.06;
+  }
+
+  .apex-product-card__placeholder {
+    width: 80%;
+    height: 100%;
+    fill: var(--apex-stone-200);
+  }
+
+  .apex-product-card__rating {
+    position: absolute;
+    inset-block-start: 26px;
+    inset-inline-end: 22px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    height: 22px;
+    padding-inline: 7px;
+    border-radius: var(--apex-radius-pill);
+    background-color: var(--apex-stone-200);
+    font-size: 0.8125rem;
+    line-height: 1;
+    color: var(--apex-olive);
+  }
+
+  .apex-product-card__star svg {
+    display: block;
+    width: 15px;
+    height: 15px;
+  }
+
+  .apex-product-card__info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 25px 21px 21px;
+  }
+
+  .apex-product-card__category,
+  .apex-product-card__note {
+    margin: 0;
+    font-size: 0.625rem;
+    line-height: 0.875rem;
+    letter-spacing: 0.5px;
+  }
+
+  .apex-product-card__category {
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .apex-product-card__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--apex-space-12);
+    margin-block-start: var(--apex-space-8);
+  }
+
+  .apex-product-card__title {
+    margin: 0;
+    font-family: var(--font-body--family);
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.25rem;
+    text-transform: uppercase;
+    color: var(--apex-olive);
+  }
+
+  .apex-product-card__price {
+    margin: 0;
+    flex: none;
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-product-card__note {
+    margin-block-start: auto;
+    padding-block-start: var(--apex-space-24);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .apex-product-card__media img {
+      transition: none;
+    }
+  }
+{% endstylesheet %}

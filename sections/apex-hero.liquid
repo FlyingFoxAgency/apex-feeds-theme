@@ -1,0 +1,447 @@
+{% comment %}
+  APEX hero slideshow (Figma "Hero"). A dried moss panel with the snake skin pattern on the
+  right, a product image that breaks out below the panel, and a timeline of dots on the left
+  that picks the slide. Each slide is a block.
+{% endcomment %}
+<script src="{{ 'apex-home.js' | asset_url }}" type="module"></script>
+
+{%- liquid
+  assign slides = section.blocks | where: 'type', 'slide'
+  if section.settings.pattern != blank
+    assign pattern_url = section.settings.pattern | image_url: width: 1600
+  endif
+-%}
+
+<div
+  class="apex-hero"
+  style="--apex-hero-bg: {{ section.settings.background_color }};{% if pattern_url %} --apex-hero-pattern: url('{{ pattern_url }}');{% endif %}"
+>
+  <apex-hero class="apex-hero__stage" data-autoplay="{{ section.settings.autoplay_speed }}">
+    <div class="apex-hero__slides">
+      {%- for block in slides -%}
+        <div
+          class="apex-hero__slide{% if forloop.first %} is-active{% endif %}"
+          data-slide
+          {{ block.shopify_attributes }}
+        >
+          <div class="apex-hero__content">
+            {%- if block.settings.eyebrow != blank -%}
+              <p class="apex-hero__eyebrow apex-eyebrow">{{ block.settings.eyebrow }}</p>
+            {%- endif -%}
+            {%- if block.settings.title != blank -%}
+              {%- if forloop.first -%}
+                <h1 class="apex-hero__title apex-display">{{ block.settings.title | newline_to_br }}</h1>
+              {%- else -%}
+                <h2 class="apex-hero__title apex-display">{{ block.settings.title | newline_to_br }}</h2>
+              {%- endif -%}
+            {%- endif -%}
+            {%- if block.settings.text != blank -%}
+              <div class="apex-hero__text">{{ block.settings.text }}</div>
+            {%- endif -%}
+            {%- if block.settings.button_label != blank or block.settings.button_2_label != blank -%}
+              <div class="apex-hero__buttons">
+                {%- if block.settings.button_label != blank -%}
+                  <a class="apex-button apex-button--amber" href="{{ block.settings.button_link | default: routes.all_products_collection_url }}">
+                    {{- block.settings.button_label | escape -}}
+                  </a>
+                {%- endif -%}
+                {%- if block.settings.button_2_label != blank -%}
+                  <a class="apex-button apex-button--outline-light" href="{{ block.settings.button_2_link | default: routes.all_products_collection_url }}">
+                    {{- block.settings.button_2_label | escape -}}
+                  </a>
+                {%- endif -%}
+              </div>
+            {%- endif -%}
+          </div>
+
+          {%- if block.settings.image != blank -%}
+            <div class="apex-hero__media">
+              {%- liquid
+                if forloop.first
+                  assign loading = 'eager'
+                  assign priority = 'high'
+                else
+                  assign loading = 'lazy'
+                  assign priority = 'auto'
+                endif
+              -%}
+              {{
+                block.settings.image
+                | image_url: width: 2000
+                | image_tag:
+                  loading: loading,
+                  fetchpriority: priority,
+                  sizes: '(min-width: 1200px) 70vw, 100vw',
+                  widths: '600, 900, 1200, 1600, 2000',
+                  alt: block.settings.image.alt
+              }}
+            </div>
+          {%- elsif request.design_mode -%}
+            <div class="apex-hero__media apex-hero__media--placeholder">
+              {{ 'product-apparel-1' | placeholder_svg_tag }}
+            </div>
+          {%- endif -%}
+        </div>
+      {%- endfor -%}
+
+      {%- if slides.size > 1 -%}
+        <div class="apex-hero__timeline" role="group" aria-label="Choose a slide">
+          {%- for block in slides -%}
+            <button
+              type="button"
+              class="apex-hero__dot{% if forloop.first %} is-active{% endif %}"
+              data-dot
+              aria-label="Slide {{ forloop.index }}{% if block.settings.label != blank %}: {{ block.settings.label | escape }}{% endif %}"
+            >
+              {%- if block.settings.label != blank -%}
+                <span class="apex-hero__dot-label" aria-hidden="true">{{ block.settings.label | escape }}</span>
+              {%- endif -%}
+            </button>
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+    </div>
+  </apex-hero>
+</div>
+
+{% stylesheet %}
+  .apex-hero {
+    overflow-x: clip;
+    padding-block-start: var(--apex-space-32);
+  }
+
+  /* The design is laid out on a 1440px stage. 1cqw is 1% of that stage, so positions taken
+     from Figma (x / 14.4) scale with it. */
+  .apex-hero__stage {
+    position: relative;
+    display: block;
+    max-width: 1440px;
+    margin-inline: auto;
+    container-type: inline-size;
+  }
+
+  .apex-hero__slides {
+    position: relative;
+    display: grid;
+    isolation: isolate;
+  }
+
+  /* Panel colour and snake skin pattern run to both edges of the screen */
+  .apex-hero__slides::before,
+  .apex-hero__slides::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset-block: 0;
+    inset-inline: calc((100cqw - 100vw) / 2);
+    background-color: var(--apex-hero-bg, var(--apex-dried-moss));
+  }
+
+  .apex-hero__slides::after {
+    inset-inline-start: 40.69cqw;
+    background: var(--apex-hero-pattern, none) right top / auto 100% repeat-x;
+  }
+
+  .apex-hero__slide {
+    grid-area: 1 / 1;
+    position: relative;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.6s var(--ease-out-cubic, ease-out),
+      visibility 0s linear 0.6s;
+  }
+
+  .apex-hero__slide.is-active {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.6s var(--ease-out-cubic, ease-out);
+  }
+
+  .apex-hero__content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    color: var(--apex-sandstone-glow);
+  }
+
+  .apex-hero__eyebrow {
+    margin: 0 0 var(--apex-space-24);
+    color: var(--apex-sandstone-glow);
+  }
+
+  .apex-hero__title {
+    margin: 0;
+    color: var(--apex-sandstone-glow);
+  }
+
+  .apex-hero__text {
+    margin-block-start: var(--apex-space-24);
+    font-size: 1.25rem;
+    line-height: 1.625rem;
+  }
+
+  .apex-hero__text p {
+    margin: 0;
+  }
+
+  .apex-hero__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--apex-space-24);
+    margin-block-start: var(--apex-space-48);
+  }
+
+  .apex-hero__media img,
+  .apex-hero__media svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .apex-hero__media--placeholder svg {
+    aspect-ratio: 997 / 615;
+    fill: rgb(255 240 214 / 0.3);
+  }
+
+  /* Timeline: sandstone line with a dot per slide, the current one amber with its label */
+  .apex-hero__timeline {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    gap: var(--apex-space-16);
+  }
+
+  .apex-hero__dot {
+    position: relative;
+    width: 10px;
+    height: 10px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background-color: var(--apex-sandstone);
+    cursor: pointer;
+    transition: scale 0.2s var(--ease-out-cubic, ease-out);
+  }
+
+  /* Bigger touch target than the 10px dot */
+  .apex-hero__dot::before {
+    content: '';
+    position: absolute;
+    inset: -12px;
+  }
+
+  .apex-hero__dot:is(:hover, :focus-visible) {
+    scale: 1.3;
+  }
+
+  .apex-hero__dot.is-active {
+    background-color: var(--apex-amber);
+  }
+
+  .apex-hero__dot-label {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-end: calc(100% + 14px);
+    translate: 0 -50%;
+    display: none;
+    padding: 0 8px;
+    border-radius: var(--apex-radius-sm);
+    background-color: var(--apex-amber);
+    color: var(--apex-burrow);
+    font-size: 0.6875rem;
+    line-height: 1rem;
+    white-space: nowrap;
+  }
+
+  /* Desktop: Figma layout on the 1440 stage */
+  @media screen and (min-width: 1200px) {
+    .apex-hero__stage {
+      /* 615px of product image plus 11px before the shop nav, at 1440 */
+      min-height: 43.47cqw;
+    }
+
+    .apex-hero__slides {
+      min-height: 34.17cqw;
+    }
+
+    .apex-hero__slides::before,
+    .apex-hero__slides::after {
+      inset-block-end: auto;
+      height: max(100%, 34.17cqw);
+    }
+
+    .apex-hero__content {
+      max-width: 33cqw;
+      min-height: 34.17cqw;
+      justify-content: center;
+      padding-block: var(--apex-space-24) var(--apex-space-48);
+      padding-inline-start: 13.47cqw;
+      box-sizing: content-box;
+    }
+
+    .apex-hero__text {
+      max-width: min(383px, 26.6cqw);
+    }
+
+    .apex-hero__media {
+      position: absolute;
+      z-index: 1;
+      inset-block-start: -0.07cqw;
+      inset-inline-start: 38.06cqw;
+      width: 69.24cqw;
+    }
+
+    .apex-hero__timeline {
+      position: absolute;
+      inset-block: 30px calc(100% - 409px);
+      inset-inline-start: calc(6.39cqw - 5px);
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .apex-hero__timeline::before {
+      content: '';
+      position: absolute;
+      inset-block: 7px;
+      inset-inline-start: 4px;
+      width: 2px;
+      background-color: var(--apex-sandstone);
+    }
+
+    .apex-hero__dot.is-active .apex-hero__dot-label {
+      display: block;
+    }
+  }
+
+  /* Tablet and mobile: text, then image, then dots */
+  @media screen and (max-width: 1199px) {
+    .apex-hero__content {
+      padding: var(--apex-space-48) var(--page-margin, 16px) 0;
+    }
+
+    .apex-hero__media {
+      width: min(100%, 720px);
+      margin: var(--apex-space-24) auto 0;
+    }
+
+    .apex-hero__timeline {
+      justify-content: center;
+      padding-block: var(--apex-space-16) var(--apex-space-24);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .apex-hero__slide,
+    .apex-hero__slide.is-active,
+    .apex-hero__dot {
+      transition: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX hero",
+  "tag": "section",
+  "class": "apex-hero-section",
+  "settings": [
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Panel colour",
+      "default": "#898671"
+    },
+    {
+      "type": "image_picker",
+      "id": "pattern",
+      "label": "Pattern on the right",
+      "info": "Figma layer \"Asset 2\" (snake skin). It repeats across to the right edge."
+    },
+    {
+      "type": "range",
+      "id": "autoplay_speed",
+      "label": "Change slide every",
+      "min": 0,
+      "max": 12,
+      "step": 1,
+      "unit": "s",
+      "default": 6,
+      "info": "0 turns auto-play off."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "slide",
+      "name": "Slide",
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Timeline label",
+          "default": "Featured"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Product image",
+          "info": "Transparent PNG, about 2000 x 1234px (Figma \"Group-Mockup-Labels-Basic 1\")."
+        },
+        {
+          "type": "text",
+          "id": "eyebrow",
+          "label": "Eyebrow",
+          "default": "Premium animal supplements"
+        },
+        {
+          "type": "textarea",
+          "id": "title",
+          "label": "Title",
+          "default": "Nutrition\nyou can see"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text",
+          "default": "<p>Welcome to Burger Bliss, where we take your cravings to a whole new level!</p>"
+        },
+        {
+          "type": "text",
+          "id": "button_label",
+          "label": "Amber button label",
+          "default": "Shop NutriCore range"
+        },
+        {
+          "type": "url",
+          "id": "button_link",
+          "label": "Amber button link"
+        },
+        {
+          "type": "text",
+          "id": "button_2_label",
+          "label": "Outline button label",
+          "default": "Explore"
+        },
+        {
+          "type": "url",
+          "id": "button_2_link",
+          "label": "Outline button link"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX hero",
+      "blocks": [
+        { "type": "slide" },
+        { "type": "slide" },
+        { "type": "slide" },
+        { "type": "slide" }
+      ]
+    }
+  ]
+}
+{% endschema %}

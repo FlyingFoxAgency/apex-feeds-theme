@@ -1,0 +1,184 @@
+{% comment %}
+  APEX shop nav (Figma "Shop Nav"): a soft olive bar of category links under the hero.
+  The current category gets the white highlight and amber underline from Figma.
+{% endcomment %}
+{%- assign menu = section.settings.menu -%}
+
+<div class="apex-shop-nav apex-container">
+  <nav class="apex-shop-nav__bar" aria-label="{{ section.settings.label | escape }}">
+    <ul class="apex-shop-nav__list list-unstyled" role="list">
+      {%- if section.settings.show_shop_all -%}
+        {%- liquid
+          assign shop_all_url = routes.all_products_collection_url
+          assign shop_all_current = false
+          if request.path == shop_all_url
+            assign shop_all_current = true
+          endif
+        -%}
+        <li class="apex-shop-nav__item">
+          <a
+            class="apex-shop-nav__link"
+            href="{{ shop_all_url }}"
+            {% if shop_all_current %}
+              aria-current="page"
+            {% endif %}
+          >
+            <span>{{ section.settings.shop_all_label | escape }}</span>
+          </a>
+        </li>
+      {%- endif -%}
+      {%- for link in menu.links -%}
+        <li class="apex-shop-nav__item">
+          <a
+            class="apex-shop-nav__link"
+            href="{{ link.url }}"
+            {% if link.current or link.child_active %}
+              aria-current="page"
+            {% endif %}
+          >
+            <span>{{ link.title | escape }}</span>
+          </a>
+        </li>
+      {%- endfor -%}
+    </ul>
+  </nav>
+</div>
+
+{% stylesheet %}
+  .apex-shop-nav {
+    position: relative;
+    z-index: 2;
+    padding-block: 11px 0;
+  }
+
+  .apex-shop-nav__bar {
+    overflow-x: auto;
+    border-radius: var(--apex-radius-lg);
+    background-color: rgb(100 105 53 / 0.2);
+    scrollbar-width: none;
+  }
+
+  .apex-shop-nav__bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .apex-shop-nav__list {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    /* Figma spaces the links 48px apart across the bar; space-between keeps that look and
+       lets them close up to 24px before the bar starts to scroll */
+    gap: var(--apex-space-24);
+    min-width: max-content;
+    min-height: 80px;
+    margin: 0;
+    padding-inline: 52px;
+  }
+
+  .apex-shop-nav__item {
+    display: flex;
+  }
+
+  .apex-shop-nav__link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 104px;
+    padding-block: var(--apex-space-8);
+    color: var(--apex-burrow);
+    font-family: var(--font-body--family);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1rem;
+    text-align: center;
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+
+  .apex-shop-nav__link > span {
+    display: inline-block;
+    transition: scale 0.2s var(--ease-out-cubic, ease-out);
+  }
+
+  .apex-shop-nav__link:is(:hover, :focus-visible) > span {
+    scale: 1.06;
+  }
+
+  /* Current category: Figma "highlight hover" (white at 45%) with a 3px amber underline */
+  .apex-shop-nav__link[aria-current='page']::before,
+  .apex-shop-nav__link[aria-current='page']::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset-inline: -30px;
+  }
+
+  .apex-shop-nav__link[aria-current='page'] {
+    isolation: isolate;
+  }
+
+  .apex-shop-nav__link[aria-current='page']::before {
+    inset-block: 0 2px;
+    background-color: rgb(255 255 255 / 0.45);
+  }
+
+  .apex-shop-nav__link[aria-current='page']::after {
+    inset-block: auto 0;
+    height: 3px;
+    background-color: var(--apex-amber);
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-shop-nav__list {
+      gap: var(--apex-space-32);
+      padding-inline: var(--apex-space-24);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .apex-shop-nav__link > span {
+      transition: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX shop nav",
+  "tag": "section",
+  "class": "apex-shop-nav-section",
+  "settings": [
+    {
+      "type": "link_list",
+      "id": "menu",
+      "label": "Menu",
+      "default": "shop",
+      "info": "Uses the same Shop menu as the footer unless you pick another."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_shop_all",
+      "label": "Start with a Shop All link",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "shop_all_label",
+      "label": "Shop All label",
+      "default": "Shop all"
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "label": "Name for screen readers",
+      "default": "Shop by category"
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX shop nav"
+    }
+  ]
+}
+{% endschema %}

@@ -608,3 +608,109 @@ html:has(.menu-drawer-container[open]) .apex-help-button {
     transform: none;
   }
 }
+
+/* ==========================================================================
+   Shared building blocks for APEX sections
+   ========================================================================== */
+
+/* 1244px content column, as in Figma */
+.apex-container {
+  width: min(100% - 2 * var(--page-margin, 16px), var(--narrow-page-width));
+  margin-inline: auto;
+}
+
+/* Section titles (Figma Heading/H2: Dharma 64/61, burrow) */
+.apex-section-title {
+  margin: 0;
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  font-size: var(--font-size--h2);
+  line-height: 0.95;
+  text-transform: uppercase;
+  color: var(--apex-burrow);
+}
+
+/* Buttons (Figma Button: 48px tall, 15/24 semibold, upper case) */
+.apex-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--apex-space-8);
+  min-height: 48px;
+  padding: var(--apex-space-12) var(--apex-space-20);
+  border: 1px solid transparent;
+  border-radius: var(--apex-radius-pill);
+  font-family: var(--font-body--family);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.5rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: scale 0.2s var(--ease-out-cubic, ease-out);
+}
+
+.apex-button:is(:hover, :focus-visible) {
+  scale: 1.06;
+}
+
+.apex-button svg {
+  width: 24px;
+  height: 24px;
+  flex: none;
+}
+
+.apex-button--amber {
+  background-color: var(--apex-amber);
+  border-color: var(--apex-amber);
+  color: var(--apex-burrow);
+}
+
+.apex-button--outline-light {
+  background-color: transparent;
+  border-color: var(--apex-sandstone-glow);
+  color: var(--apex-sandstone-glow);
+}
+
+.apex-button--dark {
+  background-color: var(--apex-burrow);
+  border-color: var(--apex-burrow);
+  color: var(--apex-stone-100);
+}
+
+.apex-button--dark .apex-button__label {
+  background: var(--apex-silver-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.apex-button--outline-moss {
+  padding-inline: var(--apex-space-16);
+  border: 2px solid var(--apex-dried-moss);
+  border-radius: var(--apex-radius-md);
+  background-color: transparent;
+  color: var(--apex-dried-moss);
+}
+
+/* Decorative line art (snake, lizard, geckos): never catches clicks */
+.apex-decoration {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.apex-decoration img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .apex-button {
+    transition: none;
+  }
+}
