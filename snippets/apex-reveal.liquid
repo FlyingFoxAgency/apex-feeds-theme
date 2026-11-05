@@ -1,0 +1,31 @@
+{% doc %}
+  Scroll-in reveal for the page's sections: each section below the hero fades up gently the
+  first time it comes into view. Script-only, so without JavaScript (and in the theme editor)
+  everything simply shows. Styles are in apex.css under "Section reveal".
+{% enddoc %}
+{%- unless request.design_mode -%}
+  <script type="module">
+    const motionOk = window.matchMedia('(prefers-reduced-motion: no-preference)').matches;
+    const sections = [...document.querySelectorAll('main > .shopify-section')].slice(1);
+
+    if (motionOk && 'IntersectionObserver' in window && sections.length) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            entry.target.classList.add('is-revealed');
+            observer.unobserve(entry.target);
+          }
+        },
+        { rootMargin: '0px 0px -12% 0px', threshold: 0 }
+      );
+
+      for (const section of sections) {
+        // Sections already on screen at load show straight away, without the fade
+        if (section.getBoundingClientRect().top < window.innerHeight * 0.88) continue;
+        section.setAttribute('data-apex-reveal', '');
+        observer.observe(section);
+      }
+    }
+  </script>
+{%- endunless -%}
