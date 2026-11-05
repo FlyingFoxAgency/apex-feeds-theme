@@ -373,8 +373,13 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
   inset-block-start: 50%;
   inset-inline-end: 15px;
   translate: 0 -50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 37px;
   height: 37px;
+  /* Horizon adds an 8px margin to integrated buttons, which pushed the circle off centre */
+  margin: 0;
   padding: 0;
   border: 0;
   border-radius: var(--apex-radius-pill);
@@ -386,6 +391,7 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
 .footer-content:has(.apex-dedication) .email-signup__button-icon > svg {
   width: 24px;
   height: 24px;
+  padding: 0;
 }
 
 /* Social icons: 24px, 23px apart */
