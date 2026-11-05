@@ -84,7 +84,7 @@
       "settings": {
         "indicator_label": "Featured",
         "autoplay_speed": 6,
-        "background_color": "#898671",
+        "background_color": "rgba(0,0,0,0)",
         "pattern_position": 68
       }
     },
