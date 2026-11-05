@@ -2117,5 +2117,42 @@
         "default": "equal-width-buttons"
       }
     ]
+  },
+  {
+    "name": "APEX Feeds",
+    "settings": [
+      {
+        "type": "header",
+        "content": "Page background"
+      },
+      {
+        "type": "image_picker",
+        "id": "apex_page_texture",
+        "label": "Stone texture",
+        "info": "Export the stone floor texture from Figma (JPG, about 2000px wide) and upload it here. It tiles down the page behind every section without its own background colour."
+      },
+      {
+        "type": "color",
+        "id": "apex_page_texture_color",
+        "label": "Texture base colour",
+        "default": "#FAF9F7"
+      },
+      {
+        "type": "header",
+        "content": "Help button"
+      },
+      {
+        "type": "checkbox",
+        "id": "apex_show_help_button",
+        "label": "Show floating help button",
+        "default": true
+      },
+      {
+        "type": "url",
+        "id": "apex_help_link",
+        "label": "Help button link",
+        "info": "Leave blank to link to /pages/help-centre."
+      }
+    ]
   }
 ]

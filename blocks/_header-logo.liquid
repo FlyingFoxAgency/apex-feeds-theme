@@ -55,14 +55,20 @@
     {% endif %}
     data-testid="header-logo"
   >
-    {% render 'image',
-      image: settings.logo,
-      class: 'header-logo__image',
-      height: settings.logo_height,
-      alt_text_fallback: alt_text_fallback,
-      text_fallback: shop.name,
-      style: logo_style
-    %}
+    {%- if settings.logo != blank -%}
+      {% render 'image',
+        image: settings.logo,
+        class: 'header-logo__image',
+        height: settings.logo_height,
+        alt_text_fallback: alt_text_fallback,
+        text_fallback: shop.name,
+        style: logo_style
+      %}
+    {%- else -%}
+      {%- comment -%} APEX: the Figma logo, used until a logo image is uploaded in theme settings {%- endcomment -%}
+      <span class="apex-logo" aria-hidden="true">{{ 'apex-logo.svg' | inline_asset_content }}</span>
+      <span class="visually-hidden">{{ alt_text_fallback }}</span>
+    {%- endif -%}
   </span>
 
   {% if use_inverse_logo %}

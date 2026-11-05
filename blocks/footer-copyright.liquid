@@ -15,7 +15,7 @@
     &copy; {{ 'now' | date: '%Y' }}
     {{ shop.name | link_to: routes.root_url -}}
     {%- if block_settings.show_powered_by -%}
-      , {{ powered_by_link }}
+      . {{ powered_by_link }}
     {%- endif -%}
   </span>
 </div>

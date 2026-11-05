@@ -98,6 +98,17 @@
     /* Display, 128/102, for page heroes */
     --apex-font-size-display: clamp(4rem, 8.9vw, 8rem);
     --apex-line-height-display: 0.8;
+
+    /* Stone texture behind the page (Theme settings > APEX Feeds) */
+    --apex-page-texture-color: {{ settings.apex_page_texture_color | default: '#faf9f7' }};
+    {%- if settings.apex_page_texture != blank %}
+      --apex-page-texture: url('{{ settings.apex_page_texture | image_url: width: 2400 }}');
+    {%- else %}
+      --apex-page-texture: none;
+    {%- endif %}
+
+    /* Rounded top of the textured page panel, under the announcement bar */
+    --apex-panel-radius: 30px;
   }
 
   /* Display title used on page heroes (Figma Heading/Display) */
