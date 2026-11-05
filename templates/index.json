@@ -16,6 +16,7 @@
           "type": "slide",
           "settings": {
             "label": "Featured",
+            "image": "shopify://shop_images/Nutricore-group-mockup_b39044d0-3e92-4c40-926d-ad7897b0fc1b.png",
             "eyebrow": "Premium animal supplements",
             "title": "Nutrition\nyou can see",
             "text": "<p>Welcome to Burger Bliss, where we take your cravings to a whole new level!</p>",
@@ -73,6 +74,7 @@
       ],
       "settings": {
         "background_color": "#898671",
+        "pattern": "shopify://shop_images/Snake-skin-pattern-gradient.png",
         "autoplay_speed": 6
       }
     },
@@ -94,8 +96,8 @@
         "text": "<p>Welcome to Burger Bliss, where we take your cravings to a whole new level! Our mouthwatering burgers are made from 100% beef and are served on freshly baked buns.</p>",
         "button_label": "Shop premium range",
         "button_link": "",
-        "gradient_from": "#40443D",
-        "gradient_to": "#A0AA98"
+        "gradient_from": "#40443d",
+        "gradient_to": "#a0aa98"
       }
     },
     "apex_animals": {
@@ -104,6 +106,8 @@
         "card_reptiles": {
           "type": "card",
           "settings": {
+            "collection": "",
+            "link": "",
             "word": "Reptiles",
             "label": "",
             "button_label": "Shop for reptiles"
@@ -112,6 +116,8 @@
         "card_insects": {
           "type": "card",
           "settings": {
+            "collection": "",
+            "link": "",
             "word": "Insects",
             "label": "",
             "button_label": "Shop for insects"
@@ -120,6 +126,8 @@
         "card_invertebrates": {
           "type": "card",
           "settings": {
+            "collection": "",
+            "link": "",
             "word": "Invertebrates",
             "label": "",
             "button_label": "Shop for invertebrates"
@@ -139,6 +147,7 @@
       "type": "apex-product-carousel",
       "settings": {
         "title": "Best sellers",
+        "collection": "",
         "products_to_show": 8
       }
     },
@@ -148,25 +157,33 @@
         "tab_values": {
           "type": "tab",
           "settings": {
-            "tab_title": "Our values"
+            "tab_title": "Our values",
+            "heading": "",
+            "text": "<p>Nulla libero nibh, pellentesque vel auctor fringilla, faucibus at est. Mauris in feugiat nisi. Curabitur at felis non nunc pretium lobortis. Integer nec mattis tellus.</p>"
           }
         },
         "tab_story": {
           "type": "tab",
           "settings": {
-            "tab_title": "Our story"
+            "tab_title": "Our story",
+            "heading": "",
+            "text": "<p>Nulla libero nibh, pellentesque vel auctor fringilla, faucibus at est. Mauris in feugiat nisi. Curabitur at felis non nunc pretium lobortis. Integer nec mattis tellus.</p>"
           }
         },
         "tab_best": {
           "type": "tab",
           "settings": {
-            "tab_title": "Only the best"
+            "tab_title": "Only the best",
+            "heading": "",
+            "text": "<p>Nulla libero nibh, pellentesque vel auctor fringilla, faucibus at est. Mauris in feugiat nisi. Curabitur at felis non nunc pretium lobortis. Integer nec mattis tellus.</p>"
           }
         },
         "tab_passion": {
           "type": "tab",
           "settings": {
-            "tab_title": "The passion"
+            "tab_title": "The passion",
+            "heading": "",
+            "text": "<p>Nulla libero nibh, pellentesque vel auctor fringilla, faucibus at est. Mauris in feugiat nisi. Curabitur at felis non nunc pretium lobortis. Integer nec mattis tellus.</p>"
           }
         }
       },
