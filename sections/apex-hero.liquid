@@ -338,7 +338,7 @@
   }
 
   /* Entrance, each time a slide comes in: the panel and pattern ease in, the text rises a
-     touch, then the product image glides in from the right and settles with a slight sway */
+     touch, then the product image glides in from the right and stops with a very slight bounce */
   @media (prefers-reduced-motion: no-preference) {
     .apex-hero__slide.is-active .apex-hero__panel {
       animation: apex-hero-panel-in 0.9s var(--ease-out-cubic, ease-out) both;
@@ -353,8 +353,7 @@
     }
 
     .apex-hero__slide.is-active .apex-hero__media {
-      transform-origin: 50% 85%;
-      animation: apex-hero-media-in 1.5s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
+      animation: apex-hero-media-in 1.2s linear 0.35s both;
     }
   }
 
@@ -378,32 +377,27 @@
     }
   }
 
-  /* Slides in, swings just past its place, then rocks back and settles */
+  /* Slides in and stops short, with a very slight bounce, as if stopped in its tracks */
   @keyframes apex-hero-media-in {
     0% {
       opacity: 0;
-      translate: 7% 0;
-      rotate: 2.5deg;
+      translate: 8% 0;
+      animation-timing-function: cubic-bezier(0.3, 0.7, 0.4, 1);
     }
 
-    45% {
+    55% {
       opacity: 1;
-      translate: -0.6% 0;
-      rotate: -1deg;
+      translate: -0.8% 0;
+      animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
     }
 
-    70% {
-      translate: 0.2% 0;
-      rotate: 0.4deg;
-    }
-
-    88% {
-      rotate: -0.12deg;
+    78% {
+      translate: 0.15% 0;
+      animation-timing-function: ease-out;
     }
 
     100% {
       translate: 0 0;
-      rotate: 0deg;
     }
   }
 
