@@ -5,6 +5,7 @@
 {% endcomment %}
 <div
   class="apex-feature"
+  data-apex-feature
   {% if section.settings.indicator_label != blank %} data-apex-indicator-label="{{ section.settings.indicator_label | escape }}"{% endif %}
   style="--apex-feature-from: {{ section.settings.gradient_from }}; --apex-feature-to: {{ section.settings.gradient_to }};"
 >
@@ -60,7 +61,64 @@
   </div>
 </div>
 
+{%- unless request.design_mode -%}
+  <script type="module">
+    // Once the visitor has started scrolling and this section is in view, fade in the gradient
+    // panel, then the product image. Without JavaScript (or in the theme editor) both just show.
+    const motionOk = window.matchMedia('(prefers-reduced-motion: no-preference)').matches;
+    const sections = document.querySelectorAll('[data-apex-feature]:not([data-apex-fade])');
+
+    if (motionOk && 'IntersectionObserver' in window) {
+      for (const section of sections) {
+        section.setAttribute('data-apex-fade', '');
+        let inView = false;
+        let scrolled = false;
+        const reveal = () => {
+          if (!inView || !scrolled) return;
+          section.classList.add('is-shown');
+          observer.disconnect();
+          document.removeEventListener('scroll', onScroll, { capture: true });
+        };
+        const onScroll = () => {
+          scrolled = true;
+          reveal();
+        };
+        const observer = new IntersectionObserver(
+          ([entry]) => {
+            inView = entry.isIntersecting;
+            reveal();
+          },
+          { rootMargin: '0px 0px -15% 0px' }
+        );
+        observer.observe(section);
+        document.addEventListener('scroll', onScroll, { capture: true, passive: true });
+      }
+    }
+  </script>
+{%- endunless -%}
+
 {% stylesheet %}
+  /* Fade-in (see the script above): the panel first, then the product image. The transitions
+     sit on the shown state only, so hiding them at load is instant. */
+  .apex-feature.is-shown .apex-feature__panel::before {
+    transition: opacity 1.1s var(--ease-out-cubic, ease-out);
+  }
+
+  .apex-feature.is-shown .apex-feature__media {
+    transition:
+      opacity 1.2s var(--ease-out-cubic, ease-out) 0.35s,
+      translate 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.35s;
+  }
+
+  .apex-feature[data-apex-fade]:not(.is-shown) .apex-feature__panel::before,
+  .apex-feature[data-apex-fade]:not(.is-shown) .apex-feature__media {
+    opacity: 0;
+  }
+
+  .apex-feature[data-apex-fade]:not(.is-shown) .apex-feature__media {
+    translate: 0 24px;
+  }
+
   .apex-feature {
     overflow-x: clip;
   }
