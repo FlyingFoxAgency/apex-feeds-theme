@@ -23,7 +23,8 @@
             "button_link": "",
             "button_2_label": "Explore",
             "button_2_link": "",
-            "background_color": "",
+            "background_color": "{{ settings.color_palette.color4 }}",
+            "pattern": "shopify://shop_images/Snake-skin-pattern-gradient.png",
             "pattern_position_custom": false,
             "pattern_position": 67
           }
@@ -84,7 +85,6 @@
         "indicator_label": "Featured",
         "autoplay_speed": 6,
         "background_color": "#898671",
-        "pattern": "shopify://shop_images/Snake-skin-pattern-gradient.png",
         "pattern_position": 68
       }
     },
