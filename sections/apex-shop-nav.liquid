@@ -1,10 +1,13 @@
 {% comment %}
-  APEX shop nav (Figma "Shop Nav"): a soft olive bar of category links under the hero.
-  The current category gets the white highlight and amber underline from Figma.
+  APEX shop nav (Figma "Shop Nav"): category links. From 1200px wide it floats at the bottom of
+  the screen, level with the help button: on load the links spread across the screen with no
+  background, and once the page scrolls they draw in to Figma's soft olive bar. Narrower screens
+  show the bar under the hero. The current category gets the white highlight and amber
+  underline from Figma.
 {% endcomment %}
 {%- assign menu = section.settings.menu -%}
 
-<div class="apex-shop-nav apex-container">
+<apex-shop-nav class="apex-shop-nav">
   <nav class="apex-shop-nav__bar" aria-label="{{ section.settings.label | escape }}">
     <ul class="apex-shop-nav__list list-unstyled" role="list">
       {%- if section.settings.show_shop_all -%}
@@ -42,12 +45,56 @@
       {%- endfor -%}
     </ul>
   </nav>
-</div>
+</apex-shop-nav>
+
+<script type="module">
+  // Draws the floating nav in once the page has scrolled. From 990px the page scrolls inside
+  // .page-wrapper, so listen on the document in the capture phase to hear either.
+  if (!customElements.get('apex-shop-nav')) {
+    customElements.define(
+      'apex-shop-nav',
+      class ApexShopNav extends HTMLElement {
+        connectedCallback() {
+          this.update = this.update.bind(this);
+          this.measure = this.measure.bind(this);
+          document.addEventListener('scroll', this.update, { capture: true, passive: true });
+          window.addEventListener('resize', this.measure);
+          document.fonts?.ready.then(this.measure);
+          this.measure();
+          this.update();
+        }
+
+        disconnectedCallback() {
+          document.removeEventListener('scroll', this.update, { capture: true });
+          window.removeEventListener('resize', this.measure);
+        }
+
+        // Width of Figma's bar for these links: 48px between them and 52px in from each end.
+        // A real length lets the bar animate from spread out to drawn in.
+        measure() {
+          const items = [...this.querySelectorAll('.apex-shop-nav__item')];
+          const links = items.reduce((total, item) => total + item.getBoundingClientRect().width, 0);
+          const fit = links + Math.max(0, items.length - 1) * 48 + 2 * 52;
+          this.style.setProperty('--apex-shop-nav-fit', `${Math.ceil(fit)}px`);
+        }
+
+        update() {
+          const wrapper = document.querySelector('.page-wrapper');
+          const scrolled = Math.max(window.scrollY, wrapper ? wrapper.scrollTop : 0);
+          this.toggleAttribute('data-condensed', scrolled > 24);
+        }
+      }
+    );
+  }
+</script>
 
 {% stylesheet %}
   .apex-shop-nav {
     position: relative;
     z-index: 2;
+    display: block;
+    width: min(100% - 2 * var(--page-margin, 16px), var(--narrow-page-width));
+    margin-inline: auto;
     padding-block: 11px 0;
   }
 
@@ -129,6 +176,63 @@
     background-color: var(--apex-amber);
   }
 
+  /* Floating at the bottom of the screen */
+  @media screen and (min-width: 1200px) {
+    .apex-shop-nav {
+      /* Clear of the help button (50px in, 53px wide) plus 24px */
+      --apex-shop-nav-clear: 127px;
+      --apex-shop-nav-max: calc(100vw - 2 * var(--apex-shop-nav-clear));
+
+      position: fixed;
+      z-index: var(--layer-sticky, 10);
+      inset-inline: 0;
+      /* Centred on the help button, and rising with it near the footer */
+      inset-block-end: calc(max(50px, var(--apex-help-lift, 0px)) + 26.5px - 40px);
+      display: flex;
+      justify-content: center;
+      width: auto;
+      margin: 0;
+      padding: 0;
+      pointer-events: none;
+    }
+
+    .apex-shop-nav__bar {
+      width: var(--apex-shop-nav-max);
+      background-color: transparent;
+      pointer-events: auto;
+      transition:
+        width 0.5s var(--ease-out-cubic, ease-out),
+        background-color 0.4s ease,
+        backdrop-filter 0.4s ease;
+    }
+
+    .apex-shop-nav__list {
+      padding-inline: 0;
+      transition: padding 0.5s var(--ease-out-cubic, ease-out);
+    }
+
+    /* Scrolled: Figma's bar, drawn in to fit the links (48px apart, 52px in from the ends).
+       On narrower screens it stops at the clear space and the links close up. */
+    .apex-shop-nav[data-condensed] .apex-shop-nav__bar {
+      width: min(var(--apex-shop-nav-max), var(--apex-shop-nav-fit, 100vw));
+      background-color: rgb(100 105 53 / 0.2);
+      /* Blur keeps the links readable over whatever scrolls behind */
+      -webkit-backdrop-filter: blur(var(--apex-glass-blur));
+      backdrop-filter: blur(var(--apex-glass-blur));
+    }
+
+    .apex-shop-nav[data-condensed] .apex-shop-nav__list {
+      padding-inline: 52px;
+    }
+  }
+
+  /* The page indicator shows from 1600px, so keep clear of it on the left too */
+  @media screen and (min-width: 1600px) {
+    .apex-shop-nav {
+      --apex-shop-nav-clear: 160px;
+    }
+  }
+
   @media screen and (max-width: 749px) {
     .apex-shop-nav__list {
       gap: var(--apex-space-32);
@@ -137,6 +241,8 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .apex-shop-nav__bar,
+    .apex-shop-nav__list,
     .apex-shop-nav__link > span {
       transition: none;
     }

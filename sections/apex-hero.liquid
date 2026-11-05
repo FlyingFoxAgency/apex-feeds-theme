@@ -274,13 +274,11 @@
 
   /* Desktop: Figma layout on the 1440 stage */
   @media screen and (min-width: 1200px) {
-    .apex-hero__stage {
-      /* 615px of product image plus 11px before the shop nav, at 1440 */
-      min-height: 43.47cqw;
-    }
-
+    /* Room under the 492px panel for the jars that hang below it (134px at 1440). Set on the
+       slides, not the stage: cqw on the stage itself would measure the screen, not the stage. */
     .apex-hero__slides {
       min-height: 34.17cqw;
+      margin-block-end: 9.3cqw;
     }
 
     .apex-hero__panel {

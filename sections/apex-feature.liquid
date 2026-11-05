@@ -155,14 +155,13 @@
       padding-block: 116px 0;
     }
 
-    .apex-feature__stage {
-      padding-block-end: 15.6cqw;
-    }
-
+    /* Room for the jars that hang below the panel. Set on the panel, not the stage: cqw on the
+       stage itself would measure the screen, not the stage. */
     .apex-feature__panel {
       display: flex;
       align-items: center;
       min-height: 32.01cqw;
+      margin-block-end: 15.6cqw;
     }
 
     .apex-feature__media {
