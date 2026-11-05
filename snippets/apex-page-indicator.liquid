@@ -102,17 +102,17 @@
 
   /* 50px in from the left edge of the screen (like the help button on the right), measured to
      the left edge of the widest name tag, so the dots stay put whichever tag is showing. 70% of
-     the screen tall and centred. Below 1600px wide the dots would sit over the content, so it's
-     hidden. */
+     the screen tall, with the bottom dot level with the bottom of the help button: 50px up, and
+     rising with it (--apex-help-lift) to stay clear of the footer. Below 1600px wide the dots
+     would sit over the content, so it's hidden. */
   @media screen and (min-width: 1600px) {
     .apex-page-indicator:not([hidden]) {
       position: fixed;
       z-index: var(--layer-sticky, 10);
-      inset-block-start: 50%;
+      inset-block-end: max(50px, var(--apex-help-lift, 0px));
       inset-inline-start: 50px;
       padding-inline-start: calc(var(--apex-indicator-tag-width, 0px) + 14px);
       display: block;
-      translate: 0 -50%;
     }
 
     html:has(.menu-drawer-container[open]) .apex-page-indicator {
