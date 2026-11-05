@@ -1,5 +1,5 @@
 {% doc %}
-  APEX page indicator (the Figma timeline on the left of the hero): a fixed sandstone line, 11px left of the content column, with
+  APEX page indicator (the Figma timeline on the left of the hero): a fixed sandstone line, 50px in from the left of the screen and 70% of its height, with
   a dot for each section on the page that has a name set ("Name in the page indicator"). The
   section you're scrolled to has an amber dot with its name in an amber tag; clicking a dot
   scrolls to that section. It only appears when the page has at least two named sections, and
@@ -47,6 +47,7 @@
           });
 
           this.hidden = false;
+          document.fonts?.ready.then(() => this.measure());
           let queued = false;
           const queue = () => {
             if (queued) return;
@@ -57,12 +58,26 @@
             });
           };
           document.addEventListener('scroll', queue, { capture: true, passive: true });
-          window.addEventListener('resize', queue);
+          window.addEventListener('resize', () => {
+            this.measured = false;
+            queue();
+          });
           this.update();
+        }
+
+        /* Room for the widest name tag left of the dots (0 while the indicator is hidden) */
+        measure() {
+          const widest = Math.max(
+            0,
+            ...[...this.querySelectorAll('.apex-page-indicator__label')].map((tag) => tag.offsetWidth)
+          );
+          if (widest) this.style.setProperty('--apex-indicator-tag-width', `${Math.ceil(widest)}px`);
+          this.measured = widest > 0;
         }
 
         /* The current section is the last one whose top has passed 40% of the screen height */
         update() {
+          if (!this.measured) this.measure();
           const line = window.innerHeight * 0.4;
           let current = 0;
           this.sections.forEach((section, i) => {
@@ -85,14 +100,17 @@
     display: none;
   }
 
-  /* Figma: the dots sit 11px left of the 1244px content column on a 374px line. Below 1440px
-     there isn't room for the name tags beside the content, so it's hidden. */
-  @media screen and (min-width: 1440px) {
+  /* 50px in from the left edge of the screen (like the help button on the right), measured to
+     the left edge of the widest name tag, so the dots stay put whichever tag is showing. 70% of
+     the screen tall and centred. Below 1600px wide the dots would sit over the content, so it's
+     hidden. */
+  @media screen and (min-width: 1600px) {
     .apex-page-indicator:not([hidden]) {
       position: fixed;
       z-index: var(--layer-sticky, 10);
       inset-block-start: 50%;
-      inset-inline-start: calc((100vw - var(--narrow-page-width)) / 2 - 11px);
+      inset-inline-start: 50px;
+      padding-inline-start: calc(var(--apex-indicator-tag-width, 0px) + 14px);
       display: block;
       translate: 0 -50%;
     }
@@ -107,7 +125,8 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    height: 374px;
+    height: 70vh;
+    height: 70svh;
     margin: 0;
     padding: 0;
   }
