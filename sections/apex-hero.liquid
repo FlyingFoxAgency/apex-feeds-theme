@@ -293,7 +293,8 @@
       min-height: calc(34.17cqw - var(--apex-space-24) - var(--apex-space-48));
       justify-content: center;
       padding-block: var(--apex-space-24) var(--apex-space-48);
-      padding-inline-start: 13.47cqw;
+      /* Lined up with the header's Home link (set by apex-home.js), else Figma's 194px */
+      padding-inline-start: var(--apex-hero-text-x, 13.47cqw);
       box-sizing: content-box;
     }
 
@@ -316,7 +317,7 @@
     .apex-hero__dots {
       position: absolute;
       inset-block-end: var(--apex-space-20);
-      inset-inline-start: 13.47cqw;
+      inset-inline-start: var(--apex-hero-text-x, 13.47cqw);
     }
   }
 

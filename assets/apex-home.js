@@ -35,12 +35,46 @@ class ApexHero extends HTMLElement {
       }
     });
 
+    // Line the slide text up with the first header menu link (Home)
+    this.align = this.align.bind(this);
+    window.addEventListener("resize", this.align);
+    document.fonts?.ready.then(this.align);
+    this.align();
+
     this.show(0);
     this.start();
   }
 
   disconnectedCallback() {
     this.stop();
+    window.removeEventListener("resize", this.align);
+  }
+
+  // Sets --apex-hero-text-x to where the first menu link's text starts, measured from the left
+  // of the hero stage. Without a desktop menu the CSS keeps the Figma position.
+  align() {
+    const title = document.querySelector(
+      "#header-component .header-menu .menu-list__link-title",
+    );
+    const text =
+      title &&
+      [...title.childNodes].find(
+        (node) => node.nodeType === 3 && node.textContent.trim(),
+      );
+    if (!text || !title.getClientRects().length) {
+      this.style.removeProperty("--apex-hero-text-x");
+      return;
+    }
+    const range = document.createRange();
+    const start = text.textContent.search(/\S/);
+    range.setStart(text, start);
+    range.setEnd(text, start + 1);
+    const x =
+      range.getBoundingClientRect().left - this.getBoundingClientRect().left;
+    this.style.setProperty(
+      "--apex-hero-text-x",
+      `${Math.max(0, Math.round(x))}px`,
+    );
   }
 
   show(index, fromUser = false) {
