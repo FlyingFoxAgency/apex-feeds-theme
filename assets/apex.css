@@ -273,6 +273,15 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
   justify-content: center;
 }
 
+/* <cart-icon> is inline by default, so its icon sat on the text baseline, a few px off the
+   search and account icons. As a flex box it centres like they do. */
+#header-component
+  .header-actions__cart-icon:not(.header-actions__cart-icon--text) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 #header-component :is(.search-action, header-actions) .svg-wrapper,
 #header-component :is(.search-action, header-actions) .svg-wrapper > svg,
 #header-component .account-button__icon {
