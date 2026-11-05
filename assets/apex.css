@@ -231,6 +231,18 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
   transform: scale(1.06);
 }
 
+/* Header icons (search, account, cart) grow the same way, keeping their colour */
+#header-component :is(.search-action, header-actions) .svg-wrapper,
+#header-component .account-button__icon {
+  transition: transform 0.2s var(--ease-out-cubic, ease-out);
+}
+
+#header-component
+  :is(.search-action button, .header-actions__action):is(:hover, :focus-visible)
+  :is(.svg-wrapper, .account-button__icon) {
+  transform: scale(1.06);
+}
+
 /* Footer lists are left-aligned, so grow from the left edge */
 .footer-content:has(.apex-dedication) .menu__item a {
   transform-origin: left center;
@@ -240,7 +252,9 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
   #header-component .menu-list__link-title,
   .apex-header-links__link,
   .footer-content:has(.apex-dedication) .menu__item a,
-  .shopify-section-group-footer-group .utilities a {
+  .shopify-section-group-footer-group .utilities a,
+  #header-component :is(.search-action, header-actions) .svg-wrapper,
+  #header-component .account-button__icon {
     transition: none;
   }
 }
