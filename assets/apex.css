@@ -73,9 +73,11 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
   letter-spacing: 0.5px;
 }
 
+/* Full-width flex so the icon and text stay centred in the slide (inline-flex sat at its start) */
 .apex-announcement--icon {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--apex-space-8);
 }
 
