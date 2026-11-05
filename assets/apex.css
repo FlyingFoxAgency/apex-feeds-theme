@@ -491,10 +491,8 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
   position: fixed;
   z-index: var(--layer-sticky);
   inset-block-end: max(var(--apex-help-rest), var(--apex-help-lift, 0px));
-  inset-inline-end: max(
-    var(--page-margin, 16px),
-    calc((100vw - var(--narrow-page-width)) / 2)
-  );
+  /* Ell: 50px in from the right edge of the screen, off the content grid */
+  inset-inline-end: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
