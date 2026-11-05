@@ -180,7 +180,8 @@
     .apex-shop-nav {
       /* Spread out, the links stay clear of the help button (50px in, 53px wide) plus 24px */
       --apex-shop-nav-clear: 127px;
-      --apex-shop-nav-max: calc(100vw - 2 * var(--apex-shop-nav-clear));
+      /* Ell: 10% narrower than the clear space, so it stays off the page indicator line */
+      --apex-shop-nav-max: calc((100vw - 2 * var(--apex-shop-nav-clear)) * 0.9);
 
       display: flex;
       justify-content: center;
@@ -189,28 +190,31 @@
       padding: 36px 0 0;
     }
 
+    /* On load: a barely-there glass bar with 60px corners */
     .apex-shop-nav__bar {
       width: var(--apex-shop-nav-max);
-      background-color: transparent;
+      border-radius: 60px;
+      background-color: rgb(100 105 53 / 0.05);
+      -webkit-backdrop-filter: blur(var(--apex-glass-blur));
+      backdrop-filter: blur(var(--apex-glass-blur));
       transition:
         width 0.5s var(--ease-out-cubic, ease-out),
+        border-radius 0.5s var(--ease-out-cubic, ease-out),
         background-color 0.4s ease;
     }
 
+    /* Links close up to 12px apart before the bar scrolls, so all of them fit at 1440 */
     .apex-shop-nav__list {
-      padding-inline: 0;
-      transition: padding 0.5s var(--ease-out-cubic, ease-out);
+      gap: var(--apex-space-12);
+      padding-inline: 40px;
     }
 
     /* Scrolled: Figma's bar, drawn in to fit the links (48px apart, 52px in from the ends).
        On narrower screens it stops at the clear space and the links close up. */
     .apex-shop-nav[data-condensed] .apex-shop-nav__bar {
       width: min(var(--apex-shop-nav-max), var(--apex-shop-nav-fit, 100vw));
+      border-radius: var(--apex-radius-lg);
       background-color: rgb(100 105 53 / 0.2);
-    }
-
-    .apex-shop-nav[data-condensed] .apex-shop-nav__list {
-      padding-inline: 52px;
     }
   }
 
@@ -230,7 +234,6 @@
 
   @media (prefers-reduced-motion: reduce) {
     .apex-shop-nav__bar,
-    .apex-shop-nav__list,
     .apex-shop-nav__link > span {
       transition: none;
     }
