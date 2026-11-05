@@ -96,7 +96,7 @@
                 | image_tag:
                   loading: loading,
                   fetchpriority: priority,
-                  sizes: '(min-width: 1200px) 70vw, 100vw',
+                  sizes: '(min-width: 1200px) 76vw, 100vw',
                   widths: '600, 900, 1200, 1600, 2000',
                   alt: block.settings.image.alt
               }}
@@ -183,6 +183,9 @@
     max-width: none;
     height: 100%;
     translate: -50% 0;
+    /* Trim a hairline off each edge: resized PNGs can pick up a light fringe there. The pattern's
+       edges are the panel colour, so nothing visible is lost. */
+    clip-path: inset(2px);
     pointer-events: none;
   }
 
@@ -299,12 +302,14 @@
       max-width: min(383px, 26.6cqw);
     }
 
+    /* The whole image, including its clear margin, as Figma places it before cropping
+       (1083 x 615 at x 462): the jars hang just below the panel */
     .apex-hero__media {
       position: absolute;
       z-index: 1;
       inset-block-start: -0.07cqw;
-      inset-inline-start: 38.06cqw;
-      width: 69.24cqw;
+      inset-inline-start: 32.12cqw;
+      width: 75.18cqw;
     }
 
     .apex-hero__dots {
@@ -402,7 +407,7 @@
           "type": "image_picker",
           "id": "image",
           "label": "Product image",
-          "info": "Transparent PNG, about 2000 x 1234px (Figma \"Group-Mockup-Labels-Basic 1\")."
+          "info": "Transparent PNG with its clear margin left in, about 1482 x 842px or larger (the uncropped Figma image \"Group-Mockup-Labels-Basic 1\")."
         },
         {
           "type": "text",
