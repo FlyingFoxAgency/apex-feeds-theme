@@ -27,8 +27,11 @@
     {{ block.shopify_attributes }}
     aria-hidden="{% if block_index == 0 %}false{% else %}true{% endif %}"
   >
-    <p class="announcement-bar__text">
-      {{ block.settings.text }}
+    <p class="announcement-bar__text{% if block_settings.apex_icon == 'box' %} apex-announcement--icon{% endif %}">
+      {%- if block_settings.apex_icon == 'box' -%}
+        <span class="svg-wrapper apex-announcement__icon">{{ 'apex-icon-box.svg' | inline_asset_content }}</span>
+      {%- endif -%}
+      <span>{{ block.settings.text }}</span>
     </p>
 
     {% if block_settings.link != blank %}
@@ -59,6 +62,22 @@
       "type": "url",
       "id": "link",
       "label": "t:settings.link"
+    },
+    {
+      "type": "select",
+      "id": "apex_icon",
+      "label": "Icon",
+      "options": [
+        {
+          "value": "none",
+          "label": "None"
+        },
+        {
+          "value": "box",
+          "label": "Parcel"
+        }
+      ],
+      "default": "none"
     },
     {
       "type": "header",

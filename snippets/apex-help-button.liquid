@@ -1,0 +1,44 @@
+{% doc %}
+  Floating help button (Figma "Help floating button"): a 53px burrow circle with the
+  message-question icon, fixed to the bottom right of the page content.
+  It never sits lower than 30px above the top edge of the footer (the burrow section with the
+  sign-up and menu links): near the end of the page it rides up with that edge, so it never
+  covers the footer.
+  Turned on and linked from Theme settings > APEX Feeds.
+
+  @example
+  {% render 'apex-help-button' %}
+{% enddoc %}
+{%- if settings.apex_show_help_button -%}
+  {%- assign help_link = settings.apex_help_link | default: '/pages/help-centre' -%}
+  <a class="apex-help-button" href="{{ help_link }}">
+    <span class="svg-wrapper">{{ 'apex-icon-help.svg' | inline_asset_content }}</span>
+    <span class="visually-hidden">Help Centre</span>
+  </a>
+  <script>
+    (() => {
+      const button = document.querySelector('.apex-help-button');
+      const line = (
+        document.querySelector('.shopify-section-group-footer-group .footer-content') ||
+        document.querySelector('[data-testid="footer-utilities"]')
+      )?.closest('.shopify-section');
+      if (!button || !line) return;
+      const clearance = 30;
+      let queued = false;
+      const update = () => {
+        queued = false;
+        const lift = window.innerHeight - line.getBoundingClientRect().top + clearance;
+        button.style.setProperty('--apex-help-lift', `${Math.max(0, Math.round(lift))}px`);
+      };
+      const queue = () => {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(update);
+      };
+      document.addEventListener('scroll', queue, { capture: true, passive: true });
+      window.addEventListener('resize', queue);
+      new ResizeObserver(queue).observe(document.body);
+      update();
+    })();
+  </script>
+{%- endif -%}

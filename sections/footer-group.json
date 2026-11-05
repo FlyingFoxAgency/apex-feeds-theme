@@ -14,8 +14,9 @@
     "footer": {
       "type": "footer",
       "blocks": {
-        "group_wErUQf": {
+        "apex_signup": {
           "type": "group",
+          "name": "Sign up",
           "settings": {
             "content_direction": "column",
             "vertical_on_mobile": true,
@@ -23,13 +24,13 @@
             "vertical_alignment": "center",
             "align_baseline": false,
             "horizontal_alignment_flex_direction_column": "flex-start",
-            "vertical_alignment_flex_direction_column": "center",
-            "gap": 12,
+            "vertical_alignment_flex_direction_column": "flex-start",
+            "gap": 0,
             "width": "fill",
             "custom_width": 100,
             "width_mobile": "fill",
             "custom_width_mobile": 100,
-            "height": "fit",
+            "height": "fill",
             "custom_height": 100,
             "background_media": "none",
             "video_position": "cover",
@@ -51,20 +52,20 @@
             "padding-inline-end": 0
           },
           "blocks": {
-            "text_pF6rVi": {
+            "apex_signup_heading": {
               "type": "text",
               "name": "t:names.heading",
               "settings": {
-                "text": "<h2>Join our email list</h2>",
+                "text": "<h2>Your pets, our passion</h2>",
                 "width": "100%",
-                "max_width": "normal",
+                "max_width": "none",
                 "alignment": "left",
-                "type_preset": "h3",
-                "font": "var(--font-body--family)",
+                "type_preset": "h2",
+                "font": "var(--font-heading--family)",
                 "font_size": "",
                 "line_height": "normal",
                 "letter_spacing": "normal",
-                "case": "none",
+                "case": "uppercase",
                 "wrap": "pretty",
                 "background": false,
                 "background_color": "#00000026",
@@ -76,15 +77,15 @@
               },
               "blocks": {}
             },
-            "text_HafH7P": {
+            "apex_signup_text": {
               "type": "text",
               "name": "t:names.text",
               "settings": {
-                "text": "<p>Get exclusive deals and early access to new products.</p>",
+                "text": "<p>Signup for the latest promotions</p>",
                 "width": "100%",
-                "max_width": "normal",
+                "max_width": "none",
                 "alignment": "left",
-                "type_preset": "rte",
+                "type_preset": "paragraph",
                 "font": "var(--font-body--family)",
                 "font_size": "",
                 "line_height": "normal",
@@ -101,7 +102,7 @@
               },
               "blocks": {}
             },
-            "email-signup_HafH7P": {
+            "apex_signup_form": {
               "type": "email-signup",
               "name": "t:names.email_signup",
               "settings": {
@@ -109,20 +110,21 @@
                 "custom_width": 100,
                 "heading": "",
                 "heading_preset": "h3",
-                "border_style": "all",
+                "border_style": "none",
                 "input_style": "custom",
-                "border_width": 1,
-                "border_radius": 100,
-                "input_background_color": "{{ settings.color_palette.color1 }}",
+                "border_width": 0,
+                "border_radius": 10,
+                "input_background_color": "",
+                "input_text_color": "",
                 "input_border_color": "",
                 "input_type_preset": "paragraph",
-                "style_class": "button-secondary",
-                "custom_button_background": "{{ settings.color_palette.foreground }}",
-                "custom_button_text": "{{ settings.color_palette.background }}",
-                "custom_button_border": "{{ settings.color_palette.background }}",
-                "display_type": "text",
+                "style_class": "button-custom",
+                "custom_button_background": "{{ settings.color_palette.color5 }}",
+                "custom_button_text": "{{ settings.color_palette.foreground }}",
+                "custom_button_border": "{{ settings.color_palette.color5 }}",
+                "display_type": "arrow",
                 "label": "Sign up",
-                "integrated_button": false,
+                "integrated_button": true,
                 "button_type_preset": "paragraph",
                 "padding-block-start": 0,
                 "padding-block-end": 0,
@@ -130,61 +132,101 @@
                 "padding-inline-end": 0
               },
               "blocks": {}
+            },
+            "apex_social": {
+              "type": "social-links",
+              "settings": {
+                "facebook_url": "https://www.facebook.com",
+                "instagram_url": "https://www.instagram.com",
+                "youtube_url": "https://www.youtube.com"
+              },
+              "blocks": {}
             }
           },
           "block_order": [
-            "text_pF6rVi",
-            "text_HafH7P",
-            "email-signup_HafH7P"
+            "apex_signup_heading",
+            "apex_signup_text",
+            "apex_signup_form",
+            "apex_social"
           ]
         },
-        "menu_footer": {
+        "apex_menu_shop": {
           "type": "menu",
           "settings": {
-            "menu": "footer",
-            "heading": "",
-            "menu_spacing": 12,
+            "menu": "shop",
+            "heading": "Shop",
+            "menu_spacing": 0,
             "show_as_accordion": false,
             "accordion_icon": "plus",
             "accordion_dividers": false,
-            "heading_preset": "paragraph",
+            "heading_preset": "h4",
             "link_preset": "paragraph",
             "padding-block-start": 0,
             "padding-block-end": 0,
             "padding-inline-start": 0,
             "padding-inline-end": 0
-          }
+          },
+          "blocks": {}
         },
-        "menu_main": {
+        "apex_menu_information": {
           "type": "menu",
           "settings": {
-            "menu": "main-menu",
-            "heading": "",
-            "menu_spacing": 12,
+            "menu": "information",
+            "heading": "Information",
+            "menu_spacing": 0,
             "show_as_accordion": false,
             "accordion_icon": "plus",
             "accordion_dividers": false,
-            "heading_preset": "paragraph",
+            "heading_preset": "h4",
             "link_preset": "paragraph",
             "padding-block-start": 0,
             "padding-block-end": 0,
             "padding-inline-start": 0,
             "padding-inline-end": 0
-          }
+          },
+          "blocks": {}
+        },
+        "apex_menu_faqs": {
+          "type": "menu",
+          "settings": {
+            "menu": "faqs",
+            "heading": "FAQs",
+            "menu_spacing": 0,
+            "show_as_accordion": false,
+            "accordion_icon": "plus",
+            "accordion_dividers": false,
+            "heading_preset": "h4",
+            "link_preset": "paragraph",
+            "padding-block-start": 0,
+            "padding-block-end": 0,
+            "padding-inline-start": 0,
+            "padding-inline-end": 0
+          },
+          "blocks": {}
+        },
+        "apex_dedication": {
+          "type": "apex-dedication",
+          "settings": {
+            "link": "",
+            "label": "Dedication",
+            "color": "#EADDC6"
+          },
+          "blocks": {}
         }
       },
       "block_order": [
-        "group_wErUQf",
-        "menu_footer",
-        "menu_main"
+        "apex_signup",
+        "apex_menu_shop",
+        "apex_menu_information",
+        "apex_menu_faqs",
+        "apex_dedication"
       ],
-      "name": "t:names.footer",
       "settings": {
         "section_width": "page-width",
-        "gap": 40,
-        "background_color": "{{ settings.color_palette.color1 }}",
-        "padding-block-start": 36,
-        "padding-block-end": 36
+        "gap": 0,
+        "background_color": "{{ settings.color_palette.foreground }}",
+        "padding-block-start": 86,
+        "padding-block-end": 86
       }
     },
     "utilities": {
@@ -194,40 +236,67 @@
           "type": "footer-copyright",
           "settings": {
             "show_powered_by": true,
+            "text_color": "",
             "font_size": "0.75rem",
             "case": "none"
-          }
+          },
+          "blocks": {}
         },
-        "policy_list": {
-          "type": "footer-policy-list",
+        "apex_payment": {
+          "type": "apex-payment-icons",
           "settings": {
-            "font_size": "0.75rem",
-            "case": "none"
-          }
+            "horizontal_alignment": "center",
+            "gap": 10,
+            "show_afterpay": true,
+            "show_visa": true,
+            "show_amex": true,
+            "show_mastercard": true,
+            "show_stripe": true,
+            "show_paypal": true,
+            "show_googlepay": true,
+            "show_applepay": true
+          },
+          "blocks": {}
         },
-        "social_icons": {
-          "type": "social-links",
+        "apex_credit": {
+          "type": "text",
+          "name": "t:names.text",
           "settings": {
-            "facebook_url": "https://www.facebook.com",
-            "instagram_url": "https://www.instagram.com",
-            "youtube_url": "https://www.youtube.com",
-            "tiktok_url": "https://www.tiktok.com",
-            "twitter_url": "https://www.twitter.com"
-          }
+            "text": "<p>Website by <a href=\"https://flyingfox.agency\" title=\"Flying Fox Brand Agency\">FLYING FOX BRAND AGENCY</a></p>",
+            "width": "fit-content",
+            "max_width": "none",
+            "alignment": "right",
+            "type_preset": "paragraph",
+            "font": "var(--font-body--family)",
+            "font_size": "",
+            "line_height": "normal",
+            "letter_spacing": "normal",
+            "case": "none",
+            "wrap": "pretty",
+            "background": false,
+            "background_color": "#00000026",
+            "corner_radius": 0,
+            "padding-block-start": 0,
+            "padding-block-end": 0,
+            "padding-inline-start": 0,
+            "padding-inline-end": 0
+          },
+          "blocks": {}
         }
       },
       "block_order": [
         "copyright",
-        "policy_list",
-        "social_icons"
+        "apex_payment",
+        "apex_credit"
       ],
       "settings": {
         "section_width": "page-width",
         "gap": 24,
-        "background_color": "{{ settings.color_palette.color1 }}",
-        "divider_thickness": 1,
-        "padding-block-start": 12,
-        "padding-block-end": 16
+        "background_color": "{{ settings.color_palette.color9 }}",
+        "divider_thickness": 0,
+        "divider_color": "",
+        "padding-block-start": 24,
+        "padding-block-end": 24
       }
     }
   },

@@ -1,0 +1,610 @@
+/*
+ * APEX Feeds layout layer: page panel, announcement bar, header, footer and help button.
+ * Values come from the Figma file "AI - APEX FEEDS" (frames on the "APEX Feeds" page).
+ * Brand tokens (--apex-*) are defined in snippets/apex-brand.liquid.
+ */
+
+/* ==========================================================================
+   Page panel
+   A dark announcement bar, then a stone-textured panel with 30px rounded top
+   corners, then the dark footer.
+   ========================================================================== */
+
+html,
+body {
+  background-color: var(--apex-burrow);
+}
+
+.page-wrapper {
+  background-color: var(--apex-page-texture-color);
+  background-image: var(--apex-page-texture);
+  background-repeat: repeat-y;
+  background-position: center top;
+  background-size: max(100%, 1440px) auto;
+  /* .page-wrapper is the scroll container from 990px up, so the texture has to scroll with it */
+  background-attachment: local;
+  /* Section backgrounds use a negative z-index. Without a stacking context here they would paint
+     underneath this texture (the announcement bar showed white). */
+  isolation: isolate;
+}
+
+/* Sections without their own background colour sit on the texture */
+main .shopify-section .section-background:not([class*="color-custom-"]) {
+  background-color: transparent;
+}
+
+/* ==========================================================================
+   Announcement bar (Figma Announcement: 85px burrow bar, Body/Capital text)
+   ========================================================================== */
+
+.shopify-section-group-header-group:has(> .announcement-bar) {
+  position: relative;
+}
+
+/* Burrow fillets that round the top corners of the textured panel */
+.shopify-section-group-header-group:has(> .announcement-bar)::after {
+  --r: var(--apex-panel-radius);
+
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 100%;
+  height: var(--r);
+  pointer-events: none;
+  z-index: 1;
+  background:
+    radial-gradient(
+        circle at 100% 100%,
+        transparent calc(var(--r) - 0.5px),
+        var(--apex-burrow) var(--r)
+      )
+      left top / var(--r) var(--r) no-repeat,
+    radial-gradient(
+        circle at 0 100%,
+        transparent calc(var(--r) - 0.5px),
+        var(--apex-burrow) var(--r)
+      )
+      right top / var(--r) var(--r) no-repeat;
+}
+
+.announcement-bar .announcement-bar__text {
+  font-size: 0.9375rem;
+  line-height: 1.5rem;
+  letter-spacing: 0.5px;
+}
+
+.apex-announcement--icon {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--apex-space-8);
+}
+
+.apex-announcement__icon,
+.apex-announcement__icon > svg {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+@media screen and (max-width: 749px) {
+  :root {
+    --apex-panel-radius: 20px;
+  }
+
+  .announcement-bar .announcement-bar__text {
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+  }
+
+  .apex-announcement__icon,
+  .apex-announcement__icon > svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* ==========================================================================
+   Header (Figma Header: menu left, logo centre, links and icons right)
+   ========================================================================== */
+
+/* At rest the header is see-through so the texture shows. Once it sticks, it gets the texture
+   colour and a soft shadow so content doesn't show through. */
+#header-component .header__underlay {
+  --color-background-top-row: transparent;
+}
+
+#header-component[data-sticky-state="active"] .header__underlay {
+  --color-background-top-row: var(--apex-page-texture-color);
+}
+
+#header-component[data-sticky-state="active"] .header__underlay-closed {
+  background-image: var(--apex-page-texture);
+  background-size: max(100%, 1440px) auto;
+  background-position: center top;
+  box-shadow:
+    0 1px 0 rgb(64 68 61 / 0.08),
+    0 8px 24px rgb(64 68 61 / 0.06);
+}
+
+#header-component .header__row--top .header__columns {
+  padding-block: var(--apex-space-16);
+}
+
+@media screen and (min-width: 750px) {
+  #header-component .header__row--top .header__columns {
+    padding-block: var(--apex-space-40) var(--apex-space-24);
+  }
+}
+
+/* Logo: 249 x 90 on desktop */
+.apex-logo {
+  --apex-logo-height: 90px;
+
+  display: block;
+  line-height: 0;
+}
+
+.apex-logo svg {
+  display: block;
+  width: auto;
+  height: var(--apex-logo-height);
+}
+
+/* When the menu sits beside the logo, lift the logo so the APEX FEEDS wordmark (the bottom
+   28px of the 90px logo, centred 31px below the logo's centre) lines up with the menu links.
+   It scales with the logo, so the alignment holds at every logo size. */
+#header-component[data-menu-style="menu"] .apex-logo svg {
+  translate: 0 calc(var(--apex-logo-height) * -31 / 90);
+}
+
+@media screen and (max-width: 989px) {
+  .apex-logo {
+    --apex-logo-height: 64px;
+  }
+}
+
+@media screen and (max-width: 749px) {
+  .apex-logo {
+    --apex-logo-height: 44px;
+  }
+}
+
+/* Menu: Figma Button style, 15/24 bold, 0.5px tracking, upper case, 24px apart */
+#header-component .header-menu .menu-list {
+  --menu-horizontal-gap: var(--apex-space-24);
+}
+
+#header-component .header-menu .menu-list__link {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.5rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+#header-component .header-menu .menu-list__link-title {
+  padding-inline: calc(var(--apex-space-24) / 2);
+}
+
+/* Secondary links (Wholesale, Stockists) */
+.apex-header-links__list {
+  display: flex;
+  align-items: center;
+  gap: var(--apex-space-24);
+  margin: 0;
+  padding: 0;
+}
+
+.apex-header-links__link {
+  font-family: var(--font-body--family);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.5rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-foreground);
+  text-decoration: none;
+}
+
+/* Every link is burrow and keeps its colour on hover; amber marks the page you're on.
+   Hovering grows the link very slightly instead (Ell, 2026-11-05). This also stops Horizon
+   dimming the other menu links on hover. */
+#header-component .menu-list .menu-list__list-item .menu-list__link {
+  color: var(--menu-top-level-font-color);
+}
+
+#header-component .menu-list__link-title,
+.apex-header-links__link,
+.footer-content:has(.apex-dedication) .menu__item a,
+.shopify-section-group-footer-group .utilities a {
+  display: inline-block;
+  transition: transform 0.2s var(--ease-out-cubic, ease-out);
+}
+
+#header-component
+  .menu-list__list-item:is(:hover, :focus-within)
+  .menu-list__link-title,
+.apex-header-links__link:is(:hover, :focus-visible),
+.footer-content:has(.apex-dedication) .menu__item a:is(:hover, :focus-visible),
+.shopify-section-group-footer-group .utilities a:is(:hover, :focus-visible) {
+  transform: scale(1.06);
+}
+
+/* Header icons (search, account, cart) grow the same way, keeping their colour */
+#header-component :is(.search-action, header-actions) .svg-wrapper,
+#header-component .account-button__icon {
+  transition: transform 0.2s var(--ease-out-cubic, ease-out);
+}
+
+#header-component
+  :is(.search-action button, .header-actions__action):is(:hover, :focus-visible)
+  :is(.svg-wrapper, .account-button__icon) {
+  transform: scale(1.06);
+}
+
+/* Footer icons grow the same way: social icons, the LH dedication mark and the round email
+   arrow. These use the scale property, so they don't clash with transforms used to place them. */
+.shopify-section-group-footer-group .social-icons__icon,
+.apex-dedication .svg-wrapper,
+.footer-content:has(.apex-dedication) .email-signup__button--arrow {
+  transition: scale 0.2s var(--ease-out-cubic, ease-out);
+}
+
+.shopify-section-group-footer-group
+  .social-icons__icon-wrapper
+  a:is(:hover, :focus-visible)
+  .social-icons__icon,
+.apex-dedication:is(:hover, :focus-visible) .svg-wrapper,
+.footer-content:has(.apex-dedication)
+  .email-signup__button--arrow:is(:hover, :focus-visible) {
+  scale: 1.06;
+}
+
+/* The arrow button keeps its colours on hover */
+.footer-content:has(.apex-dedication) .email-signup__button--arrow:hover {
+  background-color: var(--apex-sandstone);
+  color: var(--apex-burrow);
+}
+
+/* Footer lists are left-aligned, so grow from the left edge */
+.footer-content:has(.apex-dedication) .menu__item a {
+  transform-origin: left center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #header-component .menu-list__link-title,
+  .apex-header-links__link,
+  .footer-content:has(.apex-dedication) .menu__item a,
+  .shopify-section-group-footer-group .utilities a,
+  #header-component :is(.search-action, header-actions) .svg-wrapper,
+  #header-component .account-button__icon,
+  .shopify-section-group-footer-group .social-icons__icon,
+  .apex-dedication .svg-wrapper,
+  .footer-content:has(.apex-dedication) .email-signup__button--arrow {
+    transition: none;
+  }
+}
+
+/* More specific than the colour rule above, so the current page stays amber */
+#header-component
+  .menu-list:not(.x)
+  .menu-list__list-item
+  .menu-list__link.menu-list__link--active,
+#header-component .apex-header-links__link[aria-current="page"],
+#header-component .menu-drawer__menu-item[aria-current="page"] {
+  color: var(--apex-amber);
+}
+
+@media screen and (max-width: 749px) {
+  .apex-header-links {
+    display: none;
+  }
+}
+
+#header-component[data-menu-style="drawer"] .apex-header-links {
+  display: none;
+}
+
+/* Icons: 24px, 32px apart. Buttons stay 44px wide for touch, so the gaps allow for their padding. */
+@media screen and (min-width: 750px) {
+  #header-component .header__column--right {
+    gap: calc(var(--apex-space-32) - 10px);
+  }
+
+  #header-component .header__column--right header-actions {
+    gap: calc(var(--apex-space-32) - 20px);
+    margin-inline: 0 -10px;
+  }
+}
+
+#header-component .header-actions__action {
+  min-width: 44px;
+  justify-content: center;
+}
+
+/* <cart-icon> is inline by default, so its icon sat on the text baseline, a few px off the
+   search and account icons. As a flex box it centres like they do. */
+#header-component
+  .header-actions__cart-icon:not(.header-actions__cart-icon--text) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#header-component :is(.search-action, header-actions) .svg-wrapper,
+#header-component :is(.search-action, header-actions) .svg-wrapper > svg,
+#header-component .account-button__icon {
+  width: 24px;
+  height: 24px;
+}
+
+/* ==========================================================================
+   Footer (Figma Footer Top and Footer Bottom)
+   ========================================================================== */
+
+/* Sandstone text on burrow and onyx, as in Figma */
+.shopify-section-group-footer-group [class*="color-custom-"],
+.shopify-section-group-footer-group [class*="color-custom-"] .text-block {
+  --color: var(--apex-sandstone);
+  --color-rgb: 234 221 198;
+  --color-foreground: var(--apex-sandstone);
+  --color-foreground-rgb: 234 221 198;
+  --color-foreground-muted: var(--apex-sandstone);
+  --color-utilities: var(--apex-sandstone);
+}
+
+.footer-content:has(.apex-dedication) {
+  position: relative;
+  column-gap: 0;
+  row-gap: var(--apex-space-48);
+}
+
+.footer-content:has(.apex-dedication) .menu__heading,
+.footer-content:has(.apex-dedication) .menu__heading * {
+  margin: 0;
+  line-height: 1;
+}
+
+.footer-content:has(.apex-dedication) .menu__details .details-content {
+  margin-block-start: 13px;
+}
+
+.footer-content:has(.apex-dedication) .menu__item a {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+/* Sign-up column: heading 64px, text, email field, social icons at the bottom */
+.footer-content:has(.apex-dedication) > .group-block {
+  align-self: stretch;
+}
+
+.footer-content:has(.apex-dedication) > .group-block > .group-block-content {
+  height: 100%;
+}
+
+.footer-content:has(.apex-dedication) > :first-child h2 {
+  margin: 0;
+  line-height: 53px;
+}
+
+.footer-content:has(.apex-dedication) .email-signup-block {
+  margin-block-start: 31px;
+  max-width: 297px;
+}
+
+.footer-content:has(.apex-dedication) .social-icons__wrapper {
+  margin-block-start: auto;
+  padding-block-start: var(--apex-space-48);
+  gap: 23px;
+}
+
+/* Email field: sandstone at 10%, 10px radius, 48px tall, round sandstone arrow button */
+.footer-content:has(.apex-dedication) .email-signup__input-group {
+  position: relative;
+  border: 0;
+  border-radius: var(--apex-radius-md);
+  background-color: rgb(234 221 198 / 0.1);
+}
+
+.footer-content:has(.apex-dedication) .email-signup__input {
+  height: 48px;
+  padding-inline: var(--apex-space-12) 56px;
+  border: 0;
+  border-radius: var(--apex-radius-md);
+  background: transparent;
+  color: var(--apex-sandstone);
+  font-family: var(--font-body--family);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.5rem;
+}
+
+.footer-content:has(.apex-dedication) .email-signup__input::placeholder {
+  color: var(--apex-dried-moss);
+  opacity: 1;
+  text-transform: uppercase;
+}
+
+.footer-content:has(.apex-dedication) .email-signup__button--arrow {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-end: 15px;
+  translate: 0 -50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 37px;
+  height: 37px;
+  /* Horizon adds an 8px margin to integrated buttons, which pushed the circle off centre */
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--apex-radius-pill);
+  background-color: var(--apex-sandstone);
+  color: var(--apex-burrow);
+}
+
+.footer-content:has(.apex-dedication) .email-signup__button-icon,
+.footer-content:has(.apex-dedication) .email-signup__button-icon > svg {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+}
+
+/* Social icons: 24px, 23px apart */
+.footer-content:has(.apex-dedication) .social-icons__icon,
+.footer-content:has(.apex-dedication) .social-icons__icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* LH dedication mark: bottom right of the footer */
+.apex-dedication {
+  display: inline-flex;
+  color: var(--apex-dedication-color, var(--apex-sandstone));
+  line-height: 0;
+}
+
+.apex-dedication .svg-wrapper,
+.apex-dedication svg {
+  width: 29px;
+  height: 20px;
+}
+
+@media screen and (min-width: 990px) {
+  /* Columns from Figma at 1440: sign-up 369, then a divider, Shop, Information, FAQs */
+  .footer-content:has(.apex-dedication) {
+    grid-template-columns: minmax(0, 369fr) minmax(0, 374fr) minmax(0, 310fr) minmax(
+        0,
+        174fr
+      );
+    align-items: stretch;
+  }
+
+  .footer-content:has(.apex-dedication) > * {
+    padding-block-start: 18px;
+  }
+
+  /* The divider sits between the sign-up column and Shop, 84px before the Shop links */
+  .footer-content:has(.apex-dedication) > :nth-child(2) {
+    padding-inline-start: 84px;
+    padding-block-start: 18px;
+    border-inline-start: 1px solid rgb(234 221 198 / 0.18);
+  }
+
+  .footer-content:has(.apex-dedication) > :first-child {
+    padding-inline-end: var(--apex-space-24);
+  }
+
+  /* Bottom aligned with the social icons: same bottom padding, plus 2px to centre the 20px mark on the 24px icons */
+  .footer-content:has(.apex-dedication) > :last-child:has(.apex-dedication),
+  .footer-content:has(.apex-dedication) > .apex-dedication {
+    position: absolute;
+    inset-inline-end: 0;
+    inset-block-end: calc(var(--padding-block-end, 0px) + 2px);
+    padding: 0;
+  }
+}
+
+@media screen and (max-width: 989px) {
+  .footer-content:has(.apex-dedication) > :first-child h2 {
+    line-height: 1;
+  }
+
+  .footer-content:has(.apex-dedication) .apex-dedication {
+    justify-self: start;
+  }
+}
+
+/* Footer bottom: onyx bar, Body/Small sandstone text, payment icons centred */
+.shopify-section-group-footer-group .utilities {
+  color: var(--apex-sandstone);
+}
+
+.shopify-section-group-footer-group .utilities,
+.shopify-section-group-footer-group .utilities p,
+.shopify-section-group-footer-group .utilities a {
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  color: var(--apex-sandstone);
+}
+
+.shopify-section-group-footer-group .utilities a {
+  text-decoration: none;
+}
+
+.shopify-section-group-footer-group .footer-utilities__text > a:first-child {
+  text-transform: uppercase;
+}
+
+.shopify-section-group-footer-group .utilities .text-block p {
+  margin: 0;
+}
+
+/* ==========================================================================
+   Floating help button (Figma Help floating button: 53px burrow circle)
+   ========================================================================== */
+
+.apex-help-button {
+  /* --apex-help-lift is set by the help button script: how far the button must sit from the
+     viewport bottom to stay 30px above the top edge of the footer */
+  /* Ell: 50px off the bottom of the screen on every screen size */
+  --apex-help-rest: 50px;
+
+  position: fixed;
+  z-index: var(--layer-sticky);
+  inset-block-end: max(var(--apex-help-rest), var(--apex-help-lift, 0px));
+  /* Ell: 50px in from the right edge of the screen, off the content grid */
+  inset-inline-end: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 53px;
+  height: 53px;
+  border-radius: var(--apex-radius-pill);
+  background-color: var(--apex-burrow);
+  color: #fff;
+  box-shadow: 0 6px 20px rgb(36 38 35 / 0.18);
+  transition:
+    background-color var(--animation-speed) var(--animation-easing),
+    transform var(--animation-speed) var(--animation-easing);
+}
+
+/* The mobile menu drawer opens inside the page, so keep the button out of its way */
+html:has(.menu-drawer-container[open]) .apex-help-button {
+  display: none;
+}
+
+.apex-help-button:hover {
+  background-color: var(--apex-olive);
+  transform: translateY(-2px);
+}
+
+.apex-help-button .svg-wrapper,
+.apex-help-button svg {
+  width: 34px;
+  height: 34px;
+}
+
+@media screen and (max-width: 749px) {
+  .apex-help-button {
+    width: 48px;
+    height: 48px;
+  }
+
+  .apex-help-button .svg-wrapper,
+  .apex-help-button svg {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .apex-help-button,
+  .apex-help-button:hover {
+    transition: none;
+    transform: none;
+  }
+}
