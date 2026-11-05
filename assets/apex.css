@@ -138,6 +138,8 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
 
 /* Logo: 249 x 90 on desktop */
 .apex-logo {
+  --apex-logo-height: 90px;
+
   display: block;
   line-height: 0;
 }
@@ -145,18 +147,25 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
 .apex-logo svg {
   display: block;
   width: auto;
-  height: 90px;
+  height: var(--apex-logo-height);
+}
+
+/* When the menu sits beside the logo, lift the logo so the APEX FEEDS wordmark (the bottom
+   28px of the 90px logo, centred 31px below the logo's centre) lines up with the menu links.
+   It scales with the logo, so the alignment holds at every logo size. */
+#header-component[data-menu-style="menu"] .apex-logo svg {
+  translate: 0 calc(var(--apex-logo-height) * -31 / 90);
 }
 
 @media screen and (max-width: 989px) {
-  .apex-logo svg {
-    height: 64px;
+  .apex-logo {
+    --apex-logo-height: 64px;
   }
 }
 
 @media screen and (max-width: 749px) {
-  .apex-logo svg {
-    height: 44px;
+  .apex-logo {
+    --apex-logo-height: 44px;
   }
 }
 
