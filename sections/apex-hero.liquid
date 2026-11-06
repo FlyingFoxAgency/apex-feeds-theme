@@ -344,6 +344,66 @@
     }
   }
 
+  /* Phone (Ell's mockup): no pattern, a big title, the text and one button centred, then the
+     jars large and centred, hanging below the panel. Sizes follow the screen width. */
+  @media screen and (max-width: 749px) {
+    .apex-hero__pattern {
+      display: none;
+    }
+
+    /* The panel stops 47px (at 400 wide) above the jars' base */
+    .apex-hero__panel {
+      inset-block-end: 11.8vw;
+    }
+
+    .apex-hero__slide {
+      min-width: 0;
+    }
+
+    .apex-hero__content {
+      padding: 7.2vw 13.7vw 0;
+    }
+
+    .apex-hero__eyebrow {
+      margin-block-end: var(--apex-space-20);
+    }
+
+    .apex-hero__title {
+      font-size: 32vw;
+      line-height: 0.8;
+    }
+
+    .apex-hero__text {
+      align-self: stretch;
+      margin-block-start: var(--apex-space-24);
+      text-align: center;
+    }
+
+    .apex-hero__buttons {
+      align-self: center;
+      justify-content: center;
+      margin-block-start: var(--apex-space-24);
+    }
+
+    .apex-hero__buttons .apex-button--outline-light {
+      display: none;
+    }
+
+    /* The jars span 90% of the screen. The box stops at the jars' base (the rest of the image
+       is clear space and shadow, which overflows), so the panel can end just above it. */
+    .apex-hero__media {
+      width: 185vw;
+      aspect-ratio: 1000 / 348;
+      margin: calc(32px - 3.4vw) 0 0 -42.5vw;
+      pointer-events: none;
+    }
+
+    .apex-hero__dots {
+      position: relative;
+      z-index: 3;
+    }
+  }
+
   /* Entrance, each time a slide comes in: the panel and pattern ease in, the text rises a
      touch, then the product image glides in from the right and stops with a very slight bounce */
   @media (prefers-reduced-motion: no-preference) {
