@@ -7,7 +7,7 @@
   class="apex-feature"
   data-apex-feature
   {% if section.settings.indicator_label != blank %} data-apex-indicator-label="{{ section.settings.indicator_label | escape }}"{% endif %}
-  style="--apex-feature-from: {{ section.settings.gradient_from }}; --apex-feature-to: {{ section.settings.gradient_to }};"
+  style="--apex-feature-from: {{ section.settings.gradient_from }}; --apex-feature-to: {{ section.settings.gradient_to }};{% if section.settings.phone_panel != blank %} --apex-feature-phone-bg: {{ section.settings.phone_panel }};{% endif %}"
 >
   <div class="apex-feature__stage">
     {%- if section.settings.decoration != blank -%}
@@ -30,7 +30,7 @@
             | image_url: width: 2200
             | image_tag:
               loading: 'lazy',
-              sizes: '(min-width: 990px) 75vw, 100vw',
+              sizes: '(min-width: 990px) 75vw, (min-width: 750px) 100vw, 160vw',
               widths: '600, 900, 1200, 1600, 2200',
               alt: section.settings.image.alt
           }}
@@ -308,6 +308,78 @@
       opacity: 0.6;
     }
   }
+
+  /* Phone (Figma "APEX Home Page- Mobile", 402px wide: 1vw = 4.02px). A solid dark panel with
+     the text at the top, silver heading and button, and the jars overlapping its lower half and
+     hanging below it, cut off by the right edge of the screen. */
+  @media screen and (max-width: 749px) {
+    .apex-feature {
+      padding-block: 16.2vw 0;
+    }
+
+    .apex-feature__title,
+    .apex-feature__decoration {
+      display: none;
+    }
+
+    .apex-feature__panel {
+      min-height: 140.5vw;
+      /* Room for the jars hanging below, then Figma's gap to Shop by animals (whose own top
+         padding makes up the last 20px) */
+      margin-block: 0 calc(45.8vw + 16.4vw - 20px);
+    }
+
+    .apex-feature__panel::before {
+      background: var(--apex-feature-phone-bg, var(--apex-onyx));
+    }
+
+    .apex-feature__media {
+      position: absolute;
+      z-index: 1;
+      inset-block-start: 53.5vw;
+      inset-inline-start: 1vw;
+      width: 159.25vw;
+      max-width: none;
+      margin: 0;
+      pointer-events: none;
+      filter: drop-shadow(8px 15px 63px rgb(0 0 0 / 0.25));
+    }
+
+    .apex-feature__content {
+      padding: 5.7vw 8vw 0;
+      color: #fff;
+    }
+
+    .apex-feature__eyebrow {
+      margin-block-end: 17px;
+      color: inherit;
+    }
+
+    .apex-feature__heading {
+      max-width: 80.4vw;
+      font-size: 23.9vw;
+      background: var(--apex-silver-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .apex-feature__text {
+      max-width: 79.4vw;
+    }
+
+    .apex-feature__button {
+      margin-block-start: 35px;
+      background: var(--apex-silver-gradient);
+      border-color: transparent;
+      color: var(--apex-onyx);
+    }
+
+    .apex-feature__button .apex-button__label {
+      background: none;
+      color: inherit;
+    }
+  }
 {% endstylesheet %}
 
 {% schema %}
@@ -380,6 +452,12 @@
       "label": "Gradient middle",
       "default": "#A0AA98",
       "info": "Fades to transparent on the right."
+    },
+    {
+      "type": "color",
+      "id": "phone_panel",
+      "label": "Panel colour on phones",
+      "default": "#242623"
     },
     {
       "type": "image_picker",
