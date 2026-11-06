@@ -97,14 +97,21 @@
     display: block;
   }
 
-  /* Slides run off the right edge of the screen so the next one peeks in */
+  /* Slides run to both edges of the screen, so the next one peeks in on the right and the
+     previous ones stay visible (faded) on the left. The active slide still lines up with the
+     content: the left padding and snap
+     padding put it back on the grid. */
   .apex-story-tabs__track {
+    --apex-story-bleed: calc((100vw - 100%) / 2);
+
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: min(895px, 72%);
     gap: 26px;
-    margin-inline-end: calc((100% - 100vw) / 2);
-    padding-inline-end: var(--page-margin, 16px);
+    margin-inline: calc(-1 * var(--apex-story-bleed));
+    padding-inline: var(--apex-story-bleed) var(--page-margin, 16px);
+    /* Set to the left padding in px by apex-home.js (a % here would measure the track) */
+    scroll-padding-inline-start: var(--apex-story-snap, 0px);
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     scrollbar-width: none;

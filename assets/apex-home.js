@@ -170,6 +170,15 @@ class ApexTabs extends HTMLElement {
     );
     this.addEventListener("keydown", (event) => this.onKey(event));
 
+    // Snap the cards to where the first one starts (the track's left padding, in px)
+    this.setSnap = () => {
+      if (!this.track) return;
+      const pad = getComputedStyle(this.track).paddingInlineStart;
+      this.track.style.setProperty("--apex-story-snap", pad);
+    };
+    this.setSnap();
+    window.addEventListener("resize", this.setSnap);
+
     // Scrolling the cards by hand moves the active tab along with them
     if (this.track) {
       this.track.addEventListener("scroll", () => this.onScroll(), {
@@ -188,6 +197,10 @@ class ApexTabs extends HTMLElement {
     });
 
     this.select(0, false);
+  }
+
+  disconnectedCallback() {
+    window.removeEventListener("resize", this.setSnap);
   }
 
   // The card whose left edge is closest to where the first card sits
