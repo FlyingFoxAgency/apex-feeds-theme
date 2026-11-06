@@ -7,6 +7,9 @@
 {%- assign menu = section.settings.menu -%}
 
 <apex-shop-nav class="apex-shop-nav">
+  {%- if section.settings.mobile_heading != blank -%}
+    <p class="apex-eyebrow apex-shop-nav__heading">{{ section.settings.mobile_heading | escape }}</p>
+  {%- endif -%}
   <nav class="apex-shop-nav__bar" aria-label="{{ section.settings.label | escape }}">
     <ul class="apex-shop-nav__list list-unstyled" role="list">
       {%- if section.settings.show_shop_all -%}
@@ -344,6 +347,19 @@
     }
   }
 
+  /* Small heading above the bar on phones and tablets (eyebrow style in burrow) */
+  .apex-shop-nav__heading {
+    margin: 0 0 var(--apex-space-12);
+    padding-inline-start: var(--apex-space-24);
+    color: var(--apex-burrow);
+  }
+
+  @media screen and (min-width: 1200px) {
+    .apex-shop-nav__heading {
+      display: none;
+    }
+  }
+
   @media screen and (max-width: 749px) {
     .apex-shop-nav__list {
       gap: var(--apex-space-32);
@@ -389,6 +405,13 @@
       "id": "label",
       "label": "Name for screen readers",
       "default": "Shop by category"
+    },
+    {
+      "type": "text",
+      "id": "mobile_heading",
+      "label": "Heading above the bar on phones and tablets",
+      "default": "Shop by category",
+      "info": "Leave blank to leave it out."
     }
   ],
   "presets": [
