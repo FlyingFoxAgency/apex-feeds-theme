@@ -2,8 +2,10 @@
   APEX product card (Figma best seller card): glass card with a white image area, a rating pill,
   then category, title, price and a short note.
 
-  The category is the product type. The note comes from the product metafield
-  custom.card_note when it's filled in. The rating uses the standard reviews.rating
+  The category is the product type. The note lists the animals the product suits, from the
+  product metafield custom.suitable_for (a list of single line text, e.g. Reptiles, Amphibians),
+  as "For reptiles + amphibians." If that's empty, the free text metafield custom.card_note is
+  used instead. The rating uses the standard reviews.rating
   metafield that review apps fill in, and is hidden without one.
 
   @param {object} product - The product to show
@@ -15,6 +17,22 @@
 {%- liquid
   assign rating = product.metafields.reviews.rating.value.rating
   assign note = product.metafields.custom.card_note.value
+  assign animals = product.metafields.custom.suitable_for.value
+  if animals != blank
+    assign note = 'For '
+    for animal in animals
+      if forloop.first == false
+        if forloop.last
+          assign note = note | append: ' + '
+        else
+          assign note = note | append: ', '
+        endif
+      endif
+      assign animal_name = animal | downcase
+      assign note = note | append: animal_name
+    endfor
+    assign note = note | append: '.'
+  endif
   assign image = product.featured_media.preview_image
 -%}
 <article class="apex-product-card">
