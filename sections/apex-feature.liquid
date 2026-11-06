@@ -258,7 +258,8 @@
       position: absolute;
       z-index: 1;
       inset-block-start: -17.71cqw;
-      inset-inline-start: -1.25cqw;
+      /* Figma position, plus 50px further left to break the grid (Ell) */
+      inset-inline-start: calc(-1.25cqw - 50px);
       width: 78.26cqw;
       pointer-events: none;
     }
