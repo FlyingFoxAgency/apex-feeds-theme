@@ -213,13 +213,13 @@
       padding-block: 116px 0;
     }
 
-    /* Room for the jars that hang below the panel. Set on the panel, not the stage: cqw on the
-       stage itself would measure the screen, not the stage. */
+    /* Space below the panel before Shop by animals: half of Figma's gap (Ell). Set on the
+       panel, not the stage: cqw on the stage itself would measure the screen, not the stage. */
     .apex-feature__panel {
       display: flex;
       align-items: center;
       min-height: 32.01cqw;
-      margin-block-end: 15.6cqw;
+      margin-block-end: calc(7.8cqw - 10px);
     }
 
     .apex-feature__media {
