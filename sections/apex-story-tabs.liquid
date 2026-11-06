@@ -114,6 +114,12 @@
     display: none;
   }
 
+  /* An empty column after the last slide, so the last one can scroll all the way across into
+     the same spot as the others instead of stopping at the screen edge */
+  .apex-story-tabs__track::after {
+    content: '';
+  }
+
   .apex-story-tabs__panel {
     display: grid;
     grid-template-columns: 52fr 48fr;
