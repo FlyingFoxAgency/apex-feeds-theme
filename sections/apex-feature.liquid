@@ -329,8 +329,13 @@
       margin-block: 0 calc(45.8vw + 16.4vw - 20px);
     }
 
+    /* The onyx sits on the panel itself here (no fade), so it always shows */
+    .apex-feature__panel {
+      background-color: var(--apex-feature-phone-bg, #242623);
+    }
+
     .apex-feature__panel::before {
-      background: var(--apex-feature-phone-bg, var(--apex-onyx));
+      display: none;
     }
 
     .apex-feature__media {
