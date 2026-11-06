@@ -151,28 +151,36 @@
     scale: 1.06;
   }
 
-  /* Current category: Figma "highlight hover" (white at 45%) with a 3px amber underline */
-  .apex-shop-nav__link[aria-current='page']::before,
-  .apex-shop-nav__link[aria-current='page']::after {
-    content: '';
-    position: absolute;
-    z-index: -1;
-    inset-inline: -30px;
-  }
-
+  /* Current category: Figma "highlight hover" (white at 45%) behind the link */
   .apex-shop-nav__link[aria-current='page'] {
     isolation: isolate;
   }
 
   .apex-shop-nav__link[aria-current='page']::before {
-    inset-block: 0 2px;
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset-block: 0;
+    inset-inline: -30px;
     background-color: rgb(255 255 255 / 0.45);
   }
 
-  .apex-shop-nav__link[aria-current='page']::after {
-    inset-block: auto 0;
+  /* Hover and current: a rounded amber line near the bottom of the bar, as wide as the link.
+     The text stays burrow, as amber text would be hard to read on the light bar. */
+  .apex-shop-nav__link::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 8px;
     height: 3px;
+    border-radius: var(--apex-radius-pill);
     background-color: var(--apex-amber);
+    scale: 0 1;
+    transition: scale 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .apex-shop-nav__link:is(:hover, :focus-visible, [aria-current='page'])::after {
+    scale: 1 1;
   }
 
   /* Under the hero, about 170px below the panel (the hero keeps 134px for the hanging jars) */
@@ -245,6 +253,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .apex-shop-nav__bar,
+    .apex-shop-nav__link::after,
     .apex-shop-nav__link > span {
       transition: none;
     }
