@@ -101,15 +101,16 @@
   }
 
   /* 50px in from the left edge of the screen (like the help button on the right), measured to
-     the left edge of the widest name tag, so the dots stay put whichever tag is showing. 70% of
-     the screen tall, with the bottom dot level with the bottom of the help button: 50px up, and
-     rising with it (--apex-help-lift) to stay clear of the footer. Below 1600px wide the dots
-     would sit over the content, so it's hidden. */
+     the left edge of the widest name tag, so the dots stay put whichever tag is showing. The gap
+     below the last dot matches the gap above the first (Ell): 30% of the screen less 50px each
+     end. Near the footer it rises with the help button (--apex-help-lift) to stay 30px clear.
+     Below 1600px wide the dots would sit over the content, so it's hidden. */
   @media screen and (min-width: 1600px) {
     .apex-page-indicator:not([hidden]) {
       position: fixed;
       z-index: var(--layer-sticky, 10);
-      inset-block-end: max(50px, var(--apex-help-lift, 0px));
+      inset-block-end: max(calc(30vh - 50px), var(--apex-help-lift, 0px));
+      inset-block-end: max(calc(30svh - 50px), var(--apex-help-lift, 0px));
       inset-inline-start: 50px;
       padding-inline-start: calc(var(--apex-indicator-tag-width, 0px) + 14px);
       display: block;
@@ -125,8 +126,8 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    height: 70vh;
-    height: 70svh;
+    height: calc(40vh + 100px);
+    height: calc(40svh + 100px);
     margin: 0;
     padding: 0;
   }
