@@ -30,7 +30,7 @@
             | image_url: width: 2200
             | image_tag:
               loading: 'lazy',
-              sizes: '(min-width: 990px) 78vw, 100vw',
+              sizes: '(min-width: 990px) 75vw, 100vw',
               widths: '600, 900, 1200, 1600, 2200',
               alt: section.settings.image.alt
           }}
@@ -260,7 +260,8 @@
       inset-block-start: -17.71cqw;
       /* Figma position, plus 50px further left to break the grid (Ell) */
       inset-inline-start: calc(-1.25cqw - 50px);
-      width: 78.26cqw;
+      /* 5% smaller than Figma (78.26cqw) so the jars clear the next section title (Ell) */
+      width: 74.35cqw;
       pointer-events: none;
     }
 
