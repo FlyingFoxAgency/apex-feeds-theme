@@ -170,12 +170,49 @@ class ApexTabs extends HTMLElement {
     );
     this.addEventListener("keydown", (event) => this.onKey(event));
 
+    // Scrolling the cards by hand moves the active tab along with them
+    if (this.track) {
+      this.track.addEventListener("scroll", () => this.onScroll(), {
+        passive: true,
+      });
+      ["wheel", "touchstart", "pointerdown"].forEach((type) =>
+        this.track.addEventListener(type, () => (this.target = null), {
+          passive: true,
+        }),
+      );
+    }
+
     document.addEventListener("shopify:block:select", (event) => {
       const i = this.panels.findIndex((panel) => panel.contains(event.target));
       if (i >= 0) this.select(i);
     });
 
     this.select(0, false);
+  }
+
+  // The card whose left edge is closest to where the first card sits
+  nearest() {
+    const start = this.panels[0].offsetLeft + this.track.scrollLeft;
+    let best = 0;
+    this.panels.forEach((panel, i) => {
+      if (
+        Math.abs(panel.offsetLeft - start) <
+        Math.abs(this.panels[best].offsetLeft - start)
+      )
+        best = i;
+    });
+    return best;
+  }
+
+  onScroll() {
+    if (!this.panels.length) return;
+    const index = this.nearest();
+    // While a tab click is scrolling the cards, wait until it arrives
+    if (this.target != null) {
+      if (index === this.target) this.target = null;
+      return;
+    }
+    if (index !== this.current) this.select(index, false);
   }
 
   select(index, scroll = true) {
@@ -190,6 +227,7 @@ class ApexTabs extends HTMLElement {
       panel.classList.toggle("is-active", i === index),
     );
     if (scroll && this.track && this.panels[index]) {
+      this.target = index;
       const left = this.panels[index].offsetLeft - this.panels[0].offsetLeft;
       this.track.scrollTo({
         left,
