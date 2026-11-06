@@ -175,6 +175,7 @@
           "type": "tab",
           "settings": {
             "tab_title": "Our values",
+            "image": "shopify://shop_images/APEX_Product-Jar-Mockup.png",
             "heading": "",
             "text": "<p>Nulla libero nibh, pellentesque vel auctor fringilla, faucibus at est. Mauris in feugiat nisi. Curabitur at felis non nunc pretium lobortis. Integer nec mattis tellus.</p>"
           }
@@ -183,6 +184,7 @@
           "type": "tab",
           "settings": {
             "tab_title": "Our story",
+            "image": "shopify://shop_images/APEX_Jar_Mockup-Basic-Purple.png",
             "heading": "",
             "text": "<p>Nulla libero nibh, pellentesque vel auctor fringilla, faucibus at est. Mauris in feugiat nisi. Curabitur at felis non nunc pretium lobortis. Integer nec mattis tellus.</p>"
           }
@@ -191,6 +193,7 @@
           "type": "tab",
           "settings": {
             "tab_title": "Only the best",
+            "image": "shopify://shop_images/Nutricore-group-mockup_b39044d0-3e92-4c40-926d-ad7897b0fc1b.png",
             "heading": "",
             "text": "<p>Nulla libero nibh, pellentesque vel auctor fringilla, faucibus at est. Mauris in feugiat nisi. Curabitur at felis non nunc pretium lobortis. Integer nec mattis tellus.</p>"
           }
@@ -199,6 +202,7 @@
           "type": "tab",
           "settings": {
             "tab_title": "The passion",
+            "image": "shopify://shop_images/Premium-grou-mockup_54c5dd86-9df0-4cfb-9d73-52b5b146a7d7.png",
             "heading": "",
             "text": "<p>Nulla libero nibh, pellentesque vel auctor fringilla, faucibus at est. Mauris in feugiat nisi. Curabitur at felis non nunc pretium lobortis. Integer nec mattis tellus.</p>"
           }
