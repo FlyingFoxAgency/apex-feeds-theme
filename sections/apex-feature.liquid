@@ -63,34 +63,47 @@
 
 {%- unless request.design_mode -%}
   <script type="module">
-    // Once the visitor has started scrolling and this section is in view, fade in the gradient
-    // panel, then the product image. Without JavaScript (or in the theme editor) both just show.
+    // Once the visitor has started scrolling: fade the gradient panel in when the section comes
+    // into view, then grow the product image in once the panel nears the middle of the screen.
+    // Without JavaScript (or in the theme editor) both just show.
     const motionOk = window.matchMedia('(prefers-reduced-motion: no-preference)').matches;
     const sections = document.querySelectorAll('[data-apex-feature]:not([data-apex-fade])');
 
     if (motionOk && 'IntersectionObserver' in window) {
       for (const section of sections) {
+        const panel = section.querySelector('.apex-feature__panel');
+        if (!panel) continue;
         section.setAttribute('data-apex-fade', '');
-        let inView = false;
+
         let scrolled = false;
-        const reveal = () => {
-          if (!inView || !scrolled) return;
-          section.classList.add('is-shown');
-          observer.disconnect();
-          document.removeEventListener('scroll', onScroll, { capture: true });
+        const state = { section: false, middle: false };
+        const update = () => {
+          if (!scrolled) return;
+          if (state.section) section.classList.add('is-shown');
+          if (state.middle) section.classList.add('is-media-shown');
+          if (section.classList.contains('is-media-shown')) {
+            sectionObserver.disconnect();
+            middleObserver.disconnect();
+            document.removeEventListener('scroll', onScroll, { capture: true });
+          }
         };
         const onScroll = () => {
           scrolled = true;
-          reveal();
+          update();
         };
-        const observer = new IntersectionObserver(
-          ([entry]) => {
-            inView = entry.isIntersecting;
-            reveal();
-          },
-          { rootMargin: '0px 0px -15% 0px' }
-        );
-        observer.observe(section);
+        const watch = (key) => ([entry]) => {
+          state[key] = entry.isIntersecting;
+          update();
+        };
+        const sectionObserver = new IntersectionObserver(watch('section'), {
+          rootMargin: '0px 0px -15% 0px',
+        });
+        // The panel's top has passed 55% of the way down the screen
+        const middleObserver = new IntersectionObserver(watch('middle'), {
+          rootMargin: '0px 0px -45% 0px',
+        });
+        sectionObserver.observe(section);
+        middleObserver.observe(panel);
         document.addEventListener('scroll', onScroll, { capture: true, passive: true });
       }
     }
@@ -98,25 +111,44 @@
 {%- endunless -%}
 
 {% stylesheet %}
-  /* Fade-in (see the script above): the panel first, then the product image. The transitions
-     sit on the shown state only, so hiding them at load is instant. */
+  /* Fade-in (see the script above). The panel's transition sits on the shown state only, so
+     hiding it at load is instant. */
   .apex-feature.is-shown .apex-feature__panel::before {
     transition: opacity 2s cubic-bezier(0.25, 0.1, 0.25, 1);
   }
 
-  .apex-feature.is-shown .apex-feature__media {
-    transition:
-      opacity 2.2s cubic-bezier(0.25, 0.1, 0.25, 1) 0.6s,
-      translate 2.6s cubic-bezier(0.16, 1, 0.3, 1) 0.6s;
-  }
-
   .apex-feature[data-apex-fade]:not(.is-shown) .apex-feature__panel::before,
-  .apex-feature[data-apex-fade]:not(.is-shown) .apex-feature__media {
+  .apex-feature[data-apex-fade]:not(.is-media-shown) .apex-feature__media {
     opacity: 0;
   }
 
-  .apex-feature[data-apex-fade]:not(.is-shown) .apex-feature__media {
-    translate: 0 24px;
+  /* The product image grows out from the centre of its box and settles with a slight bounce,
+     like the hero's product image */
+  .apex-feature.is-media-shown .apex-feature__media {
+    animation: apex-feature-media-in 1.4s linear both;
+  }
+
+  @keyframes apex-feature-media-in {
+    0% {
+      opacity: 0;
+      scale: 0.2;
+      animation-timing-function: cubic-bezier(0.3, 0.7, 0.4, 1);
+    }
+
+    55% {
+      opacity: 1;
+      scale: 1.03;
+      animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+    }
+
+    78% {
+      scale: 0.995;
+      animation-timing-function: ease-out;
+    }
+
+    100% {
+      scale: 1;
+    }
   }
 
   .apex-feature {
