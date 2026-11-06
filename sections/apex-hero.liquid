@@ -394,13 +394,20 @@
     .apex-hero__media {
       width: 185vw;
       aspect-ratio: 1000 / 348;
+      /* Without this the box grows to the image's full height and the jars no longer hang */
+      min-height: 0;
       margin: calc(32px - 3.4vw) 0 0 -42.5vw;
       pointer-events: none;
     }
 
+    /* Below the panel on the light page, so the dots are dried moss; the current one stays amber */
     .apex-hero__dots {
       position: relative;
       z-index: 3;
+    }
+
+    .apex-hero__dot:not(.is-active) {
+      background-color: var(--apex-dried-moss);
     }
   }
 
