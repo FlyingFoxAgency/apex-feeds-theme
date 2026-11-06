@@ -121,6 +121,7 @@
             "collection": "",
             "link": "",
             "word": "Reptiles",
+            "image": "shopify://shop_images/Snake.png",
             "label": "",
             "button_label": "Shop for reptiles"
           }
@@ -161,7 +162,7 @@
       "settings": {
         "indicator_label": "Best sellers",
         "title": "Best sellers",
-        "collection": "",
+        "collection": "hydrogen",
         "products_to_show": 8
       }
     },
