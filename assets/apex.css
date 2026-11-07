@@ -829,3 +829,15 @@ html:has(.menu-drawer-container[open]) .apex-help-button {
   opacity: 0;
   translate: 0 64px;
 }
+
+/* Phones and the drawer header: search icon closer to the menu icon, the same spacing as the
+   account and bag icons on the right (Ell) */
+@media screen and (max-width: 749px) {
+  #header-component .header__columns .search-action {
+    translate: -14px 0;
+  }
+}
+
+#header-component[data-menu-style="drawer"] .header__columns .search-action {
+  translate: -14px 0;
+}
