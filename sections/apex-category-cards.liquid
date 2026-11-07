@@ -196,6 +196,28 @@
       margin-block-end: var(--apex-space-4);
     }
 
+    /* Label and button about a third smaller than on desktop (Ell) */
+    .apex-category-card__label {
+      padding-inline-start: var(--apex-space-12);
+      font-size: 0.875rem;
+      line-height: 1.125rem;
+    }
+
+    .apex-category-card__button {
+      gap: 6px;
+      min-height: 32px;
+      padding: 6px var(--apex-space-12);
+      margin-inline-start: var(--apex-space-12);
+      font-size: 0.625rem;
+      line-height: 1rem;
+      letter-spacing: 0.35px;
+    }
+
+    .apex-category-card__button svg {
+      width: 16px;
+      height: 16px;
+    }
+
     apex-category-cards[data-ready] .apex-category-card:not(.is-current) {
       opacity: 0.5;
     }
