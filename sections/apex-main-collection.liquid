@@ -1,0 +1,789 @@
+{% comment %}
+  APEX product grid (Figma "APEX Category Page" and "APEX Category Page - Filter Open"):
+  a toolbar with Show filters, the product count and Sort by; a four-column grid of APEX product
+  cards with Add to cart; page numbers with round arrows; and a filter pop-out from the left.
+
+  Filters are Shopify's storefront filters (Search & Discovery app), so they appear here once
+  they're set up in the admin. The pop-out is a plain form: Apply filters reloads the page with
+  the choices in the address, so it works without JavaScript.
+{% endcomment %}
+{%- liquid
+  assign sort_by = collection.sort_by | default: collection.default_sort_by
+  assign active_count = 0
+  for filter in collection.filters
+    assign active_count = active_count | plus: filter.active_values.size
+    if filter.type == 'price_range'
+      if filter.min_value.value != blank or filter.max_value.value != blank
+        assign active_count = active_count | plus: 1
+      endif
+    endif
+  endfor
+  assign clear_url = collection.url | append: '?sort_by=' | append: sort_by
+-%}
+
+{%- capture filter_inputs -%}
+  {%- for filter in collection.filters -%}
+    {%- for value in filter.active_values -%}
+      <input type="hidden" name="{{ value.param_name }}" value="{{ value.value | escape }}">
+    {%- endfor -%}
+    {%- if filter.type == 'price_range' -%}
+      {%- if filter.min_value.value != blank -%}
+        <input type="hidden" name="{{ filter.min_value.param_name }}" value="{{ filter.min_value.value }}">
+      {%- endif -%}
+      {%- if filter.max_value.value != blank -%}
+        <input type="hidden" name="{{ filter.max_value.param_name }}" value="{{ filter.max_value.value }}">
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endcapture -%}
+
+<apex-collection class="apex-collection apex-container">
+  {%- paginate collection.products by section.settings.per_page -%}
+    <div class="apex-collection__toolbar">
+      {%- if collection.filters.size > 0 -%}
+        <button type="button" class="apex-collection__filters-button" data-open-filters aria-haspopup="dialog">
+          {{- 'apex-icon-filter.svg' | inline_asset_content -}}
+          <span>Show filters{% if active_count > 0 %} ({{ active_count }}){% endif %}</span>
+        </button>
+      {%- endif -%}
+
+      <p class="apex-collection__count">
+        {{ collection.products_count }}
+        {% if collection.products_count == 1 %}product{% else %}products{% endif %}
+      </p>
+
+      <form class="apex-collection__sort" method="get" data-sort-form>
+        {{ filter_inputs }}
+        <label for="ApexSort-{{ section.id }}">Sort by:</label>
+        <select id="ApexSort-{{ section.id }}" name="sort_by" data-sort-select>
+          {%- for option in collection.sort_options -%}
+            <option value="{{ option.value | escape }}"{% if option.value == sort_by %} selected{% endif %}>
+              {{- option.name | escape -}}
+            </option>
+          {%- endfor -%}
+        </select>
+        <noscript><button type="submit">Sort</button></noscript>
+      </form>
+    </div>
+
+    {%- if collection.products.size > 0 -%}
+      <ul class="apex-collection__grid list-unstyled" role="list">
+        {%- for product in collection.products -%}
+          <li class="apex-collection__item">
+            {%- render 'apex-product-card',
+              product: product,
+              show_buttons: true,
+              sizes: '(min-width: 990px) 300px, (min-width: 750px) 33vw, 50vw'
+            -%}
+          </li>
+        {%- endfor -%}
+      </ul>
+    {%- else -%}
+      <div class="apex-collection__empty">
+        <p>No products match these filters.</p>
+        {%- if active_count > 0 -%}
+          <a class="apex-button apex-button--outline-moss" href="{{ clear_url }}">Clear filters</a>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    {%- if paginate.pages > 1 -%}
+      <nav class="apex-collection__pages" aria-label="Pages">
+        {%- if paginate.previous -%}
+          <a class="apex-collection__page-arrow apex-collection__page-arrow--prev" href="{{ paginate.previous.url }}" aria-label="Previous page">
+            {{- 'apex-icon-arrow-circle.svg' | inline_asset_content -}}
+          </a>
+        {%- else -%}
+          <span class="apex-collection__page-arrow apex-collection__page-arrow--prev is-disabled" aria-hidden="true">
+            {{- 'apex-icon-arrow-circle.svg' | inline_asset_content -}}
+          </span>
+        {%- endif -%}
+
+        <ul class="apex-collection__page-list list-unstyled" role="list">
+          {%- for part in paginate.parts -%}
+            <li>
+              {%- if part.is_link -%}
+                <a class="apex-collection__page" href="{{ part.url }}">{{ part.title }}</a>
+              {%- elsif part.title == paginate.current_page -%}
+                <span class="apex-collection__page is-current" aria-current="page">{{ part.title }}</span>
+              {%- else -%}
+                <span class="apex-collection__page">{{ part.title }}</span>
+              {%- endif -%}
+            </li>
+          {%- endfor -%}
+        </ul>
+
+        {%- if paginate.next -%}
+          <a class="apex-collection__page-arrow" href="{{ paginate.next.url }}" aria-label="Next page">
+            {{- 'apex-icon-arrow-circle.svg' | inline_asset_content -}}
+          </a>
+        {%- else -%}
+          <span class="apex-collection__page-arrow is-disabled" aria-hidden="true">
+            {{- 'apex-icon-arrow-circle.svg' | inline_asset_content -}}
+          </span>
+        {%- endif -%}
+      </nav>
+    {%- endif -%}
+  {%- endpaginate -%}
+
+  {%- if collection.filters.size > 0 -%}
+    <dialog class="apex-filters" aria-labelledby="ApexFiltersTitle-{{ section.id }}" data-filters>
+      <form class="apex-filters__form" method="get">
+        <div class="apex-filters__head">
+          <h2 class="apex-filters__title" id="ApexFiltersTitle-{{ section.id }}">Filters</h2>
+          <button type="button" class="apex-filters__close" data-close-filters aria-label="Close filters">
+            {{- 'apex-icon-close.svg' | inline_asset_content -}}
+          </button>
+        </div>
+
+        <div class="apex-filters__body">
+          <div class="apex-filters__sort">
+            <label for="ApexFilterSort-{{ section.id }}">Sort by</label>
+            <select id="ApexFilterSort-{{ section.id }}" name="sort_by">
+              {%- for option in collection.sort_options -%}
+                <option value="{{ option.value | escape }}"{% if option.value == sort_by %} selected{% endif %}>
+                  {{- option.name | escape -}}
+                </option>
+              {%- endfor -%}
+            </select>
+          </div>
+
+          {%- for filter in collection.filters -%}
+            <fieldset class="apex-filters__group">
+              <legend class="apex-filters__legend">{{ filter.label | escape }}</legend>
+              {%- case filter.type -%}
+                {%- when 'price_range' -%}
+                  <div class="apex-filters__price">
+                    <label>
+                      <span>From</span>
+                      <input
+                        type="number"
+                        inputmode="decimal"
+                        name="{{ filter.min_value.param_name }}"
+                        value="{{ filter.min_value.value | money_without_currency | remove: ',' }}"
+                        placeholder="0"
+                        min="0"
+                      >
+                    </label>
+                    <label>
+                      <span>To</span>
+                      <input
+                        type="number"
+                        inputmode="decimal"
+                        name="{{ filter.max_value.param_name }}"
+                        value="{{ filter.max_value.value | money_without_currency | remove: ',' }}"
+                        placeholder="{{ filter.range_max | money_without_currency | remove: ',' }}"
+                        min="0"
+                      >
+                    </label>
+                  </div>
+                {%- else -%}
+                  <ul class="apex-filters__options list-unstyled" role="list">
+                    {%- for value in filter.values -%}
+                      <li>
+                        <label class="apex-filters__option{% if value.count == 0 and value.active == false %} is-empty{% endif %}">
+                          <input
+                            type="checkbox"
+                            name="{{ value.param_name }}"
+                            value="{{ value.value | escape }}"
+                            {% if value.active %}
+                              checked
+                            {% endif %}
+                            {% if value.count == 0 and value.active == false %}
+                              disabled
+                            {% endif %}
+                          >
+                          <span class="apex-filters__box" aria-hidden="true"></span>
+                          <span class="apex-filters__label">{{ value.label | escape }}</span>
+                          <span class="apex-filters__value-count">({{ value.count }})</span>
+                        </label>
+                      </li>
+                    {%- endfor -%}
+                  </ul>
+              {%- endcase -%}
+            </fieldset>
+          {%- endfor -%}
+        </div>
+
+        <div class="apex-filters__foot">
+          {%- if active_count > 0 -%}
+            <a class="apex-filters__clear" href="{{ clear_url }}">Clear all</a>
+          {%- endif -%}
+          <button type="submit" class="apex-filters__apply">Apply filters</button>
+        </div>
+      </form>
+    </dialog>
+  {%- endif -%}
+</apex-collection>
+
+<script type="module">
+  if (!customElements.get('apex-collection')) {
+    customElements.define(
+      'apex-collection',
+      class extends HTMLElement {
+        connectedCallback() {
+          const dialog = this.querySelector('[data-filters]');
+          this.querySelector('[data-open-filters]')?.addEventListener('click', () => dialog?.showModal());
+          this.querySelector('[data-close-filters]')?.addEventListener('click', () => dialog?.close());
+          // Clicking the dimmed page beside the pop-out closes it
+          dialog?.addEventListener('click', (event) => {
+            if (event.target === dialog) dialog.close();
+          });
+          // Picking a sort order reloads straight away
+          this.querySelector('[data-sort-select]')?.addEventListener('change', (event) =>
+            event.target.form.requestSubmit()
+          );
+        }
+      }
+    );
+  }
+</script>
+
+{% stylesheet %}
+  .apex-collection {
+    display: block;
+    padding-block: 39px 31px;
+  }
+
+  /* Toolbar (Figma: 62px outline moss button, count 52px after it, sort on the right) */
+  .apex-collection__toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--apex-space-16) 52px;
+    min-height: 62px;
+  }
+
+  .apex-collection__filters-button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--apex-space-12);
+    min-height: 62px;
+    padding: var(--apex-space-12) 25px;
+    border: 2px solid var(--apex-dried-moss);
+    border-radius: var(--apex-radius-md);
+    background: transparent;
+    color: var(--apex-dried-moss);
+    font-family: var(--font-body--family);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: scale 0.2s var(--ease-out-cubic, ease-out);
+  }
+
+  .apex-collection__filters-button svg {
+    width: 24px;
+    height: 24px;
+    flex: none;
+  }
+
+  .apex-collection__filters-button:is(:hover, :focus-visible) {
+    scale: 1.06;
+  }
+
+  .apex-collection__count {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    color: var(--apex-burrow);
+  }
+
+  .apex-collection__sort {
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
+    margin: 0 0 0 auto;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    color: var(--apex-burrow);
+  }
+
+  .apex-collection__sort select {
+    padding: 0 1.2em 0 0;
+    border: 0;
+    background: transparent
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2340443d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+      no-repeat right center / 12px 8px;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    appearance: none;
+  }
+
+  /* Grid (Figma: four 288px cards, 28px apart, rows 37px apart) */
+  .apex-collection__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 37px 28px;
+    margin: var(--apex-space-24) 0 0;
+    padding: 0;
+  }
+
+  .apex-collection__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--apex-space-16);
+    padding-block: var(--apex-space-64);
+    color: var(--apex-burrow);
+  }
+
+  .apex-collection__empty p {
+    margin: 0;
+  }
+
+  /* Pages (Figma: 41px round arrows either side of the numbers, 68px under the grid) */
+  .apex-collection__pages {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--apex-space-12);
+    margin-block-start: 68px;
+    color: var(--apex-burrow);
+  }
+
+  .apex-collection__page-arrow {
+    display: flex;
+    color: inherit;
+    transition: scale 0.2s var(--ease-out-cubic, ease-out);
+  }
+
+  .apex-collection__page-arrow svg {
+    width: 41px;
+    height: 41px;
+  }
+
+  .apex-collection__page-arrow--prev svg {
+    rotate: 180deg;
+  }
+
+  .apex-collection__page-arrow.is-disabled {
+    opacity: 0.24;
+  }
+
+  a.apex-collection__page-arrow:is(:hover, :focus-visible) {
+    scale: 1.06;
+  }
+
+  .apex-collection__page-list {
+    display: flex;
+    gap: var(--apex-space-4);
+    margin: 0;
+    padding: 0;
+  }
+
+  .apex-collection__page {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    border-radius: var(--apex-radius-pill);
+    color: inherit;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: scale 0.2s var(--ease-out-cubic, ease-out);
+  }
+
+  a.apex-collection__page:is(:hover, :focus-visible) {
+    scale: 1.06;
+  }
+
+  .apex-collection__page.is-current {
+    color: var(--apex-amber);
+    font-weight: 700;
+  }
+
+  /* Filter pop-out (Figma: 559px #EDEDE6 panel from the left, 65px round right corners) */
+  .apex-filters {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(559px, 92vw);
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-start-end-radius: 65px;
+    border-end-end-radius: 65px;
+    background-color: #edede6;
+    box-shadow: 40px 0 120px rgb(0 0 0 / 0.1);
+    color: var(--apex-burrow);
+  }
+
+  .apex-filters::backdrop {
+    background-color: rgb(36 38 35 / 0.35);
+  }
+
+  .apex-filters[open] {
+    animation: apex-filters-in 0.35s var(--ease-out-cubic, ease-out);
+  }
+
+  @keyframes apex-filters-in {
+    from {
+      translate: -100% 0;
+    }
+  }
+
+  .apex-filters__form {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .apex-filters__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-inline: 65px 80px;
+    padding-block: 52px 17px;
+    border-block-end: 1px solid rgb(64 68 61 / 0.2);
+  }
+
+  .apex-filters__title {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: var(--font-size--h2);
+    line-height: 0.95;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-filters__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    transition: scale 0.2s var(--ease-out-cubic, ease-out);
+  }
+
+  .apex-filters__close svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .apex-filters__close:is(:hover, :focus-visible) {
+    scale: 1.06;
+  }
+
+  .apex-filters__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 80px var(--apex-space-32) 65px;
+  }
+
+  .apex-filters__sort {
+    display: flex;
+    align-items: center;
+    gap: var(--apex-space-12);
+    padding-block: 61px 67px;
+    border-block-end: 1px solid rgb(64 68 61 / 0.2);
+    font-size: 1.25rem;
+    line-height: 1.625rem;
+  }
+
+  .apex-filters__sort select {
+    padding: 0 28px 0 0;
+    border: 0;
+    background: transparent
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9' fill='none'%3E%3Cpath d='M1 1.5L7 7.5L13 1.5' stroke='%2340443d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+      no-repeat right center / 14px 9px;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    appearance: none;
+  }
+
+  .apex-filters__group {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .apex-filters__group:first-of-type {
+    margin-block-start: 54px;
+  }
+
+  .apex-filters__group + .apex-filters__group {
+    margin-block-start: 43px;
+  }
+
+  .apex-filters__legend {
+    padding: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.625rem;
+    text-transform: uppercase;
+  }
+
+  .apex-filters__options {
+    display: grid;
+    gap: 8px;
+    margin: 11px 0 0;
+    padding: 0 0 0 21px;
+  }
+
+  .apex-filters__option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.25rem;
+    line-height: 1.625rem;
+    cursor: pointer;
+  }
+
+  .apex-filters__option.is-empty {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .apex-filters__option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .apex-filters__box {
+    position: relative;
+    flex: none;
+    width: 22px;
+    height: 22px;
+    border: 1.5px solid currentColor;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+  }
+
+  .apex-filters__option input:checked + .apex-filters__box {
+    background-color: var(--apex-burrow);
+  }
+
+  .apex-filters__option input:checked + .apex-filters__box::after {
+    content: '';
+    position: absolute;
+    inset: 3px 6px 6px;
+    border: solid #edede6;
+    border-width: 0 2px 2px 0;
+    rotate: 45deg;
+  }
+
+  .apex-filters__option input:focus-visible + .apex-filters__box {
+    outline: 2px solid var(--apex-amber);
+    outline-offset: 2px;
+  }
+
+  .apex-filters__value-count {
+    opacity: 0.5;
+  }
+
+  .apex-filters__price {
+    display: flex;
+    gap: var(--apex-space-16);
+    margin-block-start: 11px;
+    padding-inline-start: 21px;
+  }
+
+  .apex-filters__price label {
+    display: grid;
+    gap: var(--apex-space-4);
+    font-size: 0.8125rem;
+  }
+
+  .apex-filters__price input {
+    width: 120px;
+    height: 44px;
+    padding-inline: var(--apex-space-12);
+    border: 1.5px solid rgb(64 68 61 / 0.4);
+    border-radius: var(--apex-radius-md);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 1rem;
+  }
+
+  .apex-filters__foot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--apex-space-12);
+    padding: var(--apex-space-16) 80px 40px 65px;
+  }
+
+  .apex-filters__clear {
+    color: var(--apex-burrow);
+    font-size: 0.9375rem;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .apex-filters__apply {
+    width: 100%;
+    min-height: 62px;
+    border: 2px solid var(--apex-burrow);
+    border-radius: var(--apex-radius-md);
+    background-color: var(--apex-burrow);
+    color: #edede6;
+    font-family: var(--font-body--family);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: scale 0.2s var(--ease-out-cubic, ease-out);
+  }
+
+  .apex-filters__apply:is(:hover, :focus-visible) {
+    scale: 1.06;
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-collection__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--apex-space-24) var(--apex-space-16);
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-collection {
+      padding-block: var(--apex-space-24);
+    }
+
+    .apex-collection__toolbar {
+      flex-wrap: wrap;
+      gap: var(--apex-space-12) var(--apex-space-16);
+    }
+
+    .apex-collection__filters-button {
+      min-height: 48px;
+      padding-inline: var(--apex-space-16);
+    }
+
+    .apex-collection__count {
+      order: 3;
+      width: 100%;
+      font-size: 0.875rem;
+    }
+
+    .apex-collection__sort {
+      font-size: 0.875rem;
+    }
+
+    .apex-collection__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--apex-space-16) 12px;
+    }
+
+    .apex-collection__grid .apex-product-card__info {
+      padding: var(--apex-space-16) var(--apex-space-12) var(--apex-space-12);
+    }
+
+    .apex-collection__grid .apex-product-card__row {
+      flex-direction: column;
+      gap: var(--apex-space-4);
+    }
+
+    .apex-collection__grid .apex-product-card__actions {
+      padding: 0 var(--apex-space-12) var(--apex-space-12);
+    }
+
+    .apex-collection__grid .apex-product-card__cart {
+      font-size: 0.75rem;
+      letter-spacing: 0.3px;
+    }
+
+    .apex-collection__pages {
+      margin-block-start: var(--apex-space-40);
+    }
+
+    .apex-filters {
+      border-start-end-radius: 40px;
+      border-end-end-radius: 40px;
+    }
+
+    .apex-filters__head {
+      margin-inline: var(--apex-space-24);
+      padding-block: var(--apex-space-32) var(--apex-space-12);
+    }
+
+    .apex-filters__body {
+      padding: 0 var(--apex-space-24) var(--apex-space-24);
+    }
+
+    .apex-filters__sort {
+      padding-block: var(--apex-space-24);
+      font-size: 1rem;
+    }
+
+    .apex-filters__group:first-of-type {
+      margin-block-start: var(--apex-space-24);
+    }
+
+    .apex-filters__group + .apex-filters__group {
+      margin-block-start: var(--apex-space-32);
+    }
+
+    .apex-filters__legend,
+    .apex-filters__option {
+      font-size: 1rem;
+      line-height: 1.375rem;
+    }
+
+    .apex-filters__options {
+      padding-inline-start: 0;
+    }
+
+    .apex-filters__foot {
+      padding: var(--apex-space-12) var(--apex-space-24) var(--apex-space-24);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .apex-filters[open] {
+      animation: none;
+    }
+
+    .apex-collection__filters-button,
+    .apex-collection__page-arrow,
+    .apex-collection__page,
+    .apex-filters__close,
+    .apex-filters__apply {
+      transition: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX product grid",
+  "tag": "section",
+  "class": "apex-main-collection-section",
+  "settings": [
+    {
+      "type": "range",
+      "id": "per_page",
+      "label": "Products per page",
+      "min": 8,
+      "max": 48,
+      "step": 4,
+      "default": 16
+    },
+    {
+      "type": "paragraph",
+      "content": "Filters come from Shopify's Search & Discovery app (Apps > Search & Discovery > Filters), e.g. Category, Animal type, Dietary category, Product type."
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX product grid"
+    }
+  ]
+}
+{% endschema %}

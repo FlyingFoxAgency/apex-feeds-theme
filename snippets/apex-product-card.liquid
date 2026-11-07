@@ -8,8 +8,14 @@
   used instead. The rating uses the standard reviews.rating
   metafield that review apps fill in, and is hidden without one.
 
+  With show_buttons (the category page): an Add to cart button under the text, and on hover the
+  card grows slightly, darkens and shows a Quick add button over the image (Figma "APEX Category
+  Page"). Products with one variant go straight into the cart; products with options open their
+  product page to choose one.
+
   @param {object} product - The product to show
   @param {string} [sizes] - The image sizes attribute
+  @param {boolean} [show_buttons] - Show Add to cart and the hover Quick add
 
   @example
   {% render 'apex-product-card', product: product %}
@@ -34,8 +40,12 @@
     assign note = note | append: '.'
   endif
   assign image = product.featured_media.preview_image
+  assign single_variant = false
+  if product.has_only_default_variant or product.variants.size == 1
+    assign single_variant = true
+  endif
 -%}
-<article class="apex-product-card">
+<article class="apex-product-card{% if show_buttons %} apex-product-card--buttons{% endif %}">
   <a class="apex-product-card__link" href="{{ product.url }}">
     <div class="apex-product-card__media">
       {%- if image != blank -%}
@@ -80,14 +90,56 @@
       {%- endif -%}
     </div>
   </a>
+
+  {%- if show_buttons -%}
+    {%- liquid
+      if product.available == false
+        assign cart_label = 'Sold out'
+      elsif single_variant
+        assign cart_label = 'Add to cart'
+      else
+        assign cart_label = 'Choose options'
+      endif
+    -%}
+    <div class="apex-product-card__actions">
+      {%- if product.available and single_variant -%}
+        <form class="apex-product-card__form" action="{{ routes.cart_add_url }}" method="post">
+          <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+          <input type="hidden" name="quantity" value="1">
+          <button type="submit" class="apex-product-card__cart">{{ cart_label }}</button>
+        </form>
+      {%- elsif product.available -%}
+        <a class="apex-product-card__cart" href="{{ product.url }}">{{ cart_label }}</a>
+      {%- else -%}
+        <span class="apex-product-card__cart apex-product-card__cart--disabled">{{ cart_label }}</span>
+      {%- endif -%}
+    </div>
+
+    {%- if product.available -%}
+      <div class="apex-product-card__hover" aria-hidden="true">
+        {%- if single_variant -%}
+          <form action="{{ routes.cart_add_url }}" method="post">
+            <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+            <input type="hidden" name="quantity" value="1">
+            <button type="submit" class="apex-product-card__quick" tabindex="-1">
+              {{- 'apex-icon-bag.svg' | inline_asset_content -}}
+              Quick add
+            </button>
+          </form>
+        {%- else -%}
+          <a class="apex-product-card__quick" href="{{ product.url }}" tabindex="-1">
+            {{- 'apex-icon-bag.svg' | inline_asset_content -}}
+            Quick add
+          </a>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  {%- endif -%}
 </article>
 
 {% stylesheet %}
   .apex-product-card {
-    height: 100%;
-  }
-
-  .apex-product-card__link {
+    position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -96,6 +148,12 @@
     background-color: var(--apex-glass-bg);
     -webkit-backdrop-filter: blur(var(--apex-glass-blur));
     backdrop-filter: blur(var(--apex-glass-blur));
+  }
+
+  .apex-product-card__link {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
     color: var(--apex-olive);
     text-decoration: none;
   }
@@ -201,8 +259,150 @@
     padding-block-start: var(--apex-space-24);
   }
 
+  /* Category page buttons (Figma: 243 x 30 burrow pill, sandstone label; amber on hover) */
+  .apex-product-card__actions {
+    position: relative;
+    z-index: 2;
+    padding: 0 21px 21px;
+  }
+
+  .apex-product-card--buttons .apex-product-card__note {
+    padding-block-start: var(--apex-space-8);
+  }
+
+  .apex-product-card--buttons .apex-product-card__info {
+    padding-block-end: var(--apex-space-16);
+  }
+
+  .apex-product-card__form {
+    margin: 0;
+  }
+
+  .apex-product-card__cart {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 30px;
+    padding: 3px var(--apex-space-16);
+    border: 0;
+    border-radius: var(--apex-radius-pill);
+    background-color: var(--apex-burrow);
+    color: var(--apex-sandstone);
+    font-family: var(--font-body--family);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease,
+      scale 0.2s var(--ease-out-cubic, ease-out);
+  }
+
+  .apex-product-card__cart--disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .apex-product-card__cart:not(.apex-product-card__cart--disabled):is(:hover, :focus-visible) {
+    scale: 1.06;
+  }
+
+  /* Hover (pointer devices): the card grows a little, darkens, its button turns amber and Quick
+     add appears over the image */
+  .apex-product-card--buttons {
+    transition: scale 0.3s var(--ease-out-cubic, ease-out);
+  }
+
+  .apex-product-card--buttons::after {
+    content: '';
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    border-radius: inherit;
+    background-color: rgb(64 68 61 / 0.18);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .apex-product-card__hover {
+    position: absolute;
+    z-index: 3;
+    inset-inline: 0;
+    inset-block-start: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 288 / 245;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .apex-product-card__hover form {
+    margin: 0;
+  }
+
+  .apex-product-card__quick {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--apex-space-8);
+    min-height: 48px;
+    padding: var(--apex-space-12) var(--apex-space-20);
+    border: 0;
+    border-radius: var(--apex-radius-pill);
+    background-color: var(--apex-burrow);
+    box-shadow: 0 4px 16px rgb(0 0 0 / 0.15);
+    color: var(--apex-sandstone);
+    font-family: var(--font-body--family);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    line-height: 1.5rem;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition: scale 0.2s var(--ease-out-cubic, ease-out);
+  }
+
+  .apex-product-card__quick svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .apex-product-card__quick:is(:hover, :focus-visible) {
+    scale: 1.06;
+  }
+
+  @media (hover: hover) {
+    .apex-product-card--buttons:hover {
+      scale: 1.05;
+      z-index: 1;
+    }
+
+    .apex-product-card--buttons:hover::after,
+    .apex-product-card--buttons:hover .apex-product-card__hover {
+      opacity: 1;
+    }
+
+    .apex-product-card--buttons:hover .apex-product-card__hover {
+      pointer-events: auto;
+    }
+
+    .apex-product-card--buttons:hover .apex-product-card__cart:not(.apex-product-card__cart--disabled) {
+      background-color: var(--apex-amber);
+      color: var(--apex-burrow);
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .apex-product-card__media img {
+    .apex-product-card__media img,
+    .apex-product-card--buttons,
+    .apex-product-card__cart,
+    .apex-product-card__quick {
       transition: none;
     }
   }

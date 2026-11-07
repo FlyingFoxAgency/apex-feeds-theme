@@ -1,0 +1,205 @@
+{% comment %}
+  APEX collection header (Figma "APEX Category Page" > Category Header): a full-width panel that
+  fades from clear on the left to burrow on the right, with an eyebrow, the collection name in
+  large Dharma, its description, and line art on the right (the snowflakes on Frozen Meals).
+
+  Per collection, the eyebrow and line art can come from collection metafields:
+  custom.eyebrow (single line text) and custom.header_art (file, image). Without them the section
+  settings are used.
+{% endcomment %}
+{%- liquid
+  assign eyebrow = collection.metafields.custom.eyebrow.value | default: section.settings.eyebrow
+  assign art = collection.metafields.custom.header_art.value | default: section.settings.decoration
+  assign title = collection.title | default: section.settings.fallback_title
+  if request.page_type == 'search'
+    assign title = section.settings.fallback_title
+  endif
+-%}
+<div
+  class="apex-collection-header"
+  style="--apex-collection-from: {{ section.settings.gradient_from }}; --apex-collection-to: {{ section.settings.gradient_to }};"
+>
+  <div class="apex-container apex-collection-header__inner">
+    <div class="apex-collection-header__content">
+      {%- if eyebrow != blank -%}
+        <p class="apex-eyebrow apex-collection-header__eyebrow">{{ eyebrow | escape }}</p>
+      {%- endif -%}
+      <h1 class="apex-collection-header__title">{{ title | escape }}</h1>
+      {%- if section.settings.show_description and collection.description != blank -%}
+        <div class="apex-collection-header__text">{{ collection.description }}</div>
+      {%- endif -%}
+    </div>
+
+    {%- if art != blank -%}
+      <div class="apex-collection-header__art" aria-hidden="true">
+        {{ art | image_url: width: 1000 | image_tag: loading: 'eager', alt: '', sizes: '(min-width: 990px) 463px, 50vw' }}
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+{% stylesheet %}
+  .apex-collection-header {
+    position: relative;
+    isolation: isolate;
+    margin-block-start: 53px;
+    background: linear-gradient(
+      270deg,
+      var(--apex-collection-from) 0%,
+      var(--apex-collection-from) 31%,
+      var(--apex-collection-to) 53%,
+      transparent 100%
+    );
+  }
+
+  .apex-collection-header__inner {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    min-height: 461px;
+  }
+
+  /* Figma: eyebrow 30px from the top, 51px in from the grid; text 578px wide */
+  .apex-collection-header__content {
+    position: relative;
+    z-index: 1;
+    max-width: calc(578px + 51px);
+    padding: 30px 0 43px 51px;
+  }
+
+  .apex-collection-header__eyebrow {
+    margin: 0;
+  }
+
+  /* Dharma 128/102 with Figma's soft drop shadow */
+  .apex-collection-header__title {
+    margin: 35px 0 0 -18px;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: clamp(4rem, 8.9vw, 8rem);
+    line-height: 0.8;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+    text-shadow: 0 4px 4.3px rgb(0 0 0 / 0.25);
+  }
+
+  .apex-collection-header__text {
+    margin-block-start: 35px;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+    color: var(--apex-burrow);
+  }
+
+  .apex-collection-header__text > :first-child {
+    margin-block-start: 0;
+  }
+
+  .apex-collection-header__text > :last-child {
+    margin-block-end: 0;
+  }
+
+  /* Line art at the top right (Figma: 463 x 388, 46px from the top) */
+  .apex-collection-header__art {
+    position: absolute;
+    inset-block-start: 46px;
+    inset-inline-end: 19px;
+    width: min(463px, 36vw);
+    pointer-events: none;
+  }
+
+  .apex-collection-header__art img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-collection-header {
+      margin-block-start: var(--apex-space-32);
+      background: linear-gradient(
+        270deg,
+        var(--apex-collection-from) 0%,
+        var(--apex-collection-to) 55%,
+        transparent 100%
+      );
+    }
+
+    .apex-collection-header__inner {
+      min-height: 0;
+    }
+
+    .apex-collection-header__content {
+      padding: var(--apex-space-32) 0;
+    }
+
+    .apex-collection-header__title {
+      margin: var(--apex-space-24) 0 0;
+    }
+
+    .apex-collection-header__text {
+      margin-block-start: var(--apex-space-24);
+      max-width: 60ch;
+    }
+
+    .apex-collection-header__art {
+      inset-block-start: var(--apex-space-24);
+      inset-inline-end: calc(-1 * var(--page-margin, 16px));
+      width: 40vw;
+      opacity: 0.6;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX collection header",
+  "tag": "section",
+  "class": "apex-collection-header-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Premium animal supplements",
+      "info": "A collection's own custom.eyebrow metafield replaces this."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_description",
+      "label": "Show the collection description",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "fallback_title",
+      "label": "Title when there's no collection",
+      "default": "Shop all"
+    },
+    {
+      "type": "image_picker",
+      "id": "decoration",
+      "label": "Line art on the right",
+      "info": "Transparent PNG (e.g. the snowflakes, 463 x 388). A collection's own custom.header_art metafield replaces this."
+    },
+    {
+      "type": "color",
+      "id": "gradient_from",
+      "label": "Panel colour (right)",
+      "default": "#40443D"
+    },
+    {
+      "type": "color",
+      "id": "gradient_to",
+      "label": "Panel middle colour",
+      "default": "#A0AA98",
+      "info": "Fades to clear on the left."
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX collection header"
+    }
+  ]
+}
+{% endschema %}
