@@ -948,3 +948,15 @@ html:has(.menu-drawer-container[open]) .apex-help-button {
   width: 24px;
   height: 24px;
 }
+
+/* Tapping a link on a phone flashes amber instead of the browser's blue (Ell). In the menu
+   drawer the tapped link's text turns amber too, matching the current page's amber. */
+html {
+  -webkit-tap-highlight-color: rgb(230 150 64 / 0.3);
+}
+
+#header-component
+  .menu-drawer
+  :is(.menu-drawer__menu-item, .apex-drawer-social__link):active {
+  color: var(--apex-amber);
+}
