@@ -1,6 +1,6 @@
 {% doc %}
-  APEX: the header's secondary links (Wholesale, Stockists), added to the end of the mobile
-  menu drawer list so they're reachable when the desktop links are hidden.
+  APEX: the header's secondary links (Wholesale, Stockists), then My account and Cart, added to
+  the end of the mobile menu drawer list so they're reachable when the desktop links are hidden.
 
   @param {object} section - The header section
   @param {string} drawer_type - Only renders for 'mobile-drawer'
@@ -27,4 +27,36 @@
       </a>
     </li>
   {%- endfor -%}
+{%- endif -%}
+{%- if drawer_type == 'mobile-drawer' -%}
+  {%- liquid
+    assign extra_index = start_index | default: 0
+    if linklist != blank
+      assign extra_index = extra_index | plus: linklist.links.size
+    endif
+  -%}
+  {%- if shop.customer_accounts_enabled -%}
+    <li class="menu-drawer__list-item" style="--menu-drawer-animation-index: {{ extra_index | plus: 1 }};">
+      <a
+        href="{{ routes.account_url }}"
+        class="menu-drawer__menu-item menu-drawer__menu-item--mainlist menu-drawer__animated-element"
+        {% if request.page_type contains 'customers/' %}
+          aria-current="page"
+        {% endif %}
+      >
+        <span class="menu-drawer__menu-item-text wrap-text">My account</span>
+      </a>
+    </li>
+  {%- endif -%}
+  <li class="menu-drawer__list-item" style="--menu-drawer-animation-index: {{ extra_index | plus: 2 }};">
+    <a
+      href="{{ routes.cart_url }}"
+      class="menu-drawer__menu-item menu-drawer__menu-item--mainlist menu-drawer__animated-element"
+      {% if request.page_type == 'cart' %}
+        aria-current="page"
+      {% endif %}
+    >
+      <span class="menu-drawer__menu-item-text wrap-text">Cart</span>
+    </a>
+  </li>
 {%- endif -%}

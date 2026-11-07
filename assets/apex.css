@@ -894,3 +894,57 @@ html:has(.menu-drawer-container[open]) .apex-help-button {
   line-height: 1;
   text-transform: uppercase;
 }
+
+/* Close button: top right of the drawer, 48px square (Ell) */
+#header-component .menu-drawer .menu-drawer__close-button {
+  position: absolute;
+  z-index: 2;
+  inset-block-start: calc(
+    var(--safe-area-inset-top, 0px) + var(--apex-space-12)
+  );
+  inset-inline-end: var(--apex-space-16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+}
+
+#header-component .menu-drawer .menu-drawer__close-button .header-drawer-icon {
+  width: 24px;
+  height: 24px;
+}
+
+#header-component .menu-drawer .menu-drawer__close-button svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Links start level with the close button */
+#header-component .menu-drawer .menu-drawer__navigation {
+  margin-block-start: var(--apex-space-12);
+}
+
+/* Social icons under the links (snippets/apex-drawer-social) */
+.apex-drawer-social {
+  display: flex;
+  gap: 23px;
+  margin: var(--apex-space-32) 0 0;
+  padding: 0 var(--drawer-padding, var(--padding-lg));
+}
+
+.apex-drawer-social__link {
+  display: flex;
+  color: var(--apex-burrow);
+  transition: scale 0.2s var(--ease-out-cubic, ease-out);
+}
+
+.apex-drawer-social__link:is(:hover, :focus-visible) {
+  scale: 1.06;
+}
+
+.apex-drawer-social__link svg {
+  width: 24px;
+  height: 24px;
+}
