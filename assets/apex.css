@@ -93,6 +93,12 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
     --apex-panel-radius: 20px;
   }
 
+  /* Half the desktop padding above and below the text on phones (Ell) */
+  .announcement-bar.spacing-style {
+    padding-block: calc(var(--padding-block-start, 0px) / 2)
+      calc(var(--padding-block-end, 0px) / 2);
+  }
+
   .announcement-bar .announcement-bar__text {
     font-size: 0.8125rem;
     line-height: 1.25rem;
