@@ -3,7 +3,7 @@
   has a rounded dried moss panel with a large faded word (or a photo), a label and an outline
   button. Each card is a block.
 {% endcomment %}
-<div class="apex-category-cards apex-container"
+<apex-category-cards class="apex-category-cards apex-container"
   {% if section.settings.indicator_label != blank %} data-apex-indicator-label="{{ section.settings.indicator_label | escape }}"{% endif %}
 >
   {%- if section.settings.title != blank -%}
@@ -26,7 +26,7 @@
             {{
               block.settings.image
               | image_url: width: 800
-              | image_tag: loading: 'lazy', sizes: '(min-width: 990px) 370px, 100vw', widths: '400, 600, 800', alt: ''
+              | image_tag: loading: 'lazy', sizes: '(min-width: 990px) 370px, (min-width: 750px) 50vw, 80vw', widths: '400, 600, 800', alt: ''
             }}
           {%- endif -%}
           {%- if card_word != blank -%}
@@ -45,7 +45,37 @@
       </li>
     {%- endfor -%}
   </ul>
-</div>
+</apex-category-cards>
+
+<script type="module">
+  // Phones: the cards slide sideways. A card counts as current while it is mostly on screen;
+  // the others are faded (see the phone styles below).
+  if (!customElements.get('apex-category-cards')) {
+    customElements.define(
+      'apex-category-cards',
+      class extends HTMLElement {
+        connectedCallback() {
+          const list = this.querySelector('.apex-category-cards__list');
+          if (!list || !('IntersectionObserver' in window)) return;
+          this.observer = new IntersectionObserver(
+            (entries) => {
+              for (const entry of entries) {
+                entry.target.classList.toggle('is-current', entry.intersectionRatio >= 0.75);
+              }
+            },
+            { root: list, threshold: [0, 0.75, 1] }
+          );
+          for (const card of list.children) this.observer.observe(card);
+          this.setAttribute('data-ready', '');
+        }
+
+        disconnectedCallback() {
+          this.observer?.disconnect();
+        }
+      }
+    );
+  }
+</script>
 
 {% stylesheet %}
   .apex-category-cards {
@@ -127,9 +157,47 @@
     }
   }
 
+  /* Phones: a sideways slider running to both screen edges. Cards are narrower than the screen
+     so the next one peeks in, and cards that aren't on screen are faded, like the About slides. */
   @media screen and (max-width: 749px) {
+    apex-category-cards {
+      display: block;
+    }
+
     .apex-category-cards__list {
-      grid-template-columns: minmax(0, 1fr);
+      --apex-category-bleed: calc((100vw - 100%) / 2);
+
+      display: grid;
+      grid-template-columns: none;
+      grid-auto-flow: column;
+      grid-auto-columns: 80%;
+      gap: var(--apex-space-16);
+      margin-inline: calc(-1 * var(--apex-category-bleed));
+      padding-inline: var(--apex-category-bleed);
+      /* In px: a % here would measure the scroller, not the section */
+      scroll-padding-inline: var(--page-margin, 16px);
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+
+    .apex-category-cards__list::-webkit-scrollbar {
+      display: none;
+    }
+
+    .apex-category-card {
+      scroll-snap-align: start;
+      transition: opacity 0.4s ease;
+    }
+
+    /* Room for the buttons' hover growth inside the scroller */
+    .apex-category-card__button {
+      margin-block-end: var(--apex-space-4);
+    }
+
+    apex-category-cards[data-ready] .apex-category-card:not(.is-current) {
+      opacity: 0.5;
     }
 
     .apex-category-card__word {
