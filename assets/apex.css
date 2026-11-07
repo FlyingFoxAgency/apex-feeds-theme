@@ -586,6 +586,29 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
     margin-block-start: var(--apex-space-8);
   }
 
+  /* Tighter gap from the email sign-up to the dropdowns (Ell): the social icons sit 24px under
+     the email field (and take no room until they have links), then 32px to the dropdowns */
+  .footer-content:has(.apex-dedication) .social-icons__wrapper {
+    padding-block-start: var(--apex-space-24);
+  }
+
+  .footer-content:has(.apex-dedication) .social-icons__wrapper:not(:has(a)) {
+    display: none;
+  }
+
+  .footer-content:has(.apex-dedication)
+    > :not(.menu--accordion)
+    + .menu--accordion {
+    margin-block-start: calc(var(--apex-space-32) - var(--apex-space-48));
+  }
+
+  /* Copyright and the Flying Fox credit sit close together (8px), payment icons below */
+  .shopify-section-group-footer-group
+    .utilities
+    > :last-child:not(.apex-payment-icons) {
+    margin-block-start: -16px;
+  }
+
   /* Footer bottom: copyright, then the Flying Fox credit, then the payment icons */
   .shopify-section-group-footer-group .utilities > :has(.apex-payment-icons),
   .shopify-section-group-footer-group .utilities > .apex-payment-icons {
