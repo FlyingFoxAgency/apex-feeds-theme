@@ -520,6 +520,79 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
   }
 }
 
+/* Phones: Shop, Information and FAQs become dropdowns stacked in one outlined box (the menu
+   blocks' "Show as accordion" setting), between the sign-up and the LH mark. */
+@media screen and (max-width: 749px) {
+  .footer-content:has(.apex-dedication) > .menu--accordion {
+    border: 1px solid rgb(234 221 198 / 0.18);
+    border-block-end-width: 0;
+  }
+
+  /* Pull the boxes together (cancels the footer's row gap) */
+  .footer-content:has(.apex-dedication) > .menu--accordion + .menu--accordion {
+    margin-block-start: calc(-1 * var(--apex-space-48));
+  }
+
+  .footer-content:has(.apex-dedication)
+    > :not(.menu--accordion)
+    + .menu--accordion {
+    border-start-start-radius: var(--apex-radius-md);
+    border-start-end-radius: var(--apex-radius-md);
+  }
+
+  .footer-content:has(.apex-dedication)
+    > .menu--accordion:not(:has(+ .menu--accordion)) {
+    border-block-end-width: 1px;
+    border-end-start-radius: var(--apex-radius-md);
+    border-end-end-radius: var(--apex-radius-md);
+  }
+
+  .footer-content:has(.apex-dedication) .menu--accordion .menu__heading {
+    display: flex;
+    align-items: center;
+    gap: var(--apex-space-16);
+    min-height: 64px;
+    padding: var(--apex-space-16) var(--apex-space-20);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .footer-content:has(.apex-dedication)
+    .menu--accordion
+    .menu__heading::-webkit-details-marker {
+    display: none;
+  }
+
+  .footer-content:has(.apex-dedication)
+    .menu--accordion
+    .menu__heading__toggle {
+    width: 14px;
+    height: 14px;
+    color: var(--apex-sandstone);
+  }
+
+  .footer-content:has(.apex-dedication)
+    .menu--accordion
+    .menu__details
+    .details-content {
+    margin: 0;
+    padding: 0 var(--apex-space-20) var(--apex-space-20);
+  }
+
+  .footer-content:has(.apex-dedication)
+    .menu--accordion
+    .menu__item
+    + .menu__item {
+    margin-block-start: var(--apex-space-8);
+  }
+
+  /* Footer bottom: copyright, then the Flying Fox credit, then the payment icons */
+  .shopify-section-group-footer-group .utilities > :has(.apex-payment-icons),
+  .shopify-section-group-footer-group .utilities > .apex-payment-icons {
+    order: 1;
+  }
+}
+
 /* Footer bottom: onyx bar, Body/Small sandstone text, payment icons centred */
 .shopify-section-group-footer-group .utilities {
   color: var(--apex-sandstone);
