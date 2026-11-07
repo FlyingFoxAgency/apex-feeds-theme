@@ -1,0 +1,480 @@
+{% comment %}
+  APEX feature (Figma "Shop Premium"): a section title, then a full-width gradient panel with
+  a large product image breaking out above and below it on the left, text and a dark button on
+  the right, and optional line art (the snake) behind the top right.
+{% endcomment %}
+<div
+  class="apex-feature"
+  data-apex-feature
+  {% if section.settings.indicator_label != blank %} data-apex-indicator-label="{{ section.settings.indicator_label | escape }}"{% endif %}
+  style="--apex-feature-from: {{ section.settings.gradient_from }}; --apex-feature-to: {{ section.settings.gradient_to }};{% if section.settings.phone_panel != blank %} --apex-feature-phone-bg: {{ section.settings.phone_panel }};{% endif %}"
+>
+  <div class="apex-feature__stage">
+    {%- if section.settings.decoration != blank -%}
+      <div class="apex-decoration apex-feature__decoration" aria-hidden="true">
+        {{ section.settings.decoration | image_url: width: 1200 | image_tag: loading: 'lazy', alt: '' }}
+      </div>
+    {%- endif -%}
+
+    {%- if section.settings.title != blank -%}
+      <div class="apex-container">
+        <h2 class="apex-section-title apex-feature__title">{{ section.settings.title | escape }}</h2>
+      </div>
+    {%- endif -%}
+
+    <div class="apex-feature__panel">
+      {%- if section.settings.image != blank -%}
+        <div class="apex-feature__media">
+          {{
+            section.settings.image
+            | image_url: width: 2200
+            | image_tag:
+              loading: 'lazy',
+              sizes: '(min-width: 990px) 75vw, (min-width: 750px) 100vw, 160vw',
+              widths: '600, 900, 1200, 1600, 2200',
+              alt: section.settings.image.alt
+          }}
+        </div>
+      {%- elsif request.design_mode -%}
+        <div class="apex-feature__media apex-feature__media--placeholder">
+          {{ 'product-apparel-2' | placeholder_svg_tag }}
+        </div>
+      {%- endif -%}
+
+      <div class="apex-feature__content">
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="apex-eyebrow apex-feature__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+        {%- if section.settings.heading != blank -%}
+          <h3 class="apex-feature__heading">{{ section.settings.heading | newline_to_br }}</h3>
+        {%- endif -%}
+        {%- if section.settings.text != blank -%}
+          <div class="apex-feature__text">{{ section.settings.text }}</div>
+        {%- endif -%}
+        {%- if section.settings.button_label != blank -%}
+          <a class="apex-button apex-button--dark apex-feature__button" href="{{ section.settings.button_link | default: routes.all_products_collection_url }}">
+            <span class="apex-button__label">{{ section.settings.button_label | escape }}</span>
+          </a>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</div>
+
+{%- unless request.design_mode -%}
+  <script type="module">
+    // Once the visitor has started scrolling: fade the gradient panel in when the section comes
+    // into view, then grow the product image in once the panel nears the middle of the screen.
+    // Without JavaScript (or in the theme editor) both just show.
+    const motionOk = window.matchMedia('(prefers-reduced-motion: no-preference)').matches;
+    const sections = document.querySelectorAll('[data-apex-feature]:not([data-apex-fade])');
+
+    if (motionOk && 'IntersectionObserver' in window) {
+      for (const section of sections) {
+        const panel = section.querySelector('.apex-feature__panel');
+        if (!panel) continue;
+        section.setAttribute('data-apex-fade', '');
+
+        let scrolled = false;
+        const state = { section: false, middle: false };
+        const update = () => {
+          if (!scrolled) return;
+          if (state.section) section.classList.add('is-shown');
+          if (state.middle) section.classList.add('is-media-shown');
+          if (section.classList.contains('is-media-shown')) {
+            sectionObserver.disconnect();
+            middleObserver.disconnect();
+            document.removeEventListener('scroll', onScroll, { capture: true });
+          }
+        };
+        const onScroll = () => {
+          scrolled = true;
+          update();
+        };
+        const watch = (key) => ([entry]) => {
+          state[key] = entry.isIntersecting;
+          update();
+        };
+        const sectionObserver = new IntersectionObserver(watch('section'), {
+          rootMargin: '0px 0px -15% 0px',
+        });
+        // The panel's top has passed 55% of the way down the screen
+        const middleObserver = new IntersectionObserver(watch('middle'), {
+          rootMargin: '0px 0px -45% 0px',
+        });
+        sectionObserver.observe(section);
+        middleObserver.observe(panel);
+        document.addEventListener('scroll', onScroll, { capture: true, passive: true });
+      }
+    }
+  </script>
+{%- endunless -%}
+
+{% stylesheet %}
+  /* Fade-in (see the script above). The panel's transition sits on the shown state only, so
+     hiding it at load is instant. */
+  .apex-feature.is-shown .apex-feature__panel::before {
+    transition: opacity 2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+
+  .apex-feature[data-apex-fade]:not(.is-shown) .apex-feature__panel::before,
+  .apex-feature[data-apex-fade]:not(.is-media-shown) .apex-feature__media {
+    opacity: 0;
+  }
+
+  /* The product image grows out from the centre of its box and settles with a slight bounce,
+     like the hero's product image */
+  .apex-feature.is-media-shown .apex-feature__media {
+    animation: apex-feature-media-in 1.4s linear both;
+  }
+
+  @keyframes apex-feature-media-in {
+    0% {
+      opacity: 0;
+      scale: 0.2;
+      animation-timing-function: cubic-bezier(0.3, 0.7, 0.4, 1);
+    }
+
+    55% {
+      opacity: 1;
+      scale: 1.03;
+      animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+    }
+
+    78% {
+      scale: 0.995;
+      animation-timing-function: ease-out;
+    }
+
+    100% {
+      scale: 1;
+    }
+  }
+
+  .apex-feature {
+    overflow-x: clip;
+  }
+
+  /* Laid out on a 1440px stage: 1cqw = 14.4px at full size */
+  .apex-feature__stage {
+    position: relative;
+    max-width: 1440px;
+    margin-inline: auto;
+    container-type: inline-size;
+    isolation: isolate;
+  }
+
+  .apex-feature__title {
+    position: relative;
+    z-index: 2;
+  }
+
+  .apex-feature__panel {
+    position: relative;
+    margin-block-start: var(--apex-space-24);
+  }
+
+  .apex-feature__panel::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset-block: 0;
+    inset-inline: calc((100cqw - 100vw) / 2);
+    background: linear-gradient(
+      90deg,
+      var(--apex-feature-from) 0%,
+      var(--apex-feature-from) 31%,
+      var(--apex-feature-to) 53%,
+      transparent 100%
+    );
+  }
+
+  .apex-feature__media img,
+  .apex-feature__media svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .apex-feature__media--placeholder svg {
+    aspect-ratio: 1127 / 940;
+    fill: rgb(64 68 61 / 0.15);
+  }
+
+  .apex-feature__content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    color: var(--apex-burrow);
+  }
+
+  .apex-feature__eyebrow {
+    margin: 0 0 var(--apex-space-24);
+  }
+
+  .apex-feature__heading {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: var(--font-size--h1);
+    line-height: 0.8;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-feature__text {
+    max-width: 347px;
+    margin-block-start: var(--apex-space-24);
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+  }
+
+  .apex-feature__text p {
+    margin: 0;
+  }
+
+  .apex-feature__button {
+    margin-block-start: var(--apex-space-48);
+  }
+
+  @media screen and (min-width: 990px) {
+    .apex-feature {
+      /* Room for the jars that hang below the panel */
+      padding-block: 116px 0;
+    }
+
+    /* Space below the panel before Shop by animals: half of Figma's gap (Ell). Set on the
+       panel, not the stage: cqw on the stage itself would measure the screen, not the stage. */
+    .apex-feature__panel {
+      display: flex;
+      align-items: center;
+      min-height: 32.01cqw;
+      margin-block-end: calc(7.8cqw - 10px);
+    }
+
+    .apex-feature__media {
+      position: absolute;
+      z-index: 1;
+      inset-block-start: -17.71cqw;
+      /* Figma position, plus 50px further left to break the grid (Ell) */
+      inset-inline-start: calc(-1.25cqw - 50px);
+      /* 5% smaller than Figma (78.26cqw) so the jars clear the next section title (Ell) */
+      width: 74.35cqw;
+      pointer-events: none;
+    }
+
+    .apex-feature__content {
+      width: min(476px, 33cqw);
+      padding-block: 38px 48px;
+      margin-inline-start: 60.69cqw;
+    }
+
+    .apex-feature__decoration {
+      inset-block-start: calc(var(--font-size--h2) * 0.95 + var(--apex-space-24) - 17.22cqw);
+      inset-inline-start: 75.49cqw;
+      width: 40.97cqw;
+    }
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-feature {
+      padding-block: var(--apex-space-64) var(--apex-space-48);
+    }
+
+    .apex-feature__panel::before {
+      background: linear-gradient(
+        180deg,
+        transparent 0%,
+        var(--apex-feature-to) 45%,
+        transparent 100%
+      );
+    }
+
+    .apex-feature__media {
+      width: min(100%, 640px);
+      margin-inline: auto;
+    }
+
+    .apex-feature__content {
+      padding: var(--apex-space-24) var(--page-margin, 16px) var(--apex-space-48);
+    }
+
+    .apex-feature__decoration {
+      inset-block-start: 0;
+      inset-inline-end: -20%;
+      width: 60%;
+      opacity: 0.6;
+    }
+  }
+
+  /* Phone (Figma "APEX Home Page- Mobile", 402px wide: 1vw = 4.02px). A solid dark panel with
+     the text at the top, silver heading and button, and the jars overlapping its lower half and
+     hanging below it, cut off by the right edge of the screen. */
+  @media screen and (max-width: 749px) {
+    .apex-feature {
+      padding-block: 16.2vw 0;
+    }
+
+    .apex-feature__title,
+    .apex-feature__decoration {
+      display: none;
+    }
+
+    .apex-feature__panel {
+      min-height: 140.5vw;
+      /* Room for the jars hanging below, then a 24px gap to Shop by animals, tighter than
+         Figma's 66px (Ell). Its own top padding makes up 20px of that. */
+      margin-block: 0 calc(45.8vw + 4px);
+    }
+
+    /* The onyx sits on the panel itself here (no fade), so it always shows */
+    .apex-feature__panel {
+      background-color: var(--apex-feature-phone-bg, #242623);
+    }
+
+    .apex-feature__panel::before {
+      display: none;
+    }
+
+    .apex-feature__media {
+      position: absolute;
+      z-index: 1;
+      inset-block-start: 53.5vw;
+      inset-inline-start: 1vw;
+      width: 159.25vw;
+      max-width: none;
+      margin: 0;
+      pointer-events: none;
+      filter: drop-shadow(8px 15px 63px rgb(0 0 0 / 0.25));
+    }
+
+    .apex-feature__content {
+      padding: 5.7vw 8vw 0;
+      color: #fff;
+    }
+
+    .apex-feature__eyebrow {
+      margin-block-end: 17px;
+      color: inherit;
+    }
+
+    .apex-feature__heading {
+      max-width: 80.4vw;
+      font-size: 23.9vw;
+      background: var(--apex-silver-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .apex-feature__text {
+      max-width: 79.4vw;
+    }
+
+    .apex-feature__button {
+      margin-block-start: 35px;
+      background: var(--apex-silver-gradient);
+      border-color: transparent;
+      color: var(--apex-onyx);
+    }
+
+    .apex-feature__button .apex-button__label {
+      background: none;
+      color: inherit;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX feature",
+  "tag": "section",
+  "class": "apex-feature-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "indicator_label",
+      "label": "Name in the page indicator",
+      "default": "Superblend",
+      "info": "Shown next to this section's dot on the left. Leave blank to leave it out."
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Section title",
+      "default": "Shop premium Superblend range"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Product image",
+      "info": "Transparent PNG of the three jars together, about 2250 x 1880px (Figma layers \"APEX_Jar_Mockup-Gold 2\", \"-Green2 2\" and \"-Purple 2\" exported as one)."
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Premium animal supplements"
+    },
+    {
+      "type": "textarea",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Superblend\ndietary supplement"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Text",
+      "default": "<p>Welcome to Burger Bliss, where we take your cravings to a whole new level! Our mouthwatering burgers are made from 100% beef and are served on freshly baked buns.</p>"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label",
+      "default": "Shop premium range"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Button link"
+    },
+    {
+      "type": "header",
+      "content": "Panel"
+    },
+    {
+      "type": "color",
+      "id": "gradient_from",
+      "label": "Gradient start (left)",
+      "default": "#40443D"
+    },
+    {
+      "type": "color",
+      "id": "gradient_to",
+      "label": "Gradient middle",
+      "default": "#A0AA98",
+      "info": "Fades to transparent on the right."
+    },
+    {
+      "type": "color",
+      "id": "phone_panel",
+      "label": "Panel colour on phones",
+      "default": "#242623"
+    },
+    {
+      "type": "image_picker",
+      "id": "decoration",
+      "label": "Line art behind the top right",
+      "info": "Transparent PNG (Figma \"Snake Vector\", 590 x 588)."
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX feature"
+    }
+  ]
+}
+{% endschema %}

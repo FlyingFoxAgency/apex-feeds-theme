@@ -28,7 +28,8 @@
       const update = () => {
         queued = false;
         const lift = window.innerHeight - line.getBoundingClientRect().top + clearance;
-        button.style.setProperty('--apex-help-lift', `${Math.max(0, Math.round(lift))}px`);
+        // Set on the page so the page indicator can rise with the button too
+        document.documentElement.style.setProperty('--apex-help-lift', `${Math.max(0, Math.round(lift))}px`);
       };
       const queue = () => {
         if (queued) return;

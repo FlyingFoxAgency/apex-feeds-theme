@@ -1,0 +1,246 @@
+{% comment %}
+  APEX product carousel (Figma "Best Sellers"): a section title with round arrow buttons on the
+  right, and a sliding row of APEX product cards from one collection. Optional line art (the
+  lizard) sits behind the top left.
+{% endcomment %}
+<script src="{{ 'apex-home.js' | asset_url }}" type="module"></script>
+
+{%- assign collection = section.settings.collection -%}
+
+<div class="apex-product-carousel"
+  {% if section.settings.indicator_label != blank %} data-apex-indicator-label="{{ section.settings.indicator_label | escape }}"{% endif %}
+>
+  {%- if section.settings.decoration != blank -%}
+    <div class="apex-decoration apex-product-carousel__decoration" aria-hidden="true">
+      {{ section.settings.decoration | image_url: width: 1200 | image_tag: loading: 'lazy', alt: '' }}
+    </div>
+  {%- endif -%}
+
+  <apex-carousel class="apex-product-carousel__inner apex-container">
+    <div class="apex-product-carousel__header">
+      {%- if section.settings.title != blank -%}
+        <h2 class="apex-section-title">{{ section.settings.title | escape }}</h2>
+      {%- endif -%}
+      <div class="apex-product-carousel__arrows">
+        <button type="button" class="apex-product-carousel__arrow apex-product-carousel__arrow--prev" data-prev aria-label="Previous products">
+          {{- 'apex-icon-arrow-circle.svg' | inline_asset_content -}}
+        </button>
+        <button type="button" class="apex-product-carousel__arrow" data-next aria-label="Next products">
+          {{- 'apex-icon-arrow-circle.svg' | inline_asset_content -}}
+        </button>
+      </div>
+    </div>
+
+    <ul class="apex-product-carousel__track list-unstyled" data-track role="list">
+      {%- if collection != blank and collection.products_count > 0 -%}
+        {%- for product in collection.products limit: section.settings.products_to_show -%}
+          <li class="apex-product-carousel__item">
+            {%- render 'apex-product-card', product: product -%}
+          </li>
+        {%- endfor -%}
+      {%- else -%}
+        {%- for i in (1..4) -%}
+          <li class="apex-product-carousel__item">
+            <article class="apex-product-card">
+              <div class="apex-product-card__link">
+                <div class="apex-product-card__media">
+                  {{ 'product-1' | placeholder_svg_tag: 'apex-product-card__placeholder' }}
+                </div>
+                <div class="apex-product-card__info">
+                  <p class="apex-product-card__category">Category</p>
+                  <div class="apex-product-card__row">
+                    <h3 class="apex-product-card__title">Product title</h3>
+                    <p class="apex-product-card__price">{{ 4999 | money }}</p>
+                  </div>
+                  <p class="apex-product-card__note">For reptiles + amphibians.</p>
+                </div>
+              </div>
+            </article>
+          </li>
+        {%- endfor -%}
+      {%- endif -%}
+    </ul>
+  </apex-carousel>
+</div>
+
+{% stylesheet %}
+  .apex-product-carousel {
+    position: relative;
+    isolation: isolate;
+    padding-block: var(--apex-space-96) var(--apex-space-96);
+  }
+
+  .apex-product-carousel__decoration {
+    inset-block-start: 0;
+    inset-inline-start: max(-203px, -14vw);
+    width: min(556px, 38.6vw);
+  }
+
+  .apex-product-carousel__inner {
+    position: relative;
+    z-index: 1;
+    display: block;
+  }
+
+  .apex-product-carousel__header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--apex-space-24);
+  }
+
+  .apex-product-carousel__arrows {
+    display: flex;
+    gap: 7px;
+  }
+
+  .apex-product-carousel__arrow {
+    display: flex;
+    width: 41px;
+    height: 41px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--apex-burrow);
+    cursor: pointer;
+    transition:
+      opacity 0.2s ease,
+      scale 0.2s var(--ease-out-cubic, ease-out);
+  }
+
+  .apex-product-carousel__arrow svg {
+    width: 41px;
+    height: 41px;
+  }
+
+  .apex-product-carousel__arrow--prev svg {
+    rotate: 180deg;
+  }
+
+  .apex-product-carousel__arrow:not(:disabled):is(:hover, :focus-visible) {
+    scale: 1.06;
+  }
+
+  .apex-product-carousel__arrow:disabled {
+    opacity: 0.24;
+    cursor: default;
+  }
+
+  apex-carousel[data-static] .apex-product-carousel__arrows {
+    visibility: hidden;
+  }
+
+  .apex-product-carousel__track {
+    --apex-carousel-gap: 20px;
+    --apex-carousel-visible: 4;
+
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: calc(
+      (100% - (var(--apex-carousel-visible) - 1) * var(--apex-carousel-gap)) / var(--apex-carousel-visible)
+    );
+    gap: var(--apex-carousel-gap);
+    margin: var(--apex-space-24) 0 0;
+    padding: 0;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .apex-product-carousel__track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .apex-product-carousel__item {
+    scroll-snap-align: start;
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-product-carousel__track {
+      --apex-carousel-visible: 2.3;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    /* 72px from the Shop by animals buttons above (Ell), with their 4px margin */
+    .apex-product-carousel {
+      padding-block: 68px var(--apex-space-64);
+    }
+
+    /* The row runs to both screen edges and cards that aren't fully on screen are faded,
+       like the other sliders */
+    .apex-product-carousel__track {
+      --apex-carousel-visible: 1.3;
+      --apex-carousel-gap: 16px;
+      --apex-carousel-bleed: calc((100vw - 100%) / 2);
+
+      margin-inline: calc(-1 * var(--apex-carousel-bleed));
+      padding-inline: var(--apex-carousel-bleed);
+      /* In px: a % here would measure the scroller, not the section */
+      scroll-padding-inline: var(--page-margin, 16px);
+      overscroll-behavior-x: contain;
+    }
+
+    .apex-product-carousel__item {
+      transition: opacity 0.4s ease;
+    }
+
+    apex-carousel[data-ready] .apex-product-carousel__item:not(.is-current) {
+      opacity: 0.5;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .apex-product-carousel__arrow {
+      transition: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX product carousel",
+  "tag": "section",
+  "class": "apex-product-carousel-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "indicator_label",
+      "label": "Name in the page indicator",
+      "default": "Best sellers",
+      "info": "Shown next to this section's dot on the left. Leave blank to leave it out."
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Section title",
+      "default": "Best sellers"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection"
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "label": "Products to show",
+      "min": 4,
+      "max": 16,
+      "step": 1,
+      "default": 8
+    },
+    {
+      "type": "image_picker",
+      "id": "decoration",
+      "label": "Line art behind the top left",
+      "info": "Transparent PNG (the lizard in Figma \"Best Sellers\", 556 x 360)."
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX product carousel"
+    }
+  ]
+}
+{% endschema %}

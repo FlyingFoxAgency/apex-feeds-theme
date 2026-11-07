@@ -1,0 +1,314 @@
+{% comment %}
+  APEX category cards (Figma "Shop by Animals"): a section title and a row of cards. Each card
+  has a rounded dried moss panel with a large faded word (or a photo), a label and an outline
+  button. Each card is a block.
+{% endcomment %}
+<apex-category-cards class="apex-category-cards apex-container"
+  {% if section.settings.indicator_label != blank %} data-apex-indicator-label="{{ section.settings.indicator_label | escape }}"{% endif %}
+>
+  {%- if section.settings.title != blank -%}
+    <h2 class="apex-section-title">{{ section.settings.title | escape }}</h2>
+  {%- endif -%}
+
+  <ul class="apex-category-cards__list list-unstyled" role="list">
+    {%- for block in section.blocks -%}
+      {%- liquid
+        assign card_link = block.settings.link
+        if card_link == blank and block.settings.collection != blank
+          assign card_link = block.settings.collection.url
+        endif
+        assign card_word = block.settings.word | default: block.settings.collection.title
+        assign card_label = block.settings.label | default: card_word
+      -%}
+      <li class="apex-category-card" {{ block.shopify_attributes }}>
+        <a class="apex-category-card__panel" href="{{ card_link | default: routes.all_products_collection_url }}" tabindex="-1" aria-hidden="true">
+          {%- if block.settings.image != blank -%}
+            {{
+              block.settings.image
+              | image_url: width: 800
+              | image_tag: loading: 'lazy', sizes: '(min-width: 990px) 370px, (min-width: 750px) 50vw, 80vw', widths: '400, 600, 800', alt: ''
+            }}
+          {%- endif -%}
+          {%- if card_word != blank -%}
+            <span class="apex-category-card__word">{{ card_word | escape }}</span>
+          {%- endif -%}
+        </a>
+        {%- if card_label != blank -%}
+          <h3 class="apex-category-card__label">{{ card_label | escape }}</h3>
+        {%- endif -%}
+        {%- if block.settings.button_label != blank -%}
+          <a class="apex-button apex-button--outline-moss apex-category-card__button" href="{{ card_link | default: routes.all_products_collection_url }}">
+            <span>{{ block.settings.button_label | escape }}</span>
+            {{- 'apex-icon-arrow.svg' | inline_asset_content -}}
+          </a>
+        {%- endif -%}
+      </li>
+    {%- endfor -%}
+  </ul>
+</apex-category-cards>
+
+<script type="module">
+  // Phones: the cards slide sideways. A card counts as current while it is mostly on screen;
+  // the others are faded (see the phone styles below).
+  if (!customElements.get('apex-category-cards')) {
+    customElements.define(
+      'apex-category-cards',
+      class extends HTMLElement {
+        connectedCallback() {
+          const list = this.querySelector('.apex-category-cards__list');
+          if (!list || !('IntersectionObserver' in window)) return;
+          this.observer = new IntersectionObserver(
+            (entries) => {
+              for (const entry of entries) {
+                entry.target.classList.toggle('is-current', entry.intersectionRatio >= 0.75);
+              }
+            },
+            { root: list, threshold: [0, 0.75, 1] }
+          );
+          for (const card of list.children) this.observer.observe(card);
+          this.setAttribute('data-ready', '');
+        }
+
+        disconnectedCallback() {
+          this.observer?.disconnect();
+        }
+      }
+    );
+  }
+</script>
+
+{% stylesheet %}
+  /* A custom element, so it needs display: block to stay in the page grid like a div */
+  .apex-category-cards {
+    display: block;
+    padding-block: 20px var(--apex-space-48);
+  }
+
+  .apex-category-cards__list {
+    display: grid;
+    grid-template-columns: repeat(var(--apex-category-columns, 3), minmax(0, 1fr));
+    gap: var(--apex-space-40) var(--apex-space-64);
+    margin: var(--apex-space-24) 0 0;
+    padding: 0;
+  }
+
+  .apex-category-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .apex-category-card__panel {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 174px;
+    overflow: hidden;
+    border-radius: var(--apex-radius-xl);
+    background-color: var(--apex-dried-moss);
+  }
+
+  .apex-category-card__panel img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: scale 0.4s var(--ease-out-cubic, ease-out);
+  }
+
+  .apex-category-card:hover .apex-category-card__panel img {
+    scale: 1.04;
+  }
+
+  /* Figma: Dharma 110px in sandstone at 38%, sitting on the bottom edge of the panel */
+  .apex-category-card__word {
+    position: absolute;
+    inset-inline-start: 23px;
+    inset-block-end: -0.17em;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 6.875rem;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--apex-sandstone);
+    opacity: 0.38;
+  }
+
+  .apex-category-card__label {
+    margin: var(--apex-space-12) 0 0;
+    padding-inline-start: var(--apex-space-16);
+    font-family: var(--font-body--family);
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.625rem;
+    text-transform: uppercase;
+    color: var(--apex-olive);
+  }
+
+  .apex-category-card__button {
+    margin-block-start: var(--apex-space-8);
+    margin-inline-start: var(--apex-space-16);
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-category-cards__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--apex-space-32) var(--apex-space-24);
+    }
+  }
+
+  /* Phones: a sideways slider running to both screen edges. Cards are narrower than the screen
+     so the next one peeks in, and cards that aren't on screen are faded, like the About slides. */
+  @media screen and (max-width: 749px) {
+    .apex-category-cards {
+      padding-block-end: 0;
+    }
+
+    .apex-category-cards__list {
+      --apex-category-bleed: calc((100vw - 100%) / 2);
+
+      display: grid;
+      grid-template-columns: none;
+      grid-auto-flow: column;
+      grid-auto-columns: 80%;
+      gap: var(--apex-space-16);
+      margin-inline: calc(-1 * var(--apex-category-bleed));
+      padding-inline: var(--apex-category-bleed);
+      /* In px: a % here would measure the scroller, not the section */
+      scroll-padding-inline: var(--page-margin, 16px);
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+
+    .apex-category-cards__list::-webkit-scrollbar {
+      display: none;
+    }
+
+    .apex-category-card {
+      scroll-snap-align: start;
+      transition: opacity 0.4s ease;
+    }
+
+    /* Room for the buttons' hover growth inside the scroller */
+    .apex-category-card__button {
+      margin-block-end: var(--apex-space-4);
+    }
+
+    /* Label and button about a third smaller than on desktop (Ell) */
+    .apex-category-card__label {
+      padding-inline-start: var(--apex-space-12);
+      font-size: 0.875rem;
+      line-height: 1.125rem;
+    }
+
+    .apex-category-card__button {
+      gap: 6px;
+      min-height: 32px;
+      padding: 6px var(--apex-space-12);
+      margin-inline-start: var(--apex-space-12);
+      font-size: 0.625rem;
+      line-height: 1rem;
+      letter-spacing: 0.35px;
+    }
+
+    .apex-category-card__button svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    apex-category-cards[data-ready] .apex-category-card:not(.is-current) {
+      opacity: 0.5;
+    }
+
+    .apex-category-card__word {
+      font-size: 5.5rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .apex-category-card__panel img {
+      transition: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX category cards",
+  "tag": "section",
+  "class": "apex-category-cards-section",
+  "max_blocks": 6,
+  "settings": [
+    {
+      "type": "text",
+      "id": "indicator_label",
+      "label": "Name in the page indicator",
+      "default": "Shop by animals",
+      "info": "Shown next to this section's dot on the left. Leave blank to leave it out."
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Section title",
+      "default": "Shop by animals"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "card",
+      "name": "Card",
+      "settings": [
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "Collection"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link",
+          "info": "Leave blank to use the collection."
+        },
+        {
+          "type": "text",
+          "id": "word",
+          "label": "Large word on the panel",
+          "info": "Leave blank to use the collection name."
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Photo behind the word",
+          "info": "Optional. The panel is dried moss without one."
+        },
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label under the panel",
+          "info": "Leave blank to use the large word."
+        },
+        {
+          "type": "text",
+          "id": "button_label",
+          "label": "Button label",
+          "default": "Shop now"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX category cards",
+      "blocks": [
+        { "type": "card", "settings": { "word": "Reptiles", "button_label": "Shop for reptiles" } },
+        { "type": "card", "settings": { "word": "Insects", "button_label": "Shop for insects" } },
+        { "type": "card", "settings": { "word": "Invertebrates", "button_label": "Shop for invertebrates" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

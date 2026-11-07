@@ -73,9 +73,11 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
   letter-spacing: 0.5px;
 }
 
+/* Full-width flex so the icon and text stay centred in the slide (inline-flex sat at its start) */
 .apex-announcement--icon {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--apex-space-8);
 }
 
@@ -89,6 +91,12 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
 @media screen and (max-width: 749px) {
   :root {
     --apex-panel-radius: 20px;
+  }
+
+  /* Half the desktop padding above and below the text on phones (Ell) */
+  .announcement-bar.spacing-style {
+    padding-block: calc(var(--padding-block-start, 0px) / 2)
+      calc(var(--padding-block-end, 0px) / 2);
   }
 
   .announcement-bar .announcement-bar__text {
@@ -518,6 +526,102 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
   }
 }
 
+/* Phones: Shop, Information and FAQs become dropdowns stacked in one outlined box (the menu
+   blocks' "Show as accordion" setting), between the sign-up and the LH mark. */
+@media screen and (max-width: 749px) {
+  .footer-content:has(.apex-dedication) > .menu--accordion {
+    border: 1px solid rgb(234 221 198 / 0.18);
+    border-block-end-width: 0;
+  }
+
+  /* Pull the boxes together (cancels the footer's row gap) */
+  .footer-content:has(.apex-dedication) > .menu--accordion + .menu--accordion {
+    margin-block-start: calc(-1 * var(--apex-space-48));
+  }
+
+  .footer-content:has(.apex-dedication)
+    > :not(.menu--accordion)
+    + .menu--accordion {
+    border-start-start-radius: var(--apex-radius-md);
+    border-start-end-radius: var(--apex-radius-md);
+  }
+
+  .footer-content:has(.apex-dedication)
+    > .menu--accordion:not(:has(+ .menu--accordion)) {
+    border-block-end-width: 1px;
+    border-end-start-radius: var(--apex-radius-md);
+    border-end-end-radius: var(--apex-radius-md);
+  }
+
+  .footer-content:has(.apex-dedication) .menu--accordion .menu__heading {
+    display: flex;
+    align-items: center;
+    gap: var(--apex-space-16);
+    min-height: 64px;
+    padding: var(--apex-space-16) var(--apex-space-20);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .footer-content:has(.apex-dedication)
+    .menu--accordion
+    .menu__heading::-webkit-details-marker {
+    display: none;
+  }
+
+  .footer-content:has(.apex-dedication)
+    .menu--accordion
+    .menu__heading__toggle {
+    width: 14px;
+    height: 14px;
+    color: var(--apex-sandstone);
+  }
+
+  .footer-content:has(.apex-dedication)
+    .menu--accordion
+    .menu__details
+    .details-content {
+    margin: 0;
+    padding: 0 var(--apex-space-20) var(--apex-space-20);
+  }
+
+  .footer-content:has(.apex-dedication)
+    .menu--accordion
+    .menu__item
+    + .menu__item {
+    margin-block-start: var(--apex-space-8);
+  }
+
+  /* Tighter gap from the email sign-up to the dropdowns (Ell): the social icons sit 24px under
+     the email field (and take no room until they have links), then 32px to the dropdowns */
+  .footer-content:has(.apex-dedication) .social-icons__wrapper {
+    padding-block-start: var(--apex-space-24);
+  }
+
+  .footer-content:has(.apex-dedication) .social-icons__wrapper:not(:has(a)) {
+    display: none;
+  }
+
+  .footer-content:has(.apex-dedication)
+    > :not(.menu--accordion)
+    + .menu--accordion {
+    margin-block-start: calc(var(--apex-space-32) - var(--apex-space-48));
+  }
+
+  /* Copyright and the Flying Fox credit sit close together (8px), payment icons below */
+  .shopify-section-group-footer-group
+    .utilities
+    > :last-child:not(.apex-payment-icons) {
+    margin-block-start: -16px;
+  }
+
+  /* Footer bottom: copyright, then the Flying Fox credit, then the payment icons */
+  .shopify-section-group-footer-group .utilities > :has(.apex-payment-icons),
+  .shopify-section-group-footer-group .utilities > .apex-payment-icons {
+    order: 1;
+  }
+}
+
 /* Footer bottom: onyx bar, Body/Small sandstone text, payment icons centred */
 .shopify-section-group-footer-group .utilities {
   color: var(--apex-sandstone);
@@ -607,4 +711,258 @@ html:has(.menu-drawer-container[open]) .apex-help-button {
     transition: none;
     transform: none;
   }
+}
+
+/* ==========================================================================
+   Shared building blocks for APEX sections
+   ========================================================================== */
+
+/* 1244px content column, as in Figma */
+.apex-container {
+  width: min(100% - 2 * var(--page-margin, 16px), var(--narrow-page-width));
+  margin-inline: auto;
+}
+
+/* Section titles (Figma Heading/H2: Dharma 64/61, burrow) */
+.apex-section-title {
+  margin: 0;
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  font-size: var(--font-size--h2);
+  line-height: 0.95;
+  text-transform: uppercase;
+  color: var(--apex-burrow);
+}
+
+/* Buttons (Figma Button: 48px tall, 15/24 semibold, upper case) */
+.apex-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--apex-space-8);
+  min-height: 48px;
+  padding: var(--apex-space-12) var(--apex-space-20);
+  border: 1px solid transparent;
+  border-radius: var(--apex-radius-pill);
+  font-family: var(--font-body--family);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.5rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: scale 0.2s var(--ease-out-cubic, ease-out);
+}
+
+.apex-button:is(:hover, :focus-visible) {
+  scale: 1.06;
+}
+
+.apex-button svg {
+  width: 24px;
+  height: 24px;
+  flex: none;
+}
+
+.apex-button--amber {
+  background-color: var(--apex-amber);
+  border-color: var(--apex-amber);
+  color: var(--apex-burrow);
+}
+
+.apex-button--outline-light {
+  background-color: transparent;
+  border-color: var(--apex-sandstone-glow);
+  color: var(--apex-sandstone-glow);
+}
+
+.apex-button--dark {
+  background-color: var(--apex-burrow);
+  border-color: var(--apex-burrow);
+  color: var(--apex-stone-100);
+}
+
+.apex-button--dark .apex-button__label {
+  background: var(--apex-silver-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.apex-button--outline-moss {
+  padding-inline: var(--apex-space-16);
+  border: 2px solid var(--apex-dried-moss);
+  border-radius: var(--apex-radius-md);
+  background-color: transparent;
+  color: var(--apex-dried-moss);
+}
+
+/* Decorative line art (snake, lizard, geckos): never catches clicks */
+.apex-decoration {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.apex-decoration img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .apex-button {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   Section reveal (snippets/apex-reveal.liquid): sections below the hero fade up a little the
+   first time they scroll into view
+   ========================================================================== */
+
+/* Slow and long-tailed: a gentle fade with a lift that keeps easing to a stop */
+[data-apex-reveal] {
+  transition:
+    opacity 1.6s cubic-bezier(0.25, 0.1, 0.25, 1),
+    translate 2.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-apex-reveal]:not(.is-revealed) {
+  opacity: 0;
+  translate: 0 64px;
+}
+
+/* Phones and the drawer header: search icon closer to the menu icon, the same spacing as the
+   account and bag icons on the right (Ell) */
+@media screen and (max-width: 749px) {
+  #header-component .header__columns .search-action {
+    translate: -14px 0;
+  }
+}
+
+#header-component[data-menu-style="drawer"] .header__columns .search-action {
+  translate: -14px 0;
+}
+
+/* Menu drawer (pop-out menu), styled like the Figma filter pop-out: #EDEDE6 throughout, right
+   corners rounded, soft shadow. Top-level links in Dharma, evenly spaced, whatever kind of item
+   Horizon renders them as (Ell). */
+#header-component .menu-drawer {
+  --apex-drawer-bg: #edede6;
+
+  border-inline-end: 0;
+  border-start-end-radius: 40px;
+  border-end-end-radius: 40px;
+  background-color: var(--apex-drawer-bg);
+  box-shadow: 40px 0 120px rgb(0 0 0 / 0.1);
+}
+
+#header-component
+  .menu-drawer
+  :is(
+    .menu-drawer__submenu,
+    .menu-drawer__utility-links,
+    .color-custom-drawer
+  ) {
+  background-color: var(--apex-drawer-bg);
+}
+
+#header-component .menu-drawer .menu-drawer__menu.has-submenu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--apex-space-20);
+  padding-block: var(--apex-space-12);
+}
+
+#header-component .menu-drawer .menu-drawer__menu.has-submenu > li,
+#header-component
+  .menu-drawer
+  .menu-drawer__menu.has-submenu
+  > li
+  :is(.menu-drawer__menu-container, accordion-custom, details) {
+  min-height: 0;
+  margin: 0;
+  padding-block: 0;
+  border: 0;
+}
+
+#header-component .menu-drawer .menu-drawer__menu-item--mainlist {
+  min-height: 0;
+  margin: 0;
+  padding-block: 0;
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  font-size: 2.5rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+/* Close button: top right of the drawer, 48px square (Ell) */
+#header-component .menu-drawer .menu-drawer__close-button {
+  position: absolute;
+  z-index: 2;
+  inset-block-start: calc(
+    var(--safe-area-inset-top, 0px) + var(--apex-space-12)
+  );
+  inset-inline-end: var(--apex-space-16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+}
+
+#header-component .menu-drawer .menu-drawer__close-button .header-drawer-icon {
+  width: 24px;
+  height: 24px;
+}
+
+#header-component .menu-drawer .menu-drawer__close-button svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Links start level with the close button */
+#header-component .menu-drawer .menu-drawer__navigation {
+  margin-block-start: var(--apex-space-12);
+}
+
+/* Social icons under the links (snippets/apex-drawer-social) */
+.apex-drawer-social {
+  display: flex;
+  gap: 23px;
+  margin: var(--apex-space-32) 0 0;
+  padding: 0 var(--drawer-padding, var(--padding-lg));
+}
+
+.apex-drawer-social__link {
+  display: flex;
+  color: var(--apex-burrow);
+  transition: scale 0.2s var(--ease-out-cubic, ease-out);
+}
+
+.apex-drawer-social__link:is(:hover, :focus-visible) {
+  scale: 1.06;
+}
+
+.apex-drawer-social__link svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Tapping a link on a phone flashes amber instead of the browser's blue (Ell). In the menu
+   drawer the tapped link's text turns amber too, matching the current page's amber. */
+html {
+  -webkit-tap-highlight-color: rgb(230 150 64 / 0.3);
+}
+
+#header-component
+  .menu-drawer
+  :is(.menu-drawer__menu-item, .apex-drawer-social__link):active {
+  color: var(--apex-amber);
 }

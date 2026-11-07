@@ -1,0 +1,213 @@
+{% doc %}
+  APEX page indicator (the Figma timeline on the left of the hero): a fixed sandstone line, 50px in from the left of the screen and 70% of its height, with
+  a dot for each section on the page that has a name set ("Name in the page indicator"). The
+  section you're scrolled to has an amber dot with its name in an amber tag; clicking a dot
+  scrolls to that section. It only appears when the page has at least two named sections, and
+  only on screens wide enough to leave room beside the content.
+
+  @example
+  {% render 'apex-page-indicator' %}
+{% enddoc %}
+<apex-page-indicator class="apex-page-indicator" hidden>
+  <nav aria-label="Sections on this page">
+    <ol class="apex-page-indicator__list list-unstyled" role="list"></ol>
+  </nav>
+</apex-page-indicator>
+
+<script type="module">
+  if (!customElements.get('apex-page-indicator')) {
+    customElements.define(
+      'apex-page-indicator',
+      class extends HTMLElement {
+        connectedCallback() {
+          this.sections = [...document.querySelectorAll('main [data-apex-indicator-label]')];
+          if (this.sections.length < 2) return;
+
+          const list = this.querySelector('ol');
+          this.items = this.sections.map((section) => {
+            const label = section.dataset.apexIndicatorLabel;
+            const item = document.createElement('li');
+            item.className = 'apex-page-indicator__item';
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'apex-page-indicator__dot';
+            button.setAttribute('aria-label', label);
+            const tag = document.createElement('span');
+            tag.className = 'apex-page-indicator__label';
+            tag.setAttribute('aria-hidden', 'true');
+            tag.textContent = label;
+            button.append(tag);
+            button.addEventListener('click', () => {
+              const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+              section.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+            });
+            item.append(button);
+            list.append(item);
+            return button;
+          });
+
+          this.hidden = false;
+          document.fonts?.ready.then(() => this.measure());
+          let queued = false;
+          const queue = () => {
+            if (queued) return;
+            queued = true;
+            requestAnimationFrame(() => {
+              queued = false;
+              this.update();
+            });
+          };
+          document.addEventListener('scroll', queue, { capture: true, passive: true });
+          window.addEventListener('resize', () => {
+            this.measured = false;
+            queue();
+          });
+          this.update();
+        }
+
+        /* Room for the widest name tag left of the dots (0 while the indicator is hidden) */
+        measure() {
+          const widest = Math.max(
+            0,
+            ...[...this.querySelectorAll('.apex-page-indicator__label')].map((tag) => tag.offsetWidth)
+          );
+          if (widest) this.style.setProperty('--apex-indicator-tag-width', `${Math.ceil(widest)}px`);
+          this.measured = widest > 0;
+        }
+
+        /* The current section is the last one whose top has passed 40% of the screen height */
+        update() {
+          if (!this.measured) this.measure();
+          const line = window.innerHeight * 0.4;
+          let current = 0;
+          this.sections.forEach((section, i) => {
+            if (section.getBoundingClientRect().top <= line) current = i;
+          });
+          this.items.forEach((button, i) => {
+            const active = i === current;
+            button.classList.toggle('is-active', active);
+            if (active) button.setAttribute('aria-current', 'true');
+            else button.removeAttribute('aria-current');
+          });
+        }
+      }
+    );
+  }
+</script>
+
+{% stylesheet %}
+  .apex-page-indicator {
+    display: none;
+  }
+
+  /* 50px in from the left edge of the screen (like the help button on the right), measured to
+     the left edge of the widest name tag, so the dots stay put whichever tag is showing. The gap
+     below the last dot matches the gap above the first (Ell): 30% of the screen less 50px each
+     end. Near the footer it rises with the help button (--apex-help-lift) to stay 30px clear.
+     Below 1600px wide the dots would sit over the content, so it's hidden. */
+  @media screen and (min-width: 1600px) {
+    .apex-page-indicator:not([hidden]) {
+      position: fixed;
+      z-index: var(--layer-sticky, 10);
+      inset-block-end: max(calc(30vh - 50px), var(--apex-help-lift, 0px));
+      inset-block-end: max(calc(30svh - 50px), var(--apex-help-lift, 0px));
+      inset-inline-start: 50px;
+      padding-inline-start: calc(var(--apex-indicator-tag-width, 0px) + 14px);
+      display: block;
+    }
+
+    html:has(.menu-drawer-container[open]) .apex-page-indicator {
+      display: none;
+    }
+  }
+
+  .apex-page-indicator__list {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: calc(40vh + 100px);
+    height: calc(40svh + 100px);
+    margin: 0;
+    padding: 0;
+  }
+
+  .apex-page-indicator__list::before {
+    content: '';
+    position: absolute;
+    inset-block: 7px;
+    inset-inline-start: 4px;
+    width: 2px;
+    background-color: var(--apex-sandstone);
+  }
+
+  .apex-page-indicator__item {
+    position: relative;
+    display: flex;
+  }
+
+  .apex-page-indicator__dot {
+    position: relative;
+    width: 10px;
+    height: 10px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background-color: var(--apex-sandstone);
+    cursor: pointer;
+    transition:
+      background-color 0.3s ease,
+      scale 0.2s var(--ease-out-cubic, ease-out);
+  }
+
+  /* Bigger touch target than the 10px dot */
+  .apex-page-indicator__dot::before {
+    content: '';
+    position: absolute;
+    inset: -10px;
+  }
+
+  .apex-page-indicator__dot:is(:hover, :focus-visible) {
+    scale: 1.3;
+  }
+
+  .apex-page-indicator__dot.is-active {
+    background-color: var(--apex-amber);
+  }
+
+  /* Figma "Featured" tag: amber, 4px radius, 11px burrow text, 14px left of the dot */
+  .apex-page-indicator__label {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-end: calc(100% + 14px);
+    translate: 0 -50%;
+    padding: 0 8px;
+    border-radius: var(--apex-radius-sm);
+    background-color: var(--apex-amber);
+    color: var(--apex-burrow);
+    font-family: var(--font-body--family);
+    font-size: 0.6875rem;
+    line-height: 1rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .apex-page-indicator__dot:is(.is-active, :hover, :focus-visible) .apex-page-indicator__label {
+    opacity: 1;
+  }
+
+  /* Hovered dots show their name too, so the dot's grow doesn't scale the tag */
+  .apex-page-indicator__dot:is(:hover, :focus-visible) .apex-page-indicator__label {
+    scale: calc(1 / 1.3);
+    transform-origin: right center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .apex-page-indicator__dot,
+    .apex-page-indicator__label {
+      transition: none;
+    }
+  }
+{% endstylesheet %}

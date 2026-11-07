@@ -1,0 +1,423 @@
+{% comment %}
+  APEX shop nav (Figma "Shop Nav"): category links under the hero. From 1200px wide the links
+  spread across the screen with no background on load, and once the page scrolls they draw in
+  to Figma's soft olive bar, then scroll away with the page. Narrower screens show the bar. The current category gets the white highlight and amber
+  underline from Figma.
+{% endcomment %}
+{%- assign menu = section.settings.menu -%}
+
+<apex-shop-nav class="apex-shop-nav">
+  {%- if section.settings.mobile_heading != blank -%}
+    <p class="apex-eyebrow apex-shop-nav__heading">{{ section.settings.mobile_heading | escape }}</p>
+  {%- endif -%}
+  <nav class="apex-shop-nav__bar" aria-label="{{ section.settings.label | escape }}">
+    <ul class="apex-shop-nav__list list-unstyled" role="list">
+      {%- if section.settings.show_shop_all -%}
+        {%- liquid
+          assign shop_all_url = routes.all_products_collection_url
+          assign shop_all_current = false
+          if request.path == shop_all_url
+            assign shop_all_current = true
+          endif
+        -%}
+        <li class="apex-shop-nav__item">
+          <a
+            class="apex-shop-nav__link"
+            href="{{ shop_all_url }}"
+            {% if shop_all_current %}
+              aria-current="page"
+            {% endif %}
+          >
+            <span>{{ section.settings.shop_all_label | escape }}</span>
+          </a>
+        </li>
+      {%- endif -%}
+      {%- for link in menu.links -%}
+        <li class="apex-shop-nav__item">
+          <a
+            class="apex-shop-nav__link"
+            href="{{ link.url }}"
+            {% if link.current or link.child_active %}
+              aria-current="page"
+            {% endif %}
+          >
+            <span>{{ link.title | escape }}</span>
+          </a>
+        </li>
+      {%- endfor -%}
+    </ul>
+  </nav>
+</apex-shop-nav>
+
+<script type="module">
+  // Draws the nav in once the page has scrolled. From 990px the page scrolls inside
+  // .page-wrapper, so listen on the document in the capture phase to hear either.
+  if (!customElements.get('apex-shop-nav')) {
+    customElements.define(
+      'apex-shop-nav',
+      class ApexShopNav extends HTMLElement {
+        connectedCallback() {
+          this.update = this.update.bind(this);
+          this.measure = this.measure.bind(this);
+          document.addEventListener('scroll', this.update, { capture: true, passive: true });
+          window.addEventListener('resize', this.measure);
+          document.fonts?.ready.then(this.measure);
+          this.measure();
+          this.update();
+
+          // Phones and tablets: the links scroll sideways inside the pill. Fade whichever edge
+          // has more links past it, and nudge the row once when it first comes into view.
+          this.list = this.querySelector('.apex-shop-nav__list');
+          this.edges = this.edges.bind(this);
+          this.list.addEventListener('scroll', this.edges, { passive: true });
+          window.addEventListener('resize', this.edges);
+          this.edges();
+          this.hint();
+        }
+
+        disconnectedCallback() {
+          document.removeEventListener('scroll', this.update, { capture: true });
+          window.removeEventListener('resize', this.measure);
+          window.removeEventListener('resize', this.edges);
+          this.hintObserver?.disconnect();
+        }
+
+        edges() {
+          const { scrollLeft, scrollWidth, clientWidth } = this.list;
+          this.toggleAttribute('data-more-start', scrollLeft > 4);
+          this.toggleAttribute('data-more-end', scrollLeft + clientWidth < scrollWidth - 4);
+        }
+
+        hint() {
+          const motionOk = window.matchMedia('(prefers-reduced-motion: no-preference)').matches;
+          if (!motionOk || !('IntersectionObserver' in window)) return;
+          this.hintObserver = new IntersectionObserver(
+            ([entry]) => {
+              if (!entry.isIntersecting) return;
+              this.hintObserver.disconnect();
+              if (!this.hasAttribute('data-more-end') || this.list.scrollLeft > 0) return;
+              setTimeout(() => {
+                this.list.scrollTo({ left: 56, behavior: 'smooth' });
+                setTimeout(() => this.list.scrollTo({ left: 0, behavior: 'smooth' }), 650);
+              }, 600);
+            },
+            { threshold: 1 }
+          );
+          this.hintObserver.observe(this.list);
+        }
+
+        // Width of Figma's bar for these links: 48px between them and 52px in from each end.
+        // A real length lets the bar animate from spread out to drawn in.
+        measure() {
+          const items = [...this.querySelectorAll('.apex-shop-nav__item')];
+          const links = items.reduce((total, item) => total + item.getBoundingClientRect().width, 0);
+          const fit = links + Math.max(0, items.length - 1) * 48 + 2 * 52;
+          this.style.setProperty('--apex-shop-nav-fit', `${Math.ceil(fit)}px`);
+        }
+
+        update() {
+          const wrapper = document.querySelector('.page-wrapper');
+          const scrolled = Math.max(window.scrollY, wrapper ? wrapper.scrollTop : 0);
+          this.toggleAttribute('data-condensed', scrolled > 24);
+        }
+      }
+    );
+  }
+</script>
+
+{% stylesheet %}
+  .apex-shop-nav {
+    position: relative;
+    z-index: 2;
+    display: block;
+    width: min(100% - 2 * var(--page-margin, 16px), var(--narrow-page-width));
+    margin-inline: auto;
+    padding-block: 11px 0;
+  }
+
+  .apex-shop-nav__bar {
+    overflow-x: auto;
+    border-radius: var(--apex-radius-lg);
+    background-color: rgb(100 105 53 / 0.2);
+    scrollbar-width: none;
+  }
+
+  .apex-shop-nav__bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .apex-shop-nav__list {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    /* Figma spaces the links 48px apart across the bar; space-between keeps that look and
+       lets them close up to 24px before the bar starts to scroll */
+    gap: var(--apex-space-24);
+    min-width: max-content;
+    min-height: 80px;
+    margin: 0;
+    padding-inline: 52px;
+  }
+
+  .apex-shop-nav__item {
+    display: flex;
+  }
+
+  .apex-shop-nav__link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 104px;
+    padding-block: var(--apex-space-8);
+    color: var(--apex-burrow);
+    font-family: var(--font-body--family);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1rem;
+    text-align: center;
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+
+  .apex-shop-nav__link > span {
+    display: inline-block;
+    transition: scale 0.2s var(--ease-out-cubic, ease-out);
+  }
+
+  .apex-shop-nav__link:is(:hover, :focus-visible) > span {
+    scale: 1.06;
+  }
+
+  /* Current category: Figma "highlight hover" (white at 45%) behind the link */
+  .apex-shop-nav__link[aria-current='page'] {
+    isolation: isolate;
+  }
+
+  .apex-shop-nav__link[aria-current='page']::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset-block: 0;
+    inset-inline: -30px;
+    background-color: rgb(255 255 255 / 0.45);
+  }
+
+  /* Hover and current: a rounded amber line near the bottom of the bar, as wide as the link.
+     The text stays burrow, as amber text would be hard to read on the light bar. */
+  .apex-shop-nav__link::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 8px;
+    height: 3px;
+    border-radius: var(--apex-radius-pill);
+    background-color: var(--apex-amber);
+    scale: 0 1;
+    transition: scale 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .apex-shop-nav__link:is(:hover, :focus-visible, [aria-current='page'])::after {
+    scale: 1 1;
+  }
+
+  /* Under the hero, about 170px below the panel (the hero keeps 134px for the hanging jars) */
+  @media screen and (min-width: 1200px) {
+    .apex-shop-nav {
+      /* Spread out, the links stay clear of the help button (50px in, 53px wide) plus 24px */
+      --apex-shop-nav-clear: 127px;
+      /* Ell: 10% narrower than the clear space, so it stays off the page indicator line */
+      --apex-shop-nav-max: calc((100vw - 2 * var(--apex-shop-nav-clear)) * 0.9);
+
+      display: flex;
+      justify-content: center;
+      width: auto;
+      margin: 0;
+      padding: 36px 0 0;
+    }
+
+    /* Clear glass with fully round ends (Ell), spread out or drawn in. A light blur lets the stone texture show through
+       softly; a white sheen, a bright top edge and a soft drop shadow give it depth. */
+    .apex-shop-nav__bar {
+      width: var(--apex-shop-nav-max);
+      border: 1px solid rgb(255 255 255 / 0.55);
+      border-radius: var(--apex-radius-pill);
+      background-color: rgb(100 105 53 / 0.05);
+      background-image: linear-gradient(
+        160deg,
+        rgb(255 255 255 / 0.38) 0%,
+        rgb(255 255 255 / 0.12) 45%,
+        rgb(255 255 255 / 0.04) 100%
+      );
+      box-shadow:
+        inset 0 1px 1px rgb(255 255 255 / 0.8),
+        inset 0 -1px 1px rgb(64 68 61 / 0.06),
+        0 12px 32px rgb(36 38 35 / 0.1),
+        0 2px 6px rgb(36 38 35 / 0.06);
+      -webkit-backdrop-filter: blur(4px) saturate(1.15);
+      backdrop-filter: blur(4px) saturate(1.15);
+      transition:
+        width 0.5s var(--ease-out-cubic, ease-out),
+        background-color 0.4s ease;
+    }
+
+    /* Links close up to 12px apart before the bar scrolls, so all of them fit at 1440 */
+    .apex-shop-nav__list {
+      gap: var(--apex-space-12);
+      padding-inline: 40px;
+    }
+
+    /* Scrolled: Figma's bar, drawn in to fit the links (48px apart, 52px in from the ends).
+       On narrower screens it stops at the clear space and the links close up. */
+    .apex-shop-nav[data-condensed] .apex-shop-nav__bar {
+      width: min(var(--apex-shop-nav-max), var(--apex-shop-nav-fit, 100vw));
+      background-color: rgb(100 105 53 / 0.2);
+    }
+  }
+
+  /* The page indicator shows from 1600px, so keep clear of it on the left too */
+  @media screen and (min-width: 1600px) {
+    .apex-shop-nav {
+      --apex-shop-nav-clear: 160px;
+    }
+  }
+
+  /* Phones and tablets: the desktop pill and glass, with the links scrolling inside it. The edge
+     with more links past it fades out, and a link is always cut off at that edge, so it's clear
+     the row swipes (see the script above). */
+  @media screen and (max-width: 1199px) {
+    .apex-shop-nav__bar {
+      overflow: hidden;
+      border: 1px solid rgb(255 255 255 / 0.55);
+      border-radius: var(--apex-radius-pill);
+      background-image: linear-gradient(
+        160deg,
+        rgb(255 255 255 / 0.38) 0%,
+        rgb(255 255 255 / 0.12) 45%,
+        rgb(255 255 255 / 0.04) 100%
+      );
+      box-shadow:
+        inset 0 1px 1px rgb(255 255 255 / 0.8),
+        inset 0 -1px 1px rgb(64 68 61 / 0.06),
+        0 12px 32px rgb(36 38 35 / 0.1),
+        0 2px 6px rgb(36 38 35 / 0.06);
+      -webkit-backdrop-filter: blur(4px) saturate(1.15);
+      backdrop-filter: blur(4px) saturate(1.15);
+    }
+
+    .apex-shop-nav__list {
+      --apex-fade-start: 0px;
+      --apex-fade-end: 0px;
+
+      justify-content: flex-start;
+      min-width: 0;
+      min-height: 64px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-mask-image: linear-gradient(
+        90deg,
+        transparent 0,
+        #000 var(--apex-fade-start),
+        #000 calc(100% - var(--apex-fade-end)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        90deg,
+        transparent 0,
+        #000 var(--apex-fade-start),
+        #000 calc(100% - var(--apex-fade-end)),
+        transparent 100%
+      );
+    }
+
+    .apex-shop-nav__list::-webkit-scrollbar {
+      display: none;
+    }
+
+    .apex-shop-nav[data-more-start] .apex-shop-nav__list {
+      --apex-fade-start: 48px;
+    }
+
+    .apex-shop-nav[data-more-end] .apex-shop-nav__list {
+      --apex-fade-end: 48px;
+    }
+
+    .apex-shop-nav__item {
+      flex: none;
+    }
+  }
+
+  /* Small heading above the bar on phones and tablets (eyebrow style in burrow) */
+  .apex-shop-nav__heading {
+    margin: 0 0 var(--apex-space-12);
+    padding-inline-start: var(--apex-space-24);
+    color: var(--apex-burrow);
+  }
+
+  @media screen and (min-width: 1200px) {
+    .apex-shop-nav__heading {
+      display: none;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-shop-nav__list {
+      gap: var(--apex-space-32);
+      padding-inline: var(--apex-space-24);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .apex-shop-nav__bar,
+    .apex-shop-nav__link::after,
+    .apex-shop-nav__link > span {
+      transition: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX shop nav",
+  "tag": "section",
+  "class": "apex-shop-nav-section",
+  "settings": [
+    {
+      "type": "link_list",
+      "id": "menu",
+      "label": "Menu",
+      "info": "Set to the Shop menu, the same one the footer uses."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_shop_all",
+      "label": "Start with a Shop All link",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "shop_all_label",
+      "label": "Shop All label",
+      "default": "Shop all"
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "label": "Name for screen readers",
+      "default": "Shop by category"
+    },
+    {
+      "type": "text",
+      "id": "mobile_heading",
+      "label": "Heading above the bar on phones and tablets",
+      "default": "Shop by category",
+      "info": "Leave blank to leave it out."
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX shop nav"
+    }
+  ]
+}
+{% endschema %}

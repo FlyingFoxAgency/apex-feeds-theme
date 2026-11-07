@@ -2152,7 +2152,19 @@
         "id": "apex_help_link",
         "label": "Help button link",
         "info": "Leave blank to link to /pages/help-centre."
-      }
+      },
+      {
+        "type": "header",
+        "content": "Social links in the mobile menu"
+      },
+      {
+        "type": "paragraph",
+        "content": "Icons show under the menu links once a link includes the profile (for example https://www.instagram.com/apexfeeds). The footer icons are set in the footer's Social links block."
+      },
+      { "type": "url", "id": "apex_social_facebook", "label": "Facebook" },
+      { "type": "url", "id": "apex_social_instagram", "label": "Instagram" },
+      { "type": "url", "id": "apex_social_youtube", "label": "YouTube" },
+      { "type": "url", "id": "apex_social_tiktok", "label": "TikTok" }
     ]
   }
 ]

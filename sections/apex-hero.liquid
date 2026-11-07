@@ -1,0 +1,633 @@
+{% comment %}
+  APEX hero slideshow (Figma "Hero"). Each slide is a block with its own panel colour, snake
+  skin (or other) pattern, product image, text and buttons, so the panel can change with what's
+  being promoted. The pattern shows once, centred where "Pattern position" says (67% puts it a
+  third of the way right of centre). The product image breaks out below the panel.
+  Small dots under the panel pick the slide. The page indicator on the left is separate
+  (snippets/apex-page-indicator.liquid).
+{% endcomment %}
+<script src="{{ 'apex-home.js' | asset_url }}" type="module"></script>
+
+{%- assign slides = section.blocks | where: 'type', 'slide' -%}
+
+<div
+  class="apex-hero"
+  {% if section.settings.indicator_label != blank %}
+    data-apex-indicator-label="{{ section.settings.indicator_label | escape }}"
+  {% endif %}
+>
+  <apex-hero class="apex-hero__stage" data-autoplay="{{ section.settings.autoplay_speed }}">
+    <div class="apex-hero__slides">
+      {%- for block in slides -%}
+        {%- liquid
+          assign slide_bg = block.settings.background_color
+          if slide_bg == blank or slide_bg.alpha == 0
+            assign slide_bg = section.settings.background_color
+          endif
+          assign slide_pattern = block.settings.pattern | default: section.settings.pattern
+          assign slide_position = block.settings.pattern_position
+          if block.settings.pattern_position_custom == false
+            assign slide_position = section.settings.pattern_position
+          endif
+          if forloop.first
+            assign loading = 'eager'
+            assign priority = 'high'
+          else
+            assign loading = 'lazy'
+            assign priority = 'auto'
+          endif
+        -%}
+        <div
+          class="apex-hero__slide{% if forloop.first %} is-active{% endif %}"
+          style="--apex-hero-bg: {{ slide_bg }}; --apex-hero-pattern-x: {{ slide_position }}%;"
+          data-slide
+          {{ block.shopify_attributes }}
+        >
+          <div class="apex-hero__panel" aria-hidden="true">
+            {%- if slide_pattern != blank -%}
+              {{
+                slide_pattern
+                | image_url: width: 1400
+                | image_tag:
+                  class: 'apex-hero__pattern',
+                  loading: loading,
+                  sizes: '700px',
+                  widths: '700, 1050, 1400',
+                  alt: ''
+              }}
+            {%- endif -%}
+          </div>
+
+          <div class="apex-hero__content">
+            {%- if block.settings.eyebrow != blank -%}
+              <p class="apex-hero__eyebrow apex-eyebrow">{{ block.settings.eyebrow }}</p>
+            {%- endif -%}
+            {%- if block.settings.title != blank -%}
+              {%- if forloop.first -%}
+                <h1 class="apex-hero__title apex-display">{{ block.settings.title | newline_to_br }}</h1>
+              {%- else -%}
+                <h2 class="apex-hero__title apex-display">{{ block.settings.title | newline_to_br }}</h2>
+              {%- endif -%}
+            {%- endif -%}
+            {%- if block.settings.text != blank -%}
+              <div class="apex-hero__text">{{ block.settings.text }}</div>
+            {%- endif -%}
+            {%- if block.settings.button_label != blank or block.settings.button_2_label != blank -%}
+              <div class="apex-hero__buttons">
+                {%- if block.settings.button_label != blank -%}
+                  <a class="apex-button apex-button--amber" href="{{ block.settings.button_link | default: routes.all_products_collection_url }}">
+                    {{- block.settings.button_label | escape -}}
+                  </a>
+                {%- endif -%}
+                {%- if block.settings.button_2_label != blank -%}
+                  <a class="apex-button apex-button--outline-light" href="{{ block.settings.button_2_link | default: routes.all_products_collection_url }}">
+                    {{- block.settings.button_2_label | escape -}}
+                  </a>
+                {%- endif -%}
+              </div>
+            {%- endif -%}
+          </div>
+
+          {%- if block.settings.image != blank -%}
+            <div class="apex-hero__media">
+              {{
+                block.settings.image
+                | image_url: width: 2000
+                | image_tag:
+                  loading: loading,
+                  fetchpriority: priority,
+                  sizes: '(min-width: 1440px) 1400px, (min-width: 1200px) 97vw, 100vw',
+                  widths: '600, 900, 1200, 1600, 2000',
+                  alt: block.settings.image.alt
+              }}
+            </div>
+          {%- elsif request.design_mode -%}
+            <div class="apex-hero__media apex-hero__media--placeholder">
+              {{ 'product-apparel-1' | placeholder_svg_tag }}
+            </div>
+          {%- endif -%}
+        </div>
+      {%- endfor -%}
+
+      {%- if slides.size > 1 -%}
+        <div class="apex-hero__dots" role="group" aria-label="Choose a slide">
+          {%- for block in slides -%}
+            <button
+              type="button"
+              class="apex-hero__dot{% if forloop.first %} is-active{% endif %}"
+              data-dot
+              aria-label="Slide {{ forloop.index }} of {{ slides.size }}"
+            ></button>
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+    </div>
+  </apex-hero>
+</div>
+
+{% stylesheet %}
+  .apex-hero {
+    overflow-x: clip;
+    padding-block-start: var(--apex-space-32);
+  }
+
+  /* The design is laid out on a 1440px stage. 1cqw is 1% of that stage, so positions taken
+     from Figma (x / 14.4) scale with it. */
+  .apex-hero__stage {
+    position: relative;
+    display: block;
+    max-width: 1440px;
+    margin-inline: auto;
+    container-type: inline-size;
+  }
+
+  .apex-hero__slides {
+    position: relative;
+    display: grid;
+    isolation: isolate;
+  }
+
+  .apex-hero__slide {
+    grid-area: 1 / 1;
+    position: relative;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.6s var(--ease-out-cubic, ease-out),
+      visibility 0s linear 0.6s;
+  }
+
+  .apex-hero__slide.is-active {
+    z-index: 1;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.6s var(--ease-out-cubic, ease-out);
+  }
+
+  /* Each slide's panel runs to both edges of the screen */
+  .apex-hero__panel {
+    position: absolute;
+    z-index: -1;
+    inset-block: 0;
+    inset-inline: calc((100cqw - 100vw) / 2);
+    overflow: hidden;
+    background-color: var(--apex-hero-bg, var(--apex-dried-moss));
+  }
+
+  /* Pattern shows once at the panel's full height, centred at --apex-hero-pattern-x */
+  .apex-hero__pattern {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: var(--apex-hero-pattern-x, 67%);
+    width: auto;
+    max-width: none;
+    height: 100%;
+    translate: -50% 0;
+    /* Trim a hairline off the left and right edges: resized PNGs can pick up a light fringe
+       there. The pattern's sides are the panel colour, so nothing visible is lost. */
+    clip-path: inset(0 2px);
+    pointer-events: none;
+  }
+
+  .apex-hero__content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    color: var(--apex-sandstone-glow);
+  }
+
+  .apex-hero__eyebrow {
+    margin: 0 0 var(--apex-space-24);
+    color: var(--apex-sandstone-glow);
+  }
+
+  .apex-hero__title {
+    margin: 0;
+    color: var(--apex-sandstone-glow);
+  }
+
+  .apex-hero__text {
+    margin-block-start: var(--apex-space-24);
+    font-size: 1.25rem;
+    line-height: 1.625rem;
+  }
+
+  .apex-hero__text p {
+    margin: 0;
+  }
+
+  .apex-hero__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--apex-space-24);
+    margin-block-start: var(--apex-space-48);
+  }
+
+  .apex-hero__media img,
+  .apex-hero__media svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .apex-hero__media--placeholder svg {
+    aspect-ratio: 997 / 615;
+    fill: rgb(255 240 214 / 0.3);
+  }
+
+  /* Slide dots: small sandstone dots, the current one amber */
+  .apex-hero__dots {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    gap: var(--apex-space-16);
+  }
+
+  .apex-hero__dot {
+    position: relative;
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--apex-radius-pill);
+    background-color: var(--apex-sandstone);
+    cursor: pointer;
+    /* The active dot stretches into a pill and the others slide along to make room */
+    transition:
+      width 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 0.4s ease,
+      scale 0.2s var(--ease-out-cubic, ease-out);
+  }
+
+  /* Bigger touch target than the dot */
+  .apex-hero__dot::before {
+    content: '';
+    position: absolute;
+    inset: -12px;
+  }
+
+  .apex-hero__dot:is(:hover, :focus-visible) {
+    scale: 1.3;
+  }
+
+  /* Three dots long */
+  .apex-hero__dot.is-active {
+    width: 24px;
+    background-color: var(--apex-amber);
+  }
+
+  /* Desktop: Figma layout on the 1440 stage */
+  @media screen and (min-width: 1200px) {
+    /* Room under the 492px panel for the jars that hang below it (134px at 1440). Set on the
+       slides, not the stage: cqw on the stage itself would measure the screen, not the stage. */
+    .apex-hero__slides {
+      min-height: 34.17cqw;
+      margin-block-end: 9.3cqw;
+    }
+
+    .apex-hero__panel {
+      inset-block-end: auto;
+      height: 100%;
+      min-height: 34.17cqw;
+    }
+
+    /* Panel is 492px tall at 1440: min-height excludes the padding (content-box) */
+    .apex-hero__content {
+      max-width: 33cqw;
+      min-height: calc(34.17cqw - var(--apex-space-24) - var(--apex-space-48));
+      justify-content: center;
+      padding-block: var(--apex-space-24) var(--apex-space-48);
+      /* Lined up with the header's Home link (set by apex-home.js), else Figma's 194px */
+      padding-inline-start: var(--apex-hero-text-x, 13.47cqw);
+      box-sizing: content-box;
+    }
+
+    .apex-hero__text {
+      max-width: min(383px, 26.6cqw);
+    }
+
+    /* Sized for the Photoshop export with contact shadows, so the jars land where Figma has
+       them: 678px across from x 649, lids 79px below the panel top, hanging about 50px below
+       the panel. The image's clear margin can overlap the shop nav, so it ignores clicks. */
+    .apex-hero__media {
+      position: absolute;
+      z-index: 1;
+      inset-block-start: 3.7cqw;
+      inset-inline-start: 20.46cqw;
+      width: 96.9cqw;
+      pointer-events: none;
+    }
+
+    .apex-hero__dots {
+      position: absolute;
+      inset-block-end: var(--apex-space-20);
+      inset-inline-start: var(--apex-hero-text-x, 13.47cqw);
+    }
+  }
+
+  /* Tablet and mobile: text, then image, then dots */
+  @media screen and (max-width: 1199px) {
+    .apex-hero__content {
+      padding: var(--apex-space-48) var(--page-margin, 16px) 0;
+    }
+
+    .apex-hero__media {
+      width: min(100%, 720px);
+      margin: var(--apex-space-24) auto 0;
+    }
+
+    .apex-hero__dots {
+      justify-content: center;
+      padding-block: var(--apex-space-16) var(--apex-space-24);
+    }
+  }
+
+  /* Phone (Ell's mockup): no pattern, a big title, the text and one button centred, then the
+     jars large and centred, hanging below the panel. Sizes follow the screen width. */
+  @media screen and (max-width: 749px) {
+    .apex-hero__pattern {
+      display: none;
+    }
+
+    /* The panel stops 47px (at 400 wide) above the jars' base */
+    .apex-hero__panel {
+      inset-block-end: 11.8vw;
+    }
+
+    .apex-hero__slide {
+      min-width: 0;
+    }
+
+    .apex-hero__content {
+      padding: 7.2vw 13.7vw 0;
+    }
+
+    .apex-hero__eyebrow {
+      margin-block-end: var(--apex-space-20);
+    }
+
+    .apex-hero__title {
+      font-size: 32vw;
+      line-height: 0.8;
+    }
+
+    .apex-hero__text {
+      align-self: stretch;
+      margin-block-start: var(--apex-space-24);
+      text-align: center;
+    }
+
+    .apex-hero__buttons {
+      align-self: center;
+      justify-content: center;
+      margin-block-start: var(--apex-space-24);
+    }
+
+    .apex-hero__buttons .apex-button--outline-light {
+      display: none;
+    }
+
+    /* The jars span 90% of the screen. The box stops at the jars' base (the rest of the image
+       is clear space and shadow, which overflows), so the panel can end just above it. */
+    .apex-hero__media {
+      width: 185vw;
+      aspect-ratio: 1000 / 348;
+      /* Without this the box grows to the image's full height and the jars no longer hang */
+      min-height: 0;
+      margin: calc(32px - 3.4vw) 0 0 -42.5vw;
+      pointer-events: none;
+    }
+
+    /* Below the panel on the light page, so the dots are dried moss; the current one stays amber */
+    .apex-hero__dots {
+      position: relative;
+      z-index: 3;
+    }
+
+    .apex-hero__dot:not(.is-active) {
+      background-color: var(--apex-dried-moss);
+    }
+  }
+
+  /* Entrance, each time a slide comes in: the panel and pattern ease in, the text rises a
+     touch, then the product image glides in from the right and stops with a very slight bounce */
+  @media (prefers-reduced-motion: no-preference) {
+    .apex-hero__slide.is-active .apex-hero__panel {
+      animation: apex-hero-panel-in 0.9s var(--ease-out-cubic, ease-out) both;
+    }
+
+    .apex-hero__slide.is-active .apex-hero__pattern {
+      animation: apex-hero-pattern-in 1.6s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+    }
+
+    .apex-hero__slide.is-active .apex-hero__content {
+      animation: apex-hero-content-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+    }
+
+    .apex-hero__slide.is-active .apex-hero__media {
+      animation: apex-hero-media-in 1.2s linear 0.35s both;
+    }
+  }
+
+  @keyframes apex-hero-panel-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes apex-hero-pattern-in {
+    from {
+      opacity: 0;
+      scale: 1.04;
+    }
+  }
+
+  @keyframes apex-hero-content-in {
+    from {
+      opacity: 0;
+      translate: 0 14px;
+    }
+  }
+
+  /* Slides in and stops short, with a very slight bounce, as if stopped in its tracks */
+  @keyframes apex-hero-media-in {
+    0% {
+      opacity: 0;
+      translate: 8% 0;
+      animation-timing-function: cubic-bezier(0.3, 0.7, 0.4, 1);
+    }
+
+    55% {
+      opacity: 1;
+      translate: -0.8% 0;
+      animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+    }
+
+    78% {
+      translate: 0.15% 0;
+      animation-timing-function: ease-out;
+    }
+
+    100% {
+      translate: 0 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .apex-hero__slide,
+    .apex-hero__slide.is-active,
+    .apex-hero__dot {
+      transition: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX hero",
+  "tag": "section",
+  "class": "apex-hero-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "indicator_label",
+      "label": "Name in the page indicator",
+      "default": "Featured",
+      "info": "Shown next to this section's dot on the left. Leave blank to leave it out."
+    },
+    {
+      "type": "range",
+      "id": "autoplay_speed",
+      "label": "Change slide every",
+      "min": 0,
+      "max": 12,
+      "step": 1,
+      "unit": "s",
+      "default": 6,
+      "info": "0 turns auto-play off."
+    },
+    {
+      "type": "header",
+      "content": "Default panel",
+      "info": "Used by any slide that doesn't set its own."
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Panel colour",
+      "default": "#898671"
+    },
+    {
+      "type": "image_picker",
+      "id": "pattern",
+      "label": "Pattern",
+      "info": "Shown once, at the panel's full height."
+    },
+    {
+      "type": "range",
+      "id": "pattern_position",
+      "label": "Pattern position",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 67,
+      "info": "Where the centre of the pattern sits across the screen. 67% is a third of the way right of centre."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "slide",
+      "name": "Slide",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Product image",
+          "info": "Transparent PNG of the jars with their contact shadows (the Photoshop export). Placed to match Figma \"Group-Mockup-Labels-Basic 1\"."
+        },
+        {
+          "type": "text",
+          "id": "eyebrow",
+          "label": "Eyebrow",
+          "default": "Premium animal supplements"
+        },
+        {
+          "type": "textarea",
+          "id": "title",
+          "label": "Title",
+          "default": "Nutrition\nyou can see"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text",
+          "default": "<p>Welcome to Burger Bliss, where we take your cravings to a whole new level!</p>"
+        },
+        {
+          "type": "text",
+          "id": "button_label",
+          "label": "Amber button label",
+          "default": "Shop NutriCore range"
+        },
+        {
+          "type": "url",
+          "id": "button_link",
+          "label": "Amber button link"
+        },
+        {
+          "type": "text",
+          "id": "button_2_label",
+          "label": "Outline button label",
+          "default": "Explore"
+        },
+        {
+          "type": "url",
+          "id": "button_2_link",
+          "label": "Outline button link"
+        },
+        {
+          "type": "header",
+          "content": "Panel",
+          "info": "Leave these blank to use the section's default panel."
+        },
+        {
+          "type": "color",
+          "id": "background_color",
+          "label": "Panel colour"
+        },
+        {
+          "type": "image_picker",
+          "id": "pattern",
+          "label": "Pattern"
+        },
+        {
+          "type": "checkbox",
+          "id": "pattern_position_custom",
+          "label": "Set this slide's pattern position",
+          "default": false
+        },
+        {
+          "type": "range",
+          "id": "pattern_position",
+          "label": "Pattern position",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%",
+          "default": 67,
+          "visible_if": "{{ block.settings.pattern_position_custom }}"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX hero",
+      "blocks": [{ "type": "slide" }, { "type": "slide" }]
+    }
+  ]
+}
+{% endschema %}

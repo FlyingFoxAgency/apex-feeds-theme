@@ -1,0 +1,403 @@
+{% comment %}
+  APEX story tabs (Figma "About Apex"): glass slides with an image on the left and text on the
+  right, the next slide peeking in from the right, and a row of large tab titles underneath
+  joined by thin lines. Each tab is a block.
+{% endcomment %}
+<script src="{{ 'apex-home.js' | asset_url }}" type="module"></script>
+
+<div class="apex-story-tabs"
+  {% if section.settings.indicator_label != blank %} data-apex-indicator-label="{{ section.settings.indicator_label | escape }}"{% endif %}
+>
+  {%- if section.settings.decoration != blank -%}
+    <div class="apex-decoration apex-story-tabs__decoration" aria-hidden="true">
+      {{ section.settings.decoration | image_url: width: 800 | image_tag: loading: 'lazy', alt: '' }}
+    </div>
+  {%- endif -%}
+
+  <apex-tabs class="apex-story-tabs__inner apex-container">
+    {%- if section.settings.mobile_title != blank -%}
+      <h2 class="apex-section-title apex-story-tabs__title">{{ section.settings.mobile_title | escape }}</h2>
+    {%- endif -%}
+    <div class="apex-story-tabs__track" data-track>
+      {%- for block in section.blocks -%}
+        <div
+          class="apex-story-tabs__panel{% if forloop.first %} is-active{% endif %}"
+          id="ApexStoryPanel-{{ block.id }}"
+          role="tabpanel"
+          aria-labelledby="ApexStoryTab-{{ block.id }}"
+          data-panel
+          {{ block.shopify_attributes }}
+        >
+          <div class="apex-story-tabs__media">
+            {%- if block.settings.image != blank -%}
+              {{
+                block.settings.image
+                | image_url: width: 1000
+                | image_tag: loading: 'lazy', sizes: '(min-width: 990px) 470px, 90vw', widths: '500, 750, 1000'
+              }}
+            {%- else -%}
+              {{ 'product-apparel-1' | placeholder_svg_tag: 'apex-story-tabs__placeholder' }}
+            {%- endif -%}
+          </div>
+          <div class="apex-story-tabs__content">
+            {%- assign heading = block.settings.heading | default: block.settings.tab_title -%}
+            {%- if heading != blank -%}
+              <h3 class="apex-story-tabs__heading">{{ heading | escape }}</h3>
+            {%- endif -%}
+            {%- if block.settings.text != blank -%}
+              <div class="apex-story-tabs__text">{{ block.settings.text }}</div>
+            {%- endif -%}
+          </div>
+        </div>
+      {%- endfor -%}
+    </div>
+
+    {%- if section.blocks.size > 0 -%}
+      <div
+        class="apex-story-tabs__tabs"
+        role="tablist"
+        aria-label="{{ section.settings.label | escape }}"
+        style="--apex-tab-count: {{ section.blocks.size }};"
+      >
+        {%- for block in section.blocks -%}
+          <div class="apex-story-tabs__tab-cell">
+            <button
+              type="button"
+              class="apex-story-tabs__tab{% if forloop.first %} is-active{% endif %}"
+              id="ApexStoryTab-{{ block.id }}"
+              role="tab"
+              aria-controls="ApexStoryPanel-{{ block.id }}"
+              aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+              data-tab
+            >
+              {{- block.settings.tab_title | escape -}}
+            </button>
+            <span class="apex-story-tabs__line" aria-hidden="true"></span>
+          </div>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+  </apex-tabs>
+</div>
+
+{% stylesheet %}
+  .apex-story-tabs {
+    position: relative;
+    isolation: isolate;
+    overflow-x: clip;
+    padding-block: var(--apex-space-48) 120px;
+  }
+
+  .apex-story-tabs__decoration {
+    inset-block-end: -30px;
+    inset-inline-end: max(var(--page-margin, 16px), calc((100vw - 1440px) / 2 + 31px));
+    width: min(346px, 40vw);
+  }
+
+  .apex-story-tabs__inner {
+    position: relative;
+    z-index: 1;
+    display: block;
+  }
+
+  /* Slides run to both edges of the screen, so the next one peeks in on the right and the
+     previous ones stay visible (faded) on the left. The active slide still lines up with the
+     content: the left padding and snap
+     padding put it back on the grid. */
+  .apex-story-tabs__track {
+    --apex-story-bleed: calc((100vw - 100%) / 2);
+
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: min(895px, 72%);
+    gap: 26px;
+    margin-inline: calc(-1 * var(--apex-story-bleed));
+    padding-inline: var(--apex-story-bleed) var(--page-margin, 16px);
+    /* Set to the left padding in px by apex-home.js (a % here would measure the track) */
+    scroll-padding-inline-start: var(--apex-story-snap, 0px);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .apex-story-tabs__track::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* An empty column after the last slide, so the last one can scroll all the way across into
+     the same spot as the others instead of stopping at the screen edge */
+  .apex-story-tabs__track::after {
+    content: '';
+  }
+
+  .apex-story-tabs__panel {
+    display: grid;
+    grid-template-columns: 52fr 48fr;
+    min-height: 486px;
+    overflow: hidden;
+    border-radius: var(--apex-radius-lg);
+    background-color: var(--apex-glass-bg);
+    -webkit-backdrop-filter: blur(var(--apex-glass-blur));
+    backdrop-filter: blur(var(--apex-glass-blur));
+    color: var(--apex-olive);
+    scroll-snap-align: start;
+    opacity: 0.73;
+    cursor: pointer;
+    transition: opacity 0.4s ease;
+  }
+
+  .apex-story-tabs__panel.is-active {
+    opacity: 1;
+    cursor: auto;
+  }
+
+  .apex-story-tabs__media {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-block: 49px 50px;
+    background-color: rgb(255 255 255 / 0.39);
+  }
+
+  .apex-story-tabs__media img,
+  .apex-story-tabs__placeholder {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-height: 387px;
+    object-fit: contain;
+    transition: opacity 0.4s ease;
+  }
+
+  .apex-story-tabs__placeholder {
+    fill: rgb(100 105 53 / 0.2);
+  }
+
+  .apex-story-tabs__panel:not(.is-active) .apex-story-tabs__media img {
+    opacity: 0.4;
+  }
+
+  .apex-story-tabs__content {
+    padding: 122px var(--apex-space-32) var(--apex-space-48) 33px;
+  }
+
+  .apex-story-tabs__heading {
+    margin: 0;
+    font-family: var(--font-body--family);
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.25rem;
+    text-transform: uppercase;
+    color: var(--apex-olive);
+  }
+
+  .apex-story-tabs__text {
+    max-width: 296px;
+    margin-block-start: 25px;
+    font-size: 0.625rem;
+    line-height: 0.875rem;
+    letter-spacing: 0.5px;
+  }
+
+  .apex-story-tabs__text p {
+    margin: 0 0 0.875rem;
+  }
+
+  /* Tab titles: Dharma 48/46, burrow, faded until picked, joined by thin lines */
+  .apex-story-tabs__tabs {
+    display: grid;
+    grid-template-columns: repeat(var(--apex-tab-count, 4), minmax(0, 1fr));
+    margin-block-start: 49px;
+  }
+
+  .apex-story-tabs__tab-cell {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding-inline-end: 18px;
+  }
+
+  .apex-story-tabs__tab {
+    flex: none;
+    padding: 0;
+    border: 0;
+    background: none;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: var(--font-size--h3);
+    line-height: 0.96;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--apex-burrow);
+    opacity: 0.25;
+    cursor: pointer;
+    transition:
+      opacity 0.3s ease,
+      scale 0.2s var(--ease-out-cubic, ease-out);
+    transform-origin: left center;
+  }
+
+  .apex-story-tabs__tab.is-active {
+    opacity: 1;
+  }
+
+  .apex-story-tabs__tab:is(:hover, :focus-visible) {
+    scale: 1.06;
+  }
+
+  .apex-story-tabs__line {
+    flex: 1;
+    height: 2px;
+    background-color: var(--apex-burrow);
+    opacity: 0.25;
+  }
+
+  .apex-story-tabs__title {
+    margin-block-end: var(--apex-space-24);
+  }
+
+  @media screen and (min-width: 990px) {
+    .apex-story-tabs__title {
+      display: none;
+    }
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-story-tabs__track {
+      grid-auto-columns: 86%;
+      gap: var(--apex-space-16);
+    }
+
+    /* Image on top, text below. Every card's image area is as tall as the first card's (set by
+       apex-home.js) and the text area takes the rest, so all cards line up (Ell). */
+    .apex-story-tabs__panel {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto 1fr;
+      min-height: 0;
+    }
+
+    .apex-story-tabs__media {
+      padding-block: var(--apex-space-24);
+    }
+
+    .apex-story-tabs__panel:not(:first-child) .apex-story-tabs__media {
+      box-sizing: border-box;
+      height: var(--apex-story-media-height, auto);
+    }
+
+    .apex-story-tabs__panel:not(:first-child) .apex-story-tabs__media :is(img, svg) {
+      max-height: none;
+    }
+
+    .apex-story-tabs__content {
+      padding: var(--apex-space-24);
+    }
+
+    .apex-story-tabs__tabs {
+      display: flex;
+      gap: var(--apex-space-24);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .apex-story-tabs__tab-cell {
+      padding: 0;
+    }
+
+    .apex-story-tabs__line {
+      display: none;
+    }
+
+    .apex-story-tabs__tab {
+      font-size: var(--font-size--h4);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .apex-story-tabs__panel,
+    .apex-story-tabs__media img,
+    .apex-story-tabs__tab {
+      transition: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX story tabs",
+  "tag": "section",
+  "class": "apex-story-tabs-section",
+  "max_blocks": 6,
+  "settings": [
+    {
+      "type": "text",
+      "id": "indicator_label",
+      "label": "Name in the page indicator",
+      "default": "About us",
+      "info": "Shown next to this section's dot on the left. Leave blank to leave it out."
+    },
+    {
+      "type": "text",
+      "id": "mobile_title",
+      "label": "Title on phones and tablets",
+      "default": "Get to know APEX Feeds",
+      "info": "Shown above the cards on smaller screens. Leave blank to leave it out."
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "label": "Name for screen readers",
+      "default": "About APEX Feeds"
+    },
+    {
+      "type": "image_picker",
+      "id": "decoration",
+      "label": "Line art at the bottom right",
+      "info": "Transparent PNG (the geckos in Figma \"Group 78\", 346 x 193)."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "tab",
+      "name": "Tab",
+      "settings": [
+        {
+          "type": "text",
+          "id": "tab_title",
+          "label": "Tab title",
+          "default": "Our values"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image",
+          "info": "Transparent PNG, about 930 x 774px (Figma \"Group-Mockup-Labels-Basic 2\")."
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "info": "Leave blank to use the tab title."
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text",
+          "default": "<p>Nulla libero nibh, pellentesque vel auctor fringilla, faucibus at est. Mauris in feugiat nisi. Curabitur at felis non nunc pretium lobortis. Integer nec mattis tellus.</p>"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX story tabs",
+      "blocks": [
+        { "type": "tab", "settings": { "tab_title": "Our values" } },
+        { "type": "tab", "settings": { "tab_title": "Our story" } },
+        { "type": "tab", "settings": { "tab_title": "Only the best" } },
+        { "type": "tab", "settings": { "tab_title": "The passion" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

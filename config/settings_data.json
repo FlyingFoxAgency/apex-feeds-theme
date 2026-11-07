@@ -79,6 +79,7 @@
     "currency_code_enabled_product_pages": false,
     "currency_code_enabled_product_cards": false,
     "currency_code_enabled_cart_items": false,
+    "mobile_quick_add": true,
     "product_corner_radius": 16,
     "card_corner_radius": 16,
     "show_variant_image": false,

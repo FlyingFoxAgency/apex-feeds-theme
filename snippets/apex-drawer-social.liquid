@@ -1,0 +1,36 @@
+{% doc %}
+  APEX: social icons under the links in the mobile menu drawer. URLs come from Theme settings >
+  APEX Feeds. Like Horizon's social block, an icon only shows once its link includes a profile
+  path (always shown in the theme editor so it can be checked).
+
+  @param {string} drawer_type - Only renders for 'mobile-drawer'
+
+  @example
+  {% render 'apex-drawer-social', drawer_type: 'mobile-drawer' %}
+{% enddoc %}
+{%- if drawer_type == 'mobile-drawer' -%}
+  {%- capture icons -%}
+    {%- assign platforms = 'facebook,instagram,youtube,tiktok' | split: ',' -%}
+    {%- for platform in platforms -%}
+      {%- assign setting_id = 'apex_social_' | append: platform -%}
+      {%- assign link_url = settings[setting_id] -%}
+      {%- if link_url != blank -%}
+        {%- assign url_parts = link_url | split: '//' | last | split: '/' -%}
+        {%- if request.design_mode or url_parts.size > 1 and url_parts[1] != '' -%}
+          <li>
+            <a class="apex-drawer-social__link" href="{{ link_url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ platform | capitalize }}">
+              <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                {%- render 'icon', icon: platform -%}
+              </svg>
+            </a>
+          </li>
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endcapture -%}
+  {%- if icons != blank -%}
+    <ul class="apex-drawer-social list-unstyled menu-drawer__animated-element" role="list">
+      {{- icons -}}
+    </ul>
+  {%- endif -%}
+{%- endif -%}
