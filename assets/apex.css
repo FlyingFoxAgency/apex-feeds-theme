@@ -843,14 +843,14 @@ html:has(.menu-drawer-container[open]) .apex-help-button {
 }
 
 /* Menu drawer (pop-out menu), styled like the Figma filter pop-out: #EDEDE6 throughout, right
-   corners rounded 65px, soft shadow. Top-level links are evenly spaced, whatever kind of item
+   corners rounded, soft shadow. Top-level links in Dharma, evenly spaced, whatever kind of item
    Horizon renders them as (Ell). */
 #header-component .menu-drawer {
   --apex-drawer-bg: #edede6;
 
   border-inline-end: 0;
-  border-start-end-radius: 65px;
-  border-end-end-radius: 65px;
+  border-start-end-radius: 40px;
+  border-end-end-radius: 40px;
   background-color: var(--apex-drawer-bg);
   box-shadow: 40px 0 120px rgb(0 0 0 / 0.1);
 }
@@ -865,27 +865,32 @@ html:has(.menu-drawer-container[open]) .apex-help-button {
   background-color: var(--apex-drawer-bg);
 }
 
-#header-component
-  .menu-drawer__navigation
-  > .menu-drawer__menu
-  > .menu-drawer__list-item {
-  min-height: 0;
-  margin: 0;
+#header-component .menu-drawer .menu-drawer__menu.has-submenu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--apex-space-20);
+  padding-block: var(--apex-space-12);
 }
 
+#header-component .menu-drawer .menu-drawer__menu.has-submenu > li,
 #header-component
-  .menu-drawer__navigation
-  > .menu-drawer__menu
-  > .menu-drawer__list-item
-  > :is(a, accordion-custom, .menu-drawer__menu-container),
-#header-component
-  .menu-drawer__navigation
-  > .menu-drawer__menu
-  > .menu-drawer__list-item
-  .menu-drawer__menu-item--mainlist {
-  width: 100%;
-  min-height: 56px;
+  .menu-drawer
+  .menu-drawer__menu.has-submenu
+  > li
+  :is(.menu-drawer__menu-container, accordion-custom, details) {
+  min-height: 0;
   margin: 0;
   padding-block: 0;
   border: 0;
+}
+
+#header-component .menu-drawer .menu-drawer__menu-item--mainlist {
+  min-height: 0;
+  margin: 0;
+  padding-block: 0;
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  font-size: 2.5rem;
+  line-height: 1;
+  text-transform: uppercase;
 }
