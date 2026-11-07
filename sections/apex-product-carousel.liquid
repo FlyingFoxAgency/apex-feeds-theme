@@ -167,9 +167,26 @@
       padding-block: 68px var(--apex-space-64);
     }
 
+    /* The row runs to both screen edges and cards that aren't fully on screen are faded,
+       like the other sliders */
     .apex-product-carousel__track {
       --apex-carousel-visible: 1.3;
       --apex-carousel-gap: 16px;
+      --apex-carousel-bleed: calc((100vw - 100%) / 2);
+
+      margin-inline: calc(-1 * var(--apex-carousel-bleed));
+      padding-inline: var(--apex-carousel-bleed);
+      /* In px: a % here would measure the scroller, not the section */
+      scroll-padding-inline: var(--page-margin, 16px);
+      overscroll-behavior-x: contain;
+    }
+
+    .apex-product-carousel__item {
+      transition: opacity 0.4s ease;
+    }
+
+    apex-carousel[data-ready] .apex-product-carousel__item:not(.is-current) {
+      opacity: 0.5;
     }
   }
 

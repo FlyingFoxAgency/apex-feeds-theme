@@ -123,6 +123,27 @@ class ApexCarousel extends HTMLElement {
     });
     new ResizeObserver(() => this.update()).observe(this.track);
     this.update();
+
+    // Cards that are mostly on screen count as current; the phone styles fade the rest
+    if ("IntersectionObserver" in window) {
+      this.observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            entry.target.classList.toggle(
+              "is-current",
+              entry.intersectionRatio >= 0.9,
+            );
+          }
+        },
+        { root: this.track, threshold: [0, 0.9, 1] },
+      );
+      for (const item of this.track.children) this.observer.observe(item);
+      this.setAttribute("data-ready", "");
+    }
+  }
+
+  disconnectedCallback() {
+    this.observer?.disconnect();
   }
 
   step(direction) {
@@ -179,6 +200,18 @@ class ApexTabs extends HTMLElement {
     this.setSnap();
     window.addEventListener("resize", this.setSnap);
 
+    // On smaller screens every card's image area matches the first card's height
+    const firstMedia = this.panels[0]?.querySelector(".apex-story-tabs__media");
+    if (firstMedia && this.track && "ResizeObserver" in window) {
+      this.mediaObserver = new ResizeObserver(() =>
+        this.track.style.setProperty(
+          "--apex-story-media-height",
+          `${firstMedia.offsetHeight}px`,
+        ),
+      );
+      this.mediaObserver.observe(firstMedia);
+    }
+
     // Scrolling the cards by hand moves the active tab along with them
     if (this.track) {
       this.track.addEventListener("scroll", () => this.onScroll(), {
@@ -201,6 +234,7 @@ class ApexTabs extends HTMLElement {
 
   disconnectedCallback() {
     window.removeEventListener("resize", this.setSnap);
+    this.mediaObserver?.disconnect();
   }
 
   // The card whose left edge is closest to where the first card sits

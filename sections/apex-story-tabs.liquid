@@ -15,6 +15,9 @@
   {%- endif -%}
 
   <apex-tabs class="apex-story-tabs__inner apex-container">
+    {%- if section.settings.mobile_title != blank -%}
+      <h2 class="apex-section-title apex-story-tabs__title">{{ section.settings.mobile_title | escape }}</h2>
+    {%- endif -%}
     <div class="apex-story-tabs__track" data-track>
       {%- for block in section.blocks -%}
         <div
@@ -249,19 +252,41 @@
     opacity: 0.25;
   }
 
+  .apex-story-tabs__title {
+    margin-block-end: var(--apex-space-24);
+  }
+
+  @media screen and (min-width: 990px) {
+    .apex-story-tabs__title {
+      display: none;
+    }
+  }
+
   @media screen and (max-width: 989px) {
     .apex-story-tabs__track {
       grid-auto-columns: 86%;
       gap: var(--apex-space-16);
     }
 
+    /* Image on top, text below. Every card's image area is as tall as the first card's (set by
+       apex-home.js) and the text area takes the rest, so all cards line up (Ell). */
     .apex-story-tabs__panel {
       grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto 1fr;
       min-height: 0;
     }
 
     .apex-story-tabs__media {
       padding-block: var(--apex-space-24);
+    }
+
+    .apex-story-tabs__panel:not(:first-child) .apex-story-tabs__media {
+      box-sizing: border-box;
+      height: var(--apex-story-media-height, auto);
+    }
+
+    .apex-story-tabs__panel:not(:first-child) .apex-story-tabs__media :is(img, svg) {
+      max-height: none;
     }
 
     .apex-story-tabs__content {
@@ -310,6 +335,13 @@
       "label": "Name in the page indicator",
       "default": "About us",
       "info": "Shown next to this section's dot on the left. Leave blank to leave it out."
+    },
+    {
+      "type": "text",
+      "id": "mobile_title",
+      "label": "Title on phones and tablets",
+      "default": "Get to know APEX Feeds",
+      "info": "Shown above the cards on smaller screens. Leave blank to leave it out."
     },
     {
       "type": "text",
