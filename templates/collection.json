@@ -44,10 +44,10 @@
       "type": "apex-product-carousel",
       "settings": {
         "indicator_label": "",
-        "title": "Customers also bought",
+        "title": "Don't forget the essentials",
         "collection": "",
         "products_to_show": 8,
-        "title_link": "shopify://collections/all",
+        "title_link": "",
         "show_buttons": true,
         "band": true,
         "decoration_side": "right"
