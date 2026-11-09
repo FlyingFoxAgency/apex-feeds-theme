@@ -37,7 +37,7 @@
     "apex_main_collection": {
       "type": "apex-main-collection",
       "settings": {
-        "per_page": 16
+        "per_page": 12
       }
     },
     "apex_also_bought": {
