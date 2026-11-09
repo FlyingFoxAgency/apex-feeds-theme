@@ -49,7 +49,7 @@
 -%}
 <apex-collection class="apex-collection apex-container">
   {%- paginate collection.products by per_page -%}
-    <div class="apex-collection__toolbar">
+    <div class="apex-collection__toolbar"{% if paginate.current_page > 1 %} data-scroll-to{% endif %}>
       {%- if collection.filters.size > 0 -%}
         <button type="button" class="apex-collection__filters-button" data-open-filters aria-haspopup="dialog">
           {{- 'apex-icon-filter.svg' | inline_asset_content -}}
@@ -250,6 +250,12 @@
       'apex-collection',
       class extends HTMLElement {
         connectedCallback() {
+          // Page 2 onwards opens at the products, past the header
+          const start = this.querySelector('[data-scroll-to]');
+          if (start && !window.location.hash) {
+            requestAnimationFrame(() => start.scrollIntoView({ block: 'start', behavior: 'instant' }));
+          }
+
           const dialog = this.querySelector('[data-filters]');
           this.querySelector('[data-open-filters]')?.addEventListener('click', () => dialog?.showModal());
           this.querySelector('[data-close-filters]')?.addEventListener('click', () => dialog?.close());
@@ -291,6 +297,7 @@
 
   /* Toolbar (Figma: 62px outline moss button, count 52px after it, sort on the right) */
   .apex-collection__toolbar {
+    scroll-margin-block-start: calc(var(--header-height, 0px) + var(--apex-space-24));
     display: flex;
     align-items: center;
     gap: var(--apex-space-16) 52px;
