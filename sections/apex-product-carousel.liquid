@@ -233,6 +233,13 @@
     background: linear-gradient(180deg, #cfcfca 0%, var(--apex-dried-moss) 100%);
   }
 
+  /* Cards on the band match the cards on the page above instead of tinting the band through */
+  .apex-product-carousel--band .apex-product-card {
+    background-color: var(--apex-glass-solid);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
   .apex-product-carousel--band .apex-product-carousel__track {
     grid-area: 2 / 1;
   }
