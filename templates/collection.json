@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
     "apex_shop_nav": {
@@ -6,7 +15,8 @@
         "menu": "shop",
         "show_shop_all": true,
         "shop_all_label": "Shop all",
-        "label": "Shop by category"
+        "label": "Shop by category",
+        "mobile_heading": "Shop by category"
       }
     },
     "apex_collection_header": {
@@ -15,8 +25,9 @@
         "eyebrow": "Premium animal supplements",
         "show_description": true,
         "fallback_title": "Shop all",
-        "gradient_from": "#40443d",
-        "gradient_to": "#a0aa98"
+        "decoration": "shopify://shop_images/Gecko.png",
+        "gradient_from": "{{ settings.color_palette.color5 }}",
+        "gradient_to": "{{ settings.color_palette.color11 }}"
       }
     },
     "apex_main_collection": {
@@ -30,13 +41,19 @@
       "settings": {
         "indicator_label": "",
         "title": "Customers also bought",
-        "title_link": "shopify://collections/all",
+        "collection": "",
         "products_to_show": 8,
+        "title_link": "shopify://collections/all",
         "show_buttons": true,
         "band": true,
         "decoration_side": "right"
       }
     }
   },
-  "order": ["apex_shop_nav", "apex_collection_header", "apex_main_collection", "apex_also_bought"]
+  "order": [
+    "apex_shop_nav",
+    "apex_collection_header",
+    "apex_main_collection",
+    "apex_also_bought"
+  ]
 }
