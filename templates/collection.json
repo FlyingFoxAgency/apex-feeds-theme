@@ -43,13 +43,14 @@
     "apex_also_bought": {
       "type": "apex-product-carousel",
       "settings": {
-        "indicator_label": "",
+        "indicator_label": "Essentials",
         "title": "Don't forget the essentials",
-        "collection": "",
+        "collection": "essentials",
         "products_to_show": 8,
-        "title_link": "",
+        "title_link": "shopify://collections/essentials",
         "show_buttons": true,
         "band": true,
+        "decoration": "shopify://shop_images/Gecko.png",
         "decoration_side": "right"
       }
     }
