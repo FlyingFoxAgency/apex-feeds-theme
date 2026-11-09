@@ -3,16 +3,39 @@
   fades from clear on the left to burrow on the right, with an eyebrow, the collection name in
   large Dharma, its description, and an image on the right (the snowflakes on Frozen Meals).
 
-  Per collection, the eyebrow and image can come from collection metafields:
-  custom.eyebrow (single line text) and custom.header_art (file, image). Without them the section
-  settings are used.
+  Per collection, the title, eyebrow and image can come from collection metafields:
+  custom.header_title (single line text), custom.eyebrow (single line text) and
+  custom.header_art (file, image). Without them the section settings are used.
+
+  Title order: the collection's custom.header_title, then the name of the matching item in the
+  shop menu, then the collection's own title.
 {% endcomment %}
 {%- liquid
   assign eyebrow = collection.metafields.custom.eyebrow.value | default: section.settings.eyebrow
   assign art = collection.metafields.custom.header_art.value | default: section.settings.decoration
   assign title = collection.title | default: section.settings.fallback_title
-  if request.page_type == 'search'
+  if request.page_type == 'search' or collection.handle == 'all'
     assign title = section.settings.fallback_title
+  endif
+
+  assign menu = section.settings.menu | default: linklists.shop
+  if collection
+    for link in menu.links
+      if link.url == collection.url
+        assign title = link.title
+        break
+      endif
+      for child in link.links
+        if child.url == collection.url
+          assign title = child.title
+        endif
+      endfor
+    endfor
+  endif
+
+  assign title_override = collection.metafields.custom.header_title.value
+  if title_override != blank
+    assign title = title_override
   endif
 -%}
 <div
@@ -74,7 +97,7 @@
 
   /* Dharma 128/102 with Figma's soft drop shadow */
   .apex-collection-header__title {
-    margin: 35px 0 0 -18px;
+    margin: 35px 0 0;
     font-family: var(--font-heading--family);
     font-weight: var(--font-heading--weight);
     font-size: clamp(4rem, 8.9vw, 8rem);
@@ -173,6 +196,12 @@
       "default": true
     },
     {
+      "type": "link_list",
+      "id": "menu",
+      "label": "Menu for category titles",
+      "info": "The title uses this menu's name for the collection (the Shop menu if left empty). A collection's own custom.header_title metafield replaces it."
+    },
+    {
       "type": "text",
       "id": "fallback_title",
       "label": "Title when there's no collection",
@@ -188,12 +217,12 @@
       "type": "range",
       "id": "art_width",
       "label": "Image width",
-      "min": 150,
-      "max": 800,
-      "step": 10,
+      "min": 100,
+      "max": 2000,
+      "step": 20,
       "unit": "px",
       "default": 460,
-      "info": "Width on a full-size desktop screen. It scales down on smaller screens."
+      "info": "Width on a full-size desktop screen; it scales down on smaller screens. Anything outside the panel is cropped."
     },
     {
       "type": "range",
