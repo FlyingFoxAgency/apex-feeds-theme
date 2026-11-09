@@ -24,8 +24,12 @@
       "settings": {
         "eyebrow": "Premium animal supplements",
         "show_description": true,
-        "fallback_title": "Shop all",
+        "menu": "shop",
+        "fallback_title": "Shop All",
         "decoration": "shopify://shop_images/Gecko.png",
+        "art_width": 1040,
+        "art_top": 20,
+        "art_right": -200,
         "gradient_from": "{{ settings.color_palette.color5 }}",
         "gradient_to": "{{ settings.color_palette.color11 }}"
       }
