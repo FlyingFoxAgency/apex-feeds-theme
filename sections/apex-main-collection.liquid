@@ -47,7 +47,7 @@
     assign per_page = chosen | plus: 0
   endif
 -%}
-<apex-collection class="apex-collection apex-container">
+<apex-collection class="apex-collection apex-container" data-section-id="{{ section.id }}">
   {%- paginate collection.products by per_page -%}
     <div class="apex-collection__toolbar"{% if paginate.current_page > 1 %} data-scroll-to{% endif %}>
       {%- if collection.filters.size > 0 -%}
@@ -267,21 +267,51 @@
           this.querySelector('[data-sort-select]')?.addEventListener('change', (event) =>
             event.target.form.requestSubmit()
           );
-          // Show 12 / 25 / 50 / 100: saved on the cart, then back to page 1
-          this.querySelector('[data-per-page-select]')?.addEventListener('change', async (event) => {
-            event.target.disabled = true;
-            try {
-              await fetch(`${window.Shopify?.routes?.root ?? '/'}cart/update.js`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-                body: JSON.stringify({ attributes: { _apex_per_page: event.target.value } }),
-              });
-            } finally {
-              const url = new URL(window.location.href);
-              url.searchParams.delete('page');
-              window.location.assign(url.toString());
+          this.bindPerPage();
+        }
+
+        // Show 12 / 25 / 50 / 100: saved on the cart (so it sticks), then the grid and page
+        // numbers are swapped in place, back at page 1, without moving the page
+        bindPerPage() {
+          this.querySelector('[data-per-page-select]')?.addEventListener('change', (event) =>
+            this.changePerPage(event.target)
+          );
+        }
+
+        async changePerPage(select) {
+          const url = new URL(window.location.href);
+          url.searchParams.delete('page');
+          select.disabled = true;
+          this.setAttribute('aria-busy', 'true');
+
+          try {
+            await fetch(`${window.Shopify?.routes?.root ?? '/'}cart/update.js`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+              body: JSON.stringify({ attributes: { _apex_per_page: select.value } }),
+            });
+
+            const sectionUrl = new URL(url);
+            sectionUrl.searchParams.set('section_id', this.dataset.sectionId);
+            const response = await fetch(sectionUrl);
+            if (!response.ok) throw new Error(response.statusText);
+            const html = new DOMParser().parseFromString(await response.text(), 'text/html');
+            const fresh = html.querySelector('apex-collection');
+            if (!fresh) throw new Error('No product grid in the response');
+
+            for (const selector of ['.apex-collection__grid', '.apex-collection__footer']) {
+              const current = this.querySelector(selector);
+              const next = fresh.querySelector(selector);
+              if (current && next) current.replaceWith(next);
             }
-          });
+
+            history.replaceState(history.state, '', url);
+            this.removeAttribute('aria-busy');
+            this.bindPerPage();
+            this.querySelector('[data-per-page-select]')?.focus({ preventScroll: true });
+          } catch {
+            window.location.assign(url.toString());
+          }
         }
       }
     );
@@ -292,6 +322,7 @@
   /* 158px under the grid + the carousel's 96px top = 254px, double the first build's gap */
   .apex-collection {
     display: block;
+    overflow-anchor: none;
     padding-block: 39px 158px;
   }
 
@@ -363,6 +394,11 @@
   }
 
   /* Grid (Figma: four 288px cards, 28px apart, rows 37px apart) */
+  .apex-collection[aria-busy='true'] .apex-collection__grid {
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+  }
+
   .apex-collection__grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
