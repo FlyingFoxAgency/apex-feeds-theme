@@ -1,9 +1,9 @@
 {% comment %}
   APEX collection header (Figma "APEX Category Page" > Category Header): a full-width panel that
   fades from clear on the left to burrow on the right, with an eyebrow, the collection name in
-  large Dharma, its description, and line art on the right (the snowflakes on Frozen Meals).
+  large Dharma, its description, and an image on the right (the snowflakes on Frozen Meals).
 
-  Per collection, the eyebrow and line art can come from collection metafields:
+  Per collection, the eyebrow and image can come from collection metafields:
   custom.eyebrow (single line text) and custom.header_art (file, image). Without them the section
   settings are used.
 {% endcomment %}
@@ -17,7 +17,7 @@
 -%}
 <div
   class="apex-collection-header"
-  style="--apex-collection-from: {{ section.settings.gradient_from }}; --apex-collection-to: {{ section.settings.gradient_to }};"
+  style="--apex-collection-from: {{ section.settings.gradient_from }}; --apex-collection-to: {{ section.settings.gradient_to }}; --apex-art-w: {{ section.settings.art_width }}; --apex-art-top: {{ section.settings.art_top }}; --apex-art-right: {{ section.settings.art_right }};"
 >
   <div class="apex-container apex-collection-header__inner">
     <div class="apex-collection-header__content">
@@ -42,6 +42,7 @@
   .apex-collection-header {
     position: relative;
     isolation: isolate;
+    overflow: clip;
     margin-block-start: 53px;
     background: linear-gradient(
       270deg,
@@ -99,12 +100,13 @@
     margin-block-end: 0;
   }
 
-  /* Line art at the top right (Figma: 463 x 388, 46px from the top) */
+  /* Image at the top right (Figma: 463 x 388, 46px from the top). Width and position come from
+     the section settings; the width scales down with the screen below 1440px. */
   .apex-collection-header__art {
     position: absolute;
-    inset-block-start: 46px;
-    inset-inline-end: 19px;
-    width: min(463px, 36vw);
+    inset-block-start: calc(var(--apex-art-top, 46) * 1px);
+    inset-inline-end: calc(var(--apex-art-right, 20) * 1px);
+    width: min(calc(var(--apex-art-w, 463) * 1px), calc(var(--apex-art-w, 463) * 100vw / 1440));
     pointer-events: none;
   }
 
@@ -143,9 +145,9 @@
     }
 
     .apex-collection-header__art {
-      inset-block-start: var(--apex-space-24);
-      inset-inline-end: calc(-1 * var(--page-margin, 16px));
-      width: 40vw;
+      inset-block-start: calc(var(--apex-art-top, 46) * 0.5px);
+      inset-inline-end: calc(var(--apex-art-right, 20) * 0.5px - var(--page-margin, 16px));
+      width: calc(var(--apex-art-w, 463) * 40vw / 463);
       opacity: 0.6;
     }
   }
@@ -179,8 +181,40 @@
     {
       "type": "image_picker",
       "id": "decoration",
-      "label": "Line art on the right",
-      "info": "Transparent PNG (e.g. the snowflakes, 463 x 388). A collection's own custom.header_art metafield replaces this."
+      "label": "Header image on the right",
+      "info": "Line art or any graphic, ideally a transparent PNG (the snowflakes are 463 x 388). A collection's own custom.header_art metafield replaces this."
+    },
+    {
+      "type": "range",
+      "id": "art_width",
+      "label": "Image width",
+      "min": 150,
+      "max": 800,
+      "step": 10,
+      "unit": "px",
+      "default": 460,
+      "info": "Width on a full-size desktop screen. It scales down on smaller screens."
+    },
+    {
+      "type": "range",
+      "id": "art_top",
+      "label": "Image distance from the top",
+      "min": 0,
+      "max": 200,
+      "step": 2,
+      "unit": "px",
+      "default": 46
+    },
+    {
+      "type": "range",
+      "id": "art_right",
+      "label": "Image distance from the right",
+      "min": -200,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "default": 20,
+      "info": "Negative values push the image past the right edge of the panel."
     },
     {
       "type": "color",
