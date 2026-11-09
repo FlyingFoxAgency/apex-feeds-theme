@@ -6,7 +6,8 @@
   product metafield custom.suitable_for (a list of single line text, e.g. Reptiles, Amphibians),
   as "For reptiles + amphibians." If that's empty, the free text metafield custom.card_note is
   used instead. The rating uses the standard reviews.rating
-  metafield that review apps fill in, and is hidden without one.
+  metafield that review apps fill in (or custom.rating / custom.star_rating), and is hidden
+  without one.
 
   With show_buttons (the category page): an Add to cart button under the text, and on hover the
   card grows slightly, darkens and shows a Quick add button over the image (Figma "APEX Category
@@ -21,7 +22,13 @@
   {% render 'apex-product-card', product: product %}
 {% enddoc %}
 {%- liquid
+  # Rating: the standard reviews.rating (review apps), else custom.rating or custom.star_rating
+  # (a Rating or a number metafield added by hand)
   assign rating = product.metafields.reviews.rating.value.rating
+  if rating == blank
+    assign rating_field = product.metafields.custom.rating | default: product.metafields.custom.star_rating
+    assign rating = rating_field.value.rating | default: rating_field.value
+  endif
   assign note = product.metafields.custom.card_note.value
   assign animals = product.metafields.custom.suitable_for.value
   if animals != blank
