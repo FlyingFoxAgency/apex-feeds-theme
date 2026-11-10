@@ -57,7 +57,12 @@
   {% if section.settings.indicator_label != blank %} data-apex-indicator-label="{{ section.settings.indicator_label | escape }}"{% endif %}
 >
   {%- if section.settings.decoration != blank -%}
-    <div class="apex-decoration apex-product-carousel__decoration" aria-hidden="true">
+    {%- capture art_style -%}
+      {%- if section.settings.decoration_custom -%}
+        --apex-art-width: {{ section.settings.decoration_width }}px; --apex-art-top: {{ section.settings.decoration_top }}px; --apex-art-side: {{ section.settings.decoration_side_offset }}px;
+      {%- endif -%}
+    {%- endcapture -%}
+    <div class="apex-decoration apex-product-carousel__decoration{% if section.settings.decoration_custom %} apex-product-carousel__decoration--custom{% endif %}{% if section.settings.decoration_front %} apex-product-carousel__decoration--front{% endif %}" aria-hidden="true"{% if art_style != blank %} style="{{ art_style | strip }}"{% endif %}>
       {{ section.settings.decoration | image_url: width: 1200 | image_tag: loading: 'lazy', alt: '' }}
     </div>
   {%- endif -%}
@@ -317,6 +322,25 @@
     width: min(346px, 30vw);
   }
 
+  /* Line art with its own size and position (section settings) */
+  .apex-product-carousel__decoration--custom,
+  .apex-product-carousel--art-right .apex-product-carousel__decoration--custom {
+    inset-block-start: var(--apex-art-top);
+    inset-inline-start: var(--apex-art-side);
+    inset-inline-end: auto;
+    width: var(--apex-art-width);
+  }
+
+  .apex-product-carousel--art-right .apex-product-carousel__decoration--custom {
+    inset-inline-start: auto;
+    inset-inline-end: var(--apex-art-side);
+  }
+
+  /* In front of the band and the arrows instead of tucked behind them */
+  .apex-product-carousel__decoration--front {
+    z-index: 2;
+  }
+
   @media screen and (max-width: 989px) {
     .apex-product-carousel__track {
       --apex-carousel-visible: 2.3;
@@ -360,6 +384,13 @@
     /* Right-hand line art (the gecko) 1.5x bigger, growing down from where it starts */
     .apex-product-carousel--art-right .apex-product-carousel__decoration {
       width: 45vw;
+    }
+
+    /* Custom-sized line art scales down with the phone screen */
+    .apex-product-carousel__decoration--custom,
+    .apex-product-carousel--art-right .apex-product-carousel__decoration--custom {
+      width: calc(var(--apex-art-width) * 0.5);
+      inset-block-start: calc(var(--apex-art-top) * 0.5);
     }
   }
 
@@ -449,6 +480,53 @@
         { "value": "right", "label": "Above the top right" }
       ],
       "default": "left"
+    },
+    {
+      "type": "checkbox",
+      "id": "decoration_front",
+      "label": "Line art in front of the band",
+      "info": "Off: the band and cards cover the bottom of the line art.",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "decoration_custom",
+      "label": "Set the line art size and position",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "decoration_width",
+      "label": "Line art width",
+      "min": 80,
+      "max": 700,
+      "step": 10,
+      "unit": "px",
+      "default": 340,
+      "visible_if": "{{ section.settings.decoration_custom }}"
+    },
+    {
+      "type": "range",
+      "id": "decoration_top",
+      "label": "Line art top",
+      "info": "Negative moves it up above the section. Phones use half.",
+      "min": -400,
+      "max": 200,
+      "step": 10,
+      "unit": "px",
+      "default": -80,
+      "visible_if": "{{ section.settings.decoration_custom }}"
+    },
+    {
+      "type": "range",
+      "id": "decoration_side_offset",
+      "label": "Line art distance from the side",
+      "min": -300,
+      "max": 600,
+      "step": 10,
+      "unit": "px",
+      "default": 60,
+      "visible_if": "{{ section.settings.decoration_custom }}"
     }
   ],
   "presets": [

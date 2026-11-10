@@ -64,6 +64,15 @@
 
 {%- if rows != blank -%}
   <div class="apex-info" id="product-information" data-section-id="{{ section.id }}">
+    {%- if section.settings.decoration != blank -%}
+      <div
+        class="apex-decoration apex-info__decoration{% if section.settings.decoration_mobile == false %} apex-info__decoration--desktop{% endif %}"
+        style="--apex-art-width: {{ section.settings.decoration_width }}px; --apex-art-top: {{ section.settings.decoration_top }}px; --apex-art-side: {{ section.settings.decoration_side_offset }}px;"
+        aria-hidden="true"
+      >
+        {{ section.settings.decoration | image_url: width: 1000 | image_tag: loading: 'lazy', alt: '' }}
+      </div>
+    {%- endif -%}
     <div class="apex-info__inner apex-container">
       {%- if section.settings.title != blank -%}
         <h2 class="apex-section-title apex-info__heading">{{ section.settings.title | escape }}</h2>
@@ -82,6 +91,20 @@
     padding-block: 34px 72px;
     background: linear-gradient(180deg, rgb(221 221 209 / 0.95) 0%, rgb(221 221 209 / 0.9) 45%, rgb(137 134 113 / 0.55) 100%);
     color: var(--apex-burrow);
+  }
+
+  /* Line art (the crickets) between the short description and the accordions: hangs up out of
+     the top of the band, its size and position set in the section settings */
+  .apex-info__decoration {
+    z-index: 1;
+    inset-block-start: var(--apex-art-top);
+    inset-inline-start: max(16px, calc((100vw - var(--narrow-page-width, 1200px)) / 2 + var(--apex-art-side)));
+    width: var(--apex-art-width);
+  }
+
+  .apex-info__inner {
+    position: relative;
+    z-index: 2;
   }
 
   .apex-info__heading {
@@ -220,6 +243,17 @@
       padding-block: 40px 48px;
     }
 
+    .apex-info__decoration {
+      inset-inline-start: auto;
+      inset-inline-end: 16px;
+      width: calc(var(--apex-art-width) * 0.5);
+      inset-block-start: calc(var(--apex-art-top) * 0.5);
+    }
+
+    .apex-info__decoration--desktop {
+      display: none;
+    }
+
     .apex-info__list {
       margin-block-start: 16px;
     }
@@ -261,6 +295,54 @@
       "id": "title",
       "label": "Title",
       "default": "Product information"
+    },
+    {
+      "type": "header",
+      "content": "Line art"
+    },
+    {
+      "type": "image_picker",
+      "id": "decoration",
+      "label": "Line art",
+      "info": "Transparent PNG, e.g. the crickets. Sits above the top left of the band, under the short description."
+    },
+    {
+      "type": "range",
+      "id": "decoration_width",
+      "label": "Width",
+      "min": 80,
+      "max": 700,
+      "step": 10,
+      "unit": "px",
+      "default": 280
+    },
+    {
+      "type": "range",
+      "id": "decoration_top",
+      "label": "Top",
+      "info": "Negative moves it up out of the band. Phones use half.",
+      "min": -400,
+      "max": 200,
+      "step": 10,
+      "unit": "px",
+      "default": -120
+    },
+    {
+      "type": "range",
+      "id": "decoration_side_offset",
+      "label": "Distance from the left of the page content",
+      "min": -300,
+      "max": 600,
+      "step": 10,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "checkbox",
+      "id": "decoration_mobile",
+      "label": "Show on phones",
+      "info": "On phones it sits on the right.",
+      "default": true
     }
   ],
   "blocks": [
