@@ -34,6 +34,17 @@
       endif
       assign collection = collections[category_handle] | default: product.collections.first
     endif
+
+    # A category that only holds this product would leave an empty row: use the whole shop
+    assign others = 0
+    for item in collection.products limit: 2
+      if item.id != product.id
+        assign others = others | plus: 1
+      endif
+    endfor
+    if others == 0
+      assign collection = collections.all
+    endif
   endif
 
   assign title_link = section.settings.title_link
