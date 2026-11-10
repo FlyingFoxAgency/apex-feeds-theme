@@ -346,7 +346,12 @@
         "show_buttons": true,
         "band": true,
         "decoration": "shopify://shop_images/Group_98.png",
-        "decoration_side": "right"
+        "decoration_side": "right",
+        "decoration_front": true,
+        "decoration_custom": true,
+        "decoration_width": 340,
+        "decoration_top": -150,
+        "decoration_side_offset": 120
       }
     }
   },
