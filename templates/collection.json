@@ -34,7 +34,7 @@
         "mobile_art_align": "right",
         "mobile_art_width": 85,
         "mobile_art_top": 80,
-        "mobile_art_offset": 40,
+        "mobile_art_offset": 200,
         "mobile_art_opacity": 40,
         "gradient_from": "{{ settings.color_palette.color5 }}",
         "gradient_to": "{{ settings.color_palette.color11 }}"
