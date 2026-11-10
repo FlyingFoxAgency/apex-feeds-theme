@@ -98,7 +98,7 @@
         <p class="apex-collection__animals-label" id="ApexAnimalsLabel-{{ section.id }}">
           {{- section.settings.animal_label | default: 'Shop for' | escape -}}
         </p>
-        <ul class="list-unstyled" role="list">
+        <ul class="apex-collection__animals-track list-unstyled" role="list" data-animal-track>
           {%- for value in animal_filter.values -%}
             {%- if value.count > 0 or value.active -%}
               <li>
@@ -378,6 +378,14 @@
 
           this.desktop = window.matchMedia('(min-width: 990px)');
 
+          // Animal buttons: fade whichever edge has more buttons past it
+          this.addEventListener('scroll', (event) => {
+            if (event.target.matches?.('[data-animal-track]')) this.updateAnimalFade();
+          }, true);
+          this.resizeObserver = new ResizeObserver(() => this.updateAnimalFade());
+          this.resizeObserver.observe(this);
+          this.updateAnimalFade();
+
           // One set of listeners on the whole grid, so they keep working after parts are swapped
           this.addEventListener('click', (event) => this.onClick(event));
           this.addEventListener('change', (event) => this.onChange(event));
@@ -386,6 +394,18 @@
             event.preventDefault();
             this.applyForm();
           });
+        }
+
+        disconnectedCallback() {
+          this.resizeObserver?.disconnect();
+        }
+
+        updateAnimalFade() {
+          const track = this.querySelector('[data-animal-track]');
+          if (!track) return;
+          const end = track.scrollWidth - track.clientWidth;
+          track.classList.toggle('can-scroll-start', track.scrollLeft > 2);
+          track.classList.toggle('can-scroll-end', track.scrollLeft < end - 2);
         }
 
         get dialog() {
@@ -468,7 +488,12 @@
             const fresh = html.querySelector('apex-collection');
             if (!fresh) throw new Error('No product grid in the response');
 
+            const oldTrack = this.querySelector('[data-animal-track]');
+            const trackScroll = oldTrack?.scrollLeft ?? 0;
             this.querySelector('[data-results]')?.replaceWith(fresh.querySelector('[data-results]'));
+            const newTrack = this.querySelector('[data-animal-track]');
+            if (newTrack) newTrack.scrollLeft = trackScroll;
+            this.updateAnimalFade();
 
             const body = this.querySelector('.apex-filters__body');
             const freshBody = fresh.querySelector('.apex-filters__body');
@@ -875,7 +900,6 @@
   }
 
   /* Quick animal buttons (Shop all) */
-  .apex-collection__animals ul,
   .apex-collection__chips ul {
     display: flex;
     flex-wrap: wrap;
@@ -885,12 +909,64 @@
     padding: 0;
   }
 
+  /* One line of animal buttons that scrolls sideways; the edges fade while more are hidden */
   .apex-collection__animals {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    gap: var(--apex-space-8) var(--apex-space-16);
+    gap: var(--apex-space-16);
     margin-block-start: var(--apex-space-24);
+  }
+
+  .apex-collection__animals-label {
+    flex: none;
+  }
+
+  .apex-collection__animals-track {
+    --fade-start: 0px;
+    --fade-end: 0px;
+    display: flex;
+    flex: 1;
+    gap: var(--apex-space-8);
+    min-width: 0;
+    margin: 0;
+    padding: 4px 2px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(
+      90deg,
+      transparent 0,
+      #000 var(--fade-start),
+      #000 calc(100% - var(--fade-end)),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      90deg,
+      transparent 0,
+      #000 var(--fade-start),
+      #000 calc(100% - var(--fade-end)),
+      transparent 100%
+    );
+  }
+
+  .apex-collection__animals-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .apex-collection__animals-track.can-scroll-start {
+    --fade-start: 56px;
+  }
+
+  .apex-collection__animals-track.can-scroll-end {
+    --fade-end: 56px;
+  }
+
+  .apex-collection__animals-track li {
+    flex: none;
+  }
+
+  .apex-collection__animal {
+    white-space: nowrap;
   }
 
   .apex-collection__animals-label {
@@ -1138,6 +1214,11 @@
     .apex-collection__grid .apex-product-card__cart {
       font-size: 0.75rem;
       letter-spacing: 0.3px;
+    }
+
+    /* Animal buttons run to the right edge of the screen, like the other sliders */
+    .apex-collection__animals-track {
+      margin-inline-end: calc(-1 * var(--page-margin, 16px));
     }
 
     .apex-collection__footer {
