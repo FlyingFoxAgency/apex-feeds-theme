@@ -220,11 +220,20 @@
       transform: translateX(calc(-50% - var(--apex-art-moff, 0) * 1px));
     }
 
+    /* Cover / fit inside: the image fills the panel first, then width zooms it (100% = as
+       fitted) and the top and side offsets nudge it, so every slider still does something. */
     .apex-collection-header--m-cover .apex-collection-header__art,
     .apex-collection-header--m-contain .apex-collection-header__art {
       inset: 0;
       width: auto;
-      transform: none;
+      transform-origin: right top;
+      transform: translate(calc(var(--apex-art-moff, 0) * -1px), calc(var(--apex-art-mtop, 0) * 1px))
+        scale(calc(var(--apex-art-mw, 100) / 100));
+    }
+
+    .apex-collection-header--m-center.apex-collection-header--m-cover .apex-collection-header__art,
+    .apex-collection-header--m-center.apex-collection-header--m-contain .apex-collection-header__art {
+      transform-origin: center top;
     }
 
     .apex-collection-header--m-cover .apex-collection-header__art img,
@@ -338,7 +347,7 @@
         { "value": "contain", "label": "Fit inside the panel" }
       ],
       "default": "custom",
-      "info": "Cover fills the whole panel and crops the edges. Fit inside shows the whole image. Width and offsets only apply to Custom size."
+      "info": "Cover fills the whole panel and crops the edges. Fit inside shows the whole image. With these two, width zooms the image (100% = as fitted) and the offsets nudge it."
     },
     {
       "type": "select",
