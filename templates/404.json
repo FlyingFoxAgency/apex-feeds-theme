@@ -2,8 +2,13 @@
   "sections": {
     "main": {
       "type": "apex-404",
-      "settings": {}
+      "settings": {
+        "title": "This page escaped the tub",
+        "text": "<p>Like a cricket with no Fluon, it’s made a break for it. Let’s get you back to somewhere safer.</p>"
+      }
     }
   },
-  "order": ["main"]
+  "order": [
+    "main"
+  ]
 }
