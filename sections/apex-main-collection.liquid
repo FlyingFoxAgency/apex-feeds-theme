@@ -94,7 +94,10 @@
       endif
     -%}
     {%- if show_animals -%}
-      <nav class="apex-collection__animals" aria-label="Shop by animal">
+      <nav class="apex-collection__animals" aria-labelledby="ApexAnimalsLabel-{{ section.id }}">
+        <p class="apex-collection__animals-label" id="ApexAnimalsLabel-{{ section.id }}">
+          {{- section.settings.animal_label | default: 'Shop for' | escape -}}
+        </p>
         <ul class="list-unstyled" role="list">
           {%- for value in animal_filter.values -%}
             {%- if value.count > 0 or value.active -%}
@@ -883,7 +886,21 @@
   }
 
   .apex-collection__animals {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--apex-space-8) var(--apex-space-16);
     margin-block-start: var(--apex-space-24);
+  }
+
+  .apex-collection__animals-label {
+    margin: 0;
+    color: var(--apex-olive);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
   }
 
   .apex-collection__animal {
@@ -1215,6 +1232,12 @@
       "label": "Show animal buttons on every category",
       "default": false,
       "info": "Quick buttons from the Suitable for filter always show on Shop all. Turn this on to show them on every category too."
+    },
+    {
+      "type": "text",
+      "id": "animal_label",
+      "label": "Label before the animal buttons",
+      "default": "Shop for"
     },
     {
       "type": "paragraph",
