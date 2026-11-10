@@ -49,6 +49,7 @@
 -%}
 <apex-collection class="apex-collection apex-container" data-section-id="{{ section.id }}">
   {%- paginate collection.products by per_page -%}
+    <div class="apex-collection__results" data-results>
     <div class="apex-collection__toolbar"{% if paginate.current_page > 1 %} data-scroll-to{% endif %}>
       {%- if collection.filters.size > 0 -%}
         <button type="button" class="apex-collection__filters-button" data-open-filters aria-haspopup="dialog">
@@ -75,6 +76,79 @@
         <noscript><button type="submit">Sort</button></noscript>
       </form>
     </div>
+
+    {%- liquid
+      # Quick animal buttons: the Suitable for filter as one-tap shortcuts, on Shop all (or on
+      # every category when the setting is on)
+      assign animal_filter = nil
+      for filter in collection.filters
+        if filter.param_name contains 'suitable_for'
+          assign animal_filter = filter
+        endif
+      endfor
+      assign show_animals = false
+      if animal_filter and animal_filter.values.size > 1
+        if collection.handle == 'all' or section.settings.animal_buttons_everywhere
+          assign show_animals = true
+        endif
+      endif
+    -%}
+    {%- if show_animals -%}
+      <nav class="apex-collection__animals" aria-label="Shop by animal">
+        <ul class="list-unstyled" role="list">
+          {%- for value in animal_filter.values -%}
+            {%- if value.count > 0 or value.active -%}
+              <li>
+                <a
+                  class="apex-collection__animal{% if value.active %} is-active{% endif %}"
+                  href="{% if value.active %}{{ value.url_to_remove }}{% else %}{{ value.url_to_add }}{% endif %}"
+                  {% if value.active %}
+                    aria-current="true"
+                  {% endif %}
+                  data-swap
+                >
+                  {{- value.label | escape -}}
+                </a>
+              </li>
+            {%- endif -%}
+          {%- endfor -%}
+        </ul>
+      </nav>
+    {%- endif -%}
+
+    {%- if active_count > 0 -%}
+      <div class="apex-collection__chips">
+        <ul class="list-unstyled" role="list">
+          {%- for filter in collection.filters -%}
+            {%- for value in filter.active_values -%}
+              <li>
+                <a class="apex-collection__chip" href="{{ value.url_to_remove }}" data-swap>
+                  <span class="visually-hidden">Remove filter:</span>
+                  {{ value.label | escape }}
+                  {{- 'apex-icon-close.svg' | inline_asset_content -}}
+                </a>
+              </li>
+            {%- endfor -%}
+            {%- if filter.type == 'price_range' -%}
+              {%- if filter.min_value.value != blank or filter.max_value.value != blank -%}
+                <li>
+                  <a class="apex-collection__chip" href="{{ filter.url_to_remove }}" data-swap>
+                    <span class="visually-hidden">Remove filter:</span>
+                    {{ filter.min_value.value | default: 0 | money_without_trailing_zeros }}
+                    to
+                    {{ filter.max_value.value | default: filter.range_max | money_without_trailing_zeros }}
+                    {{- 'apex-icon-close.svg' | inline_asset_content -}}
+                  </a>
+                </li>
+              {%- endif -%}
+            {%- endif -%}
+          {%- endfor -%}
+          <li>
+            <a class="apex-collection__chips-clear" href="{{ clear_url }}" data-swap>Clear all</a>
+          </li>
+        </ul>
+      </div>
+    {%- endif -%}
 
     {%- if collection.products.size > 0 -%}
       <ul class="apex-collection__grid list-unstyled" role="list">
@@ -152,6 +226,7 @@
     {%- endif -%}
     </div>
     {%- endif -%}
+    </div>
   {%- endpaginate -%}
 
   {%- if collection.filters.size > 0 -%}
@@ -176,9 +251,42 @@
             </select>
           </div>
 
+          {%- assign group_number = 0 -%}
           {%- for filter in collection.filters -%}
-            <fieldset class="apex-filters__group">
-              <legend class="apex-filters__legend">{{ filter.label | escape }}</legend>
+            {%- liquid
+              # Options with no products are hidden (unless ticked); a group with none left is skipped
+              assign has_options = false
+              if filter.type == 'price_range'
+                assign has_options = true
+              else
+                for value in filter.values
+                  if value.count > 0 or value.active
+                    assign has_options = true
+                    break
+                  endif
+                endfor
+              endif
+              if has_options == false
+                continue
+              endif
+              assign group_number = group_number | plus: 1
+              assign group_open = false
+              if group_number <= 3 or filter.active_values.size > 0
+                assign group_open = true
+              endif
+              if filter.type == 'price_range'
+                if filter.min_value.value != blank or filter.max_value.value != blank
+                  assign group_open = true
+                endif
+              endif
+            -%}
+            <details class="apex-filters__group" data-filter-group="{{ filter.param_name | escape }}"{% if group_open %} open{% endif %}>
+              <summary class="apex-filters__legend">
+                {{- filter.label | escape -}}
+                <span class="apex-filters__caret" aria-hidden="true"></span>
+              </summary>
+              <fieldset class="apex-filters__fieldset">
+              <legend class="visually-hidden">{{ filter.label | escape }}</legend>
               {%- case filter.type -%}
                 {%- when 'price_range' -%}
                   <div class="apex-filters__price">
@@ -187,6 +295,7 @@
                       <input
                         type="number"
                         inputmode="decimal"
+                        id="ApexFilter-{{ section.id }}-price-min"
                         name="{{ filter.min_value.param_name }}"
                         value="{{ filter.min_value.value | money_without_currency | remove: ',' }}"
                         placeholder="0"
@@ -198,6 +307,7 @@
                       <input
                         type="number"
                         inputmode="decimal"
+                        id="ApexFilter-{{ section.id }}-price-max"
                         name="{{ filter.max_value.param_name }}"
                         value="{{ filter.max_value.value | money_without_currency | remove: ',' }}"
                         placeholder="{{ filter.range_max | money_without_currency | remove: ',' }}"
@@ -208,17 +318,18 @@
                 {%- else -%}
                   <ul class="apex-filters__options list-unstyled" role="list">
                     {%- for value in filter.values -%}
+                      {%- if value.count == 0 and value.active != true -%}
+                        {%- continue -%}
+                      {%- endif -%}
                       <li>
-                        <label class="apex-filters__option{% if value.count == 0 and value.active == false %} is-empty{% endif %}">
+                        <label class="apex-filters__option">
                           <input
                             type="checkbox"
+                            id="ApexFilter-{{ section.id }}-{{ value.param_name | handleize }}-{{ value.value | handleize }}"
                             name="{{ value.param_name }}"
                             value="{{ value.value | escape }}"
                             {% if value.active %}
                               checked
-                            {% endif %}
-                            {% if value.count == 0 and value.active == false %}
-                              disabled
                             {% endif %}
                           >
                           <span class="apex-filters__box" aria-hidden="true"></span>
@@ -229,15 +340,21 @@
                     {%- endfor -%}
                   </ul>
               {%- endcase -%}
-            </fieldset>
+              </fieldset>
+            </details>
           {%- endfor -%}
         </div>
 
         <div class="apex-filters__foot">
           {%- if active_count > 0 -%}
-            <a class="apex-filters__clear" href="{{ clear_url }}">Clear all</a>
+            <a class="apex-filters__clear" href="{{ clear_url }}" data-swap>Clear all</a>
           {%- endif -%}
-          <button type="submit" class="apex-filters__apply">Apply filters</button>
+          {%- comment -%} Phones and tablets tick then apply; desktop updates on every tick, so its button just closes {%- endcomment -%}
+          <button type="submit" class="apex-filters__apply apex-filters__apply--submit">Apply filters</button>
+          <button type="button" class="apex-filters__apply apex-filters__apply--done" data-close-filters>
+            Show {{ collection.products_count }}
+            {% if collection.products_count == 1 %}product{% else %}products{% endif %}
+          </button>
         </div>
       </form>
     </dialog>
@@ -256,61 +373,124 @@
             requestAnimationFrame(() => start.scrollIntoView({ block: 'start', behavior: 'instant' }));
           }
 
-          const dialog = this.querySelector('[data-filters]');
-          this.querySelector('[data-open-filters]')?.addEventListener('click', () => dialog?.showModal());
-          this.querySelector('[data-close-filters]')?.addEventListener('click', () => dialog?.close());
-          // Clicking the dimmed page beside the pop-out closes it
-          dialog?.addEventListener('click', (event) => {
-            if (event.target === dialog) dialog.close();
+          this.desktop = window.matchMedia('(min-width: 990px)');
+
+          // One set of listeners on the whole grid, so they keep working after parts are swapped
+          this.addEventListener('click', (event) => this.onClick(event));
+          this.addEventListener('change', (event) => this.onChange(event));
+          this.querySelector('[data-filters]')?.addEventListener('submit', (event) => {
+            if (!this.desktop.matches) return;
+            event.preventDefault();
+            this.applyForm();
           });
-          // Picking a sort order reloads straight away
-          this.querySelector('[data-sort-select]')?.addEventListener('change', (event) =>
-            event.target.form.requestSubmit()
-          );
-          this.bindPerPage();
         }
 
-        // Show 12 / 25 / 50 / 100: saved on the cart (so it sticks), then the grid and page
-        // numbers are swapped in place, back at page 1, without moving the page
-        bindPerPage() {
-          this.querySelector('[data-per-page-select]')?.addEventListener('change', (event) =>
-            this.changePerPage(event.target)
-          );
+        get dialog() {
+          return this.querySelector('[data-filters]');
         }
 
+        onClick(event) {
+          const dialog = this.dialog;
+          if (event.target.closest('[data-open-filters]')) dialog?.showModal();
+          if (event.target.closest('[data-close-filters]')) dialog?.close();
+          // Clicking the dimmed page beside the pop-out closes it
+          if (dialog && event.target === dialog) dialog.close();
+
+          // Animal buttons, filter chips and Clear all update in place
+          const link = event.target.closest('a[data-swap]');
+          if (link && !event.metaKey && !event.ctrlKey && !event.shiftKey) {
+            event.preventDefault();
+            this.swap(new URL(link.href, window.location.href));
+          }
+        }
+
+        onChange(event) {
+          const target = event.target;
+          // Picking a sort order updates straight away
+          if (target.matches('[data-sort-select]')) {
+            const url = new URL(window.location.pathname, window.location.origin);
+            for (const [key, value] of new FormData(target.form)) url.searchParams.append(key, value);
+            this.swap(url, { focus: '[data-sort-select]' });
+          }
+          if (target.matches('[data-per-page-select]')) this.changePerPage(target);
+          // On desktop every tick in the pop-out applies straight away
+          if (target.closest('[data-filters]') && this.desktop.matches) {
+            clearTimeout(this.applyTimer);
+            this.applyTimer = setTimeout(() => this.applyForm(), target.type === 'number' ? 400 : 0);
+          }
+        }
+
+        applyForm() {
+          const form = this.dialog?.querySelector('form');
+          if (!form) return;
+          const url = new URL(window.location.pathname, window.location.origin);
+          for (const [key, value] of new FormData(form)) {
+            if (value !== '') url.searchParams.append(key, value);
+          }
+          this.swap(url);
+        }
+
+        // Show 12 / 25 / 50 / 100: saved on the cart (so it sticks), then back to page 1 in place
         async changePerPage(select) {
-          const url = new URL(window.location.href);
-          url.searchParams.delete('page');
           select.disabled = true;
-          this.setAttribute('aria-busy', 'true');
-
           try {
             await fetch(`${window.Shopify?.routes?.root ?? '/'}cart/update.js`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
               body: JSON.stringify({ attributes: { _apex_per_page: select.value } }),
             });
+          } catch {}
+          const url = new URL(window.location.href);
+          url.searchParams.delete('page');
+          this.swap(url, { focus: '[data-per-page-select]' });
+        }
 
+        // Re-render this section for a new address and swap the results (and the pop-out's
+        // options) without reloading or moving the page
+        async swap(url, { focus } = {}) {
+          url.searchParams.delete('page');
+          url.searchParams.delete('section_id');
+          const active = document.activeElement;
+          const focusSelector = focus ?? (active?.id && this.contains(active) ? `#${CSS.escape(active.id)}` : null);
+          this.setAttribute('aria-busy', 'true');
+          const request = (this.request = Symbol());
+
+          try {
             const sectionUrl = new URL(url);
             sectionUrl.searchParams.set('section_id', this.dataset.sectionId);
             const response = await fetch(sectionUrl);
             if (!response.ok) throw new Error(response.statusText);
             const html = new DOMParser().parseFromString(await response.text(), 'text/html');
+            if (request !== this.request) return; // a newer change has started
             const fresh = html.querySelector('apex-collection');
             if (!fresh) throw new Error('No product grid in the response');
 
-            for (const selector of ['.apex-collection__grid', '.apex-collection__footer']) {
-              const current = this.querySelector(selector);
-              const next = fresh.querySelector(selector);
-              if (current && next) current.replaceWith(next);
+            this.querySelector('[data-results]')?.replaceWith(fresh.querySelector('[data-results]'));
+
+            const body = this.querySelector('.apex-filters__body');
+            const freshBody = fresh.querySelector('.apex-filters__body');
+            if (body && freshBody) {
+              // Keep the groups the shopper opened or closed, and the scroll position
+              const open = new Map(
+                [...body.querySelectorAll('[data-filter-group]')].map((group) => [group.dataset.filterGroup, group.open])
+              );
+              for (const group of freshBody.querySelectorAll('[data-filter-group]')) {
+                if (open.has(group.dataset.filterGroup)) group.open = open.get(group.dataset.filterGroup);
+              }
+              const scroll = body.scrollTop;
+              body.replaceWith(freshBody);
+              freshBody.scrollTop = scroll;
             }
+            const foot = this.querySelector('.apex-filters__foot');
+            const freshFoot = fresh.querySelector('.apex-filters__foot');
+            if (foot && freshFoot) foot.replaceWith(freshFoot);
 
             history.replaceState(history.state, '', url);
-            this.removeAttribute('aria-busy');
-            this.bindPerPage();
-            this.querySelector('[data-per-page-select]')?.focus({ preventScroll: true });
+            if (focusSelector) this.querySelector(focusSelector)?.focus({ preventScroll: true });
           } catch {
             window.location.assign(url.toString());
+          } finally {
+            if (request === this.request) this.removeAttribute('aria-busy');
           }
         }
       }
@@ -636,12 +816,141 @@
     margin-block-start: 43px;
   }
 
+  .apex-filters__fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  /* Each group opens and closes from its heading */
   .apex-filters__legend {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--apex-space-12);
     padding: 0;
     font-size: 1.25rem;
     font-weight: 700;
     line-height: 1.625rem;
     text-transform: uppercase;
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .apex-filters__legend::-webkit-details-marker {
+    display: none;
+  }
+
+  .apex-filters__caret {
+    flex: none;
+    width: 14px;
+    height: 9px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9' fill='none'%3E%3Cpath d='M1 1.5L7 7.5L13 1.5' stroke='%2340443d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+      no-repeat center / contain;
+    transition: rotate 0.2s ease;
+  }
+
+  .apex-filters__group[open] .apex-filters__caret {
+    rotate: 180deg;
+  }
+
+  /* Phones and tablets: Apply filters. Desktop: filters apply on each tick, so the button
+     only closes the pop-out and shows how many products match */
+  .apex-filters__apply--done {
+    display: none;
+  }
+
+  @media screen and (min-width: 990px) {
+    .apex-filters__apply--submit {
+      display: none;
+    }
+
+    .apex-filters__apply--done {
+      display: block;
+    }
+  }
+
+  /* Quick animal buttons (Shop all) */
+  .apex-collection__animals ul,
+  .apex-collection__chips ul {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--apex-space-8);
+    margin: 0;
+    padding: 0;
+  }
+
+  .apex-collection__animals {
+    margin-block-start: var(--apex-space-24);
+  }
+
+  .apex-collection__animal {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 var(--apex-space-20);
+    border: 1.5px solid var(--apex-burrow);
+    border-radius: var(--apex-radius-pill);
+    color: var(--apex-burrow);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition:
+      scale 0.2s var(--ease-out-cubic, ease-out),
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .apex-collection__animal:is(:hover, :focus-visible) {
+    scale: 1.06;
+  }
+
+  .apex-collection__animal.is-active {
+    background-color: var(--apex-burrow);
+    color: #edede6;
+  }
+
+  /* Active filters as removable chips */
+  .apex-collection__chips {
+    margin-block-start: var(--apex-space-16);
+  }
+
+  .apex-collection__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    padding: 0 10px 0 14px;
+    border-radius: var(--apex-radius-pill);
+    background-color: var(--apex-glass-solid, #ecece6);
+    color: var(--apex-burrow);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: scale 0.2s var(--ease-out-cubic, ease-out);
+  }
+
+  .apex-collection__chip svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .apex-collection__chip:is(:hover, :focus-visible),
+  .apex-collection__chips-clear:is(:hover, :focus-visible) {
+    scale: 1.06;
+  }
+
+  .apex-collection__chips-clear {
+    display: inline-block;
+    margin-inline-start: var(--apex-space-8);
+    color: var(--apex-burrow);
+    font-size: 0.8125rem;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: scale 0.2s var(--ease-out-cubic, ease-out);
   }
 
   .apex-filters__options {
@@ -660,10 +969,6 @@
     cursor: pointer;
   }
 
-  .apex-filters__option.is-empty {
-    opacity: 0.4;
-    cursor: default;
-  }
 
   .apex-filters__option input {
     position: absolute;
@@ -903,6 +1208,13 @@
       "step": 4,
       "default": 12,
       "info": "Shoppers can change this with the Show menu under the grid (12, 25, 50 or 100)."
+    },
+    {
+      "type": "checkbox",
+      "id": "animal_buttons_everywhere",
+      "label": "Show animal buttons on every category",
+      "default": false,
+      "info": "Quick buttons from the Suitable for filter always show on Shop all. Turn this on to show them on every category too."
     },
     {
       "type": "paragraph",
