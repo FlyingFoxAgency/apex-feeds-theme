@@ -189,7 +189,8 @@
     scale: 1.06;
   }
 
-  /* Current category: Figma "highlight hover" (white at 45%) behind the link */
+  /* Current category: a very soft oval glow of white behind the link, fading out to clear
+     (Ell: no hard edges) */
   .apex-shop-nav__link[aria-current='page'] {
     isolation: isolate;
   }
@@ -198,9 +199,15 @@
     content: '';
     position: absolute;
     z-index: -1;
-    inset-block: 0;
-    inset-inline: -30px;
-    background-color: rgb(255 255 255 / 0.45);
+    inset-block: 4px;
+    inset-inline: -36px;
+    background: radial-gradient(
+      ellipse closest-side at center,
+      rgb(255 255 255 / 0.65) 0%,
+      rgb(255 255 255 / 0.32) 55%,
+      rgb(255 255 255 / 0) 100%
+    );
+    pointer-events: none;
   }
 
   /* Hover and current: a rounded amber line near the bottom of the bar, as wide as the link.

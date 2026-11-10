@@ -1,0 +1,11 @@
+{
+  "sections": {
+    "main": {
+      "type": "apex-dedication-page",
+      "settings": {}
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

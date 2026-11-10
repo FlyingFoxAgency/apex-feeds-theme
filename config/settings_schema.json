@@ -2139,6 +2139,17 @@
       },
       {
         "type": "header",
+        "content": "Search panel"
+      },
+      {
+        "type": "text",
+        "id": "apex_popular_searches",
+        "label": "Popular searches",
+        "default": "Frozen meals, Gut load, HydroBlu, Mealworms, Calcium",
+        "info": "Comma separated. Shown as pills in the search panel."
+      },
+      {
+        "type": "header",
         "content": "Help button"
       },
       {

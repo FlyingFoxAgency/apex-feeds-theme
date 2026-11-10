@@ -1,0 +1,426 @@
+{% comment %}
+  APEX collection header (Figma "APEX Category Page" > Category Header): a full-width panel that
+  fades from clear on the left to burrow on the right, with an eyebrow, the collection name in
+  large Dharma, its description, and an image on the right (the snowflakes on Frozen Meals).
+
+  Per collection, the title, eyebrow and image can come from collection metafields:
+  custom.header_title (single line text), custom.eyebrow (single line text) and
+  custom.header_art (file, image), plus the panel colours custom.header_color and
+  custom.header_color_middle (colour), and the image's width, distance from the top and
+  distance from the right in px: custom.header_art_width, custom.header_art_top,
+  custom.header_art_right (integers). Without them the section settings are used.
+  Phones (749px and under) have their own image settings: how it fits (custom size, cover,
+  contain), where it sits (right or centre), width as a % of the screen, top and side offsets
+  and opacity. custom.header_art_mobile_width, custom.header_art_mobile_top and
+  custom.header_art_mobile_offset (integers) replace the width and offsets per collection.
+
+  Title order: the collection's custom.header_title, then the name of the matching item in the
+  shop menu, then the collection's own title.
+{% endcomment %}
+{%- liquid
+  assign eyebrow = collection.metafields.custom.eyebrow.value | default: section.settings.eyebrow
+  assign art = collection.metafields.custom.header_art.value | default: section.settings.decoration
+  assign panel_from = collection.metafields.custom.header_color.value | default: section.settings.gradient_from
+  assign panel_to = collection.metafields.custom.header_color_middle.value | default: section.settings.gradient_to
+  assign art_w = collection.metafields.custom.header_art_width.value | default: section.settings.art_width
+  assign art_top = collection.metafields.custom.header_art_top.value | default: section.settings.art_top
+  assign art_right = collection.metafields.custom.header_art_right.value
+  if art_right == blank
+    assign art_right = section.settings.art_right
+  endif
+  assign art_mw = collection.metafields.custom.header_art_mobile_width.value | default: section.settings.mobile_art_width
+  assign art_mtop = collection.metafields.custom.header_art_mobile_top.value
+  if art_mtop == blank
+    assign art_mtop = section.settings.mobile_art_top
+  endif
+  assign art_moff = collection.metafields.custom.header_art_mobile_offset.value
+  if art_moff == blank
+    assign art_moff = section.settings.mobile_art_offset
+  endif
+  assign title = collection.title | default: section.settings.fallback_title
+  if request.page_type == 'search' or collection.handle == 'all'
+    assign title = section.settings.fallback_title
+  endif
+
+  assign menu = section.settings.menu | default: linklists.shop
+  if collection
+    for link in menu.links
+      if link.url == collection.url
+        assign title = link.title
+        break
+      endif
+      for child in link.links
+        if child.url == collection.url
+          assign title = child.title
+        endif
+      endfor
+    endfor
+  endif
+
+  assign title_override = collection.metafields.custom.header_title.value
+  if title_override != blank
+    assign title = title_override
+  endif
+-%}
+<div
+  class="apex-collection-header apex-collection-header--m-{{ section.settings.mobile_art_fit }} apex-collection-header--m-{{ section.settings.mobile_art_align }}"
+  style="--apex-collection-from: {{ panel_from }}; --apex-collection-to: {{ panel_to }}; --apex-art-w: {{ art_w }}; --apex-art-top: {{ art_top }}; --apex-art-right: {{ art_right }}; --apex-art-mw: {{ art_mw }}; --apex-art-mtop: {{ art_mtop }}; --apex-art-moff: {{ art_moff }}; --apex-art-mop: {{ section.settings.mobile_art_opacity | divided_by: 100.0 }};"
+>
+  <div class="apex-container apex-collection-header__inner">
+    <div class="apex-collection-header__content">
+      {%- if eyebrow != blank -%}
+        <p class="apex-eyebrow apex-collection-header__eyebrow">{{ eyebrow | escape }}</p>
+      {%- endif -%}
+      <h1 class="apex-collection-header__title">{{ title | escape }}</h1>
+      {%- if section.settings.show_description and collection.description != blank -%}
+        <div class="apex-collection-header__text">{{ collection.description }}</div>
+      {%- endif -%}
+    </div>
+
+    {%- if art != blank -%}
+      <div class="apex-collection-header__art" aria-hidden="true">
+        {{ art | image_url: width: 1000 | image_tag: loading: 'eager', alt: '', sizes: '(min-width: 990px) 463px, 100vw' }}
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+{% stylesheet %}
+  .apex-collection-header {
+    position: relative;
+    isolation: isolate;
+    overflow: clip;
+    margin-block-start: 53px;
+    background: linear-gradient(
+      270deg,
+      var(--apex-collection-from) 0%,
+      var(--apex-collection-from) 31%,
+      var(--apex-collection-to) 53%,
+      transparent 100%
+    );
+  }
+
+  .apex-collection-header__inner {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    min-height: 461px;
+  }
+
+  /* Figma: eyebrow 30px from the top, 51px in from the grid; text 578px wide */
+  .apex-collection-header__content {
+    position: relative;
+    z-index: 1;
+    max-width: calc(578px + 51px);
+    padding: 30px 0 43px 51px;
+  }
+
+  .apex-collection-header__eyebrow {
+    margin: 0;
+  }
+
+  /* Dharma 128/102 with Figma's soft drop shadow */
+  .apex-collection-header__title {
+    margin: 35px 0 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: clamp(4rem, 8.9vw, 8rem);
+    line-height: 0.8;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+    text-shadow: 0 4px 4.3px rgb(0 0 0 / 0.25);
+  }
+
+  .apex-collection-header__text {
+    max-width: 520px;
+    margin-block-start: 35px;
+    font-size: 0.9375rem;
+    font-weight: 400;
+    line-height: 1.5rem;
+    color: var(--apex-burrow);
+  }
+
+  .apex-collection-header__text > :first-child {
+    margin-block-start: 0;
+  }
+
+  .apex-collection-header__text > :last-child {
+    margin-block-end: 0;
+  }
+
+  /* Image at the top right (Figma: 463 x 388, 46px from the top). Width and position come from
+     the section settings; the width scales down with the screen below 1440px. */
+  .apex-collection-header__art {
+    position: absolute;
+    inset-block-start: calc(var(--apex-art-top, 46) * 1px);
+    inset-inline-end: calc(var(--apex-art-right, 20) * 1px);
+    width: min(calc(var(--apex-art-w, 463) * 1px), calc(var(--apex-art-w, 463) * 100vw / 1440));
+    pointer-events: none;
+  }
+
+  .apex-collection-header__art img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-collection-header {
+      margin-block-start: var(--apex-space-32);
+      background: linear-gradient(
+        270deg,
+        var(--apex-collection-from) 0%,
+        var(--apex-collection-to) 55%,
+        transparent 100%
+      );
+    }
+
+    .apex-collection-header__inner {
+      min-height: 0;
+    }
+
+    .apex-collection-header__content {
+      padding: var(--apex-space-32) 0;
+    }
+
+    .apex-collection-header__title {
+      margin: var(--apex-space-24) 0 0;
+    }
+
+    .apex-collection-header__text {
+      margin-block-start: var(--apex-space-24);
+      max-width: 54ch;
+    }
+
+    .apex-collection-header__art {
+      inset-block-start: calc(var(--apex-art-top, 46) * 0.5px);
+      inset-inline-end: calc(var(--apex-art-right, 20) * 0.5px - var(--page-margin, 16px));
+      width: calc(var(--apex-art-w, 463) * 40vw / 463);
+      opacity: 0.6;
+    }
+  }
+  /* Phones: the image has its own settings, measured from the panel edges (not the grid).
+     Custom size: width as a % of the screen, offset from the right edge, or from the centre.
+     Cover fills the whole panel (cropping); contain fits the whole image inside it. */
+  @media screen and (max-width: 749px) {
+    .apex-collection-header__inner {
+      position: static;
+    }
+
+    .apex-collection-header__art {
+      inset-block-start: calc(var(--apex-art-mtop, 24) * 1px);
+      inset-inline-end: calc(var(--apex-art-moff, -8) * 1px);
+      width: calc(var(--apex-art-mw, 40) * 1vw);
+      opacity: var(--apex-art-mop, 0.4);
+    }
+
+    .apex-collection-header--m-center .apex-collection-header__art {
+      inset-inline-end: auto;
+      inset-inline-start: 50%;
+      transform: translateX(calc(-50% - var(--apex-art-moff, 0) * 1px));
+    }
+
+    /* Cover / fit inside: the image fills the panel, width zooms it (100% = as fitted), and
+       the top and side offsets pan the picture inside the panel without ever leaving a gap: top 0
+       is centred, 100 shows the very top of the image, -100 the very bottom; side 0 hugs the
+       right (or centre), 200 slides it fully to its left edge. */
+    .apex-collection-header--m-cover .apex-collection-header__art,
+    .apex-collection-header--m-contain .apex-collection-header__art {
+      inset: 0;
+      width: auto;
+      transform-origin: right top;
+      transform: scale(calc(var(--apex-art-mw, 100) / 100));
+    }
+
+    .apex-collection-header--m-center.apex-collection-header--m-cover .apex-collection-header__art,
+    .apex-collection-header--m-center.apex-collection-header--m-contain .apex-collection-header__art {
+      transform-origin: center top;
+    }
+
+    .apex-collection-header--m-cover .apex-collection-header__art img,
+    .apex-collection-header--m-contain .apex-collection-header__art img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: clamp(0%, 100% - var(--apex-art-moff, 0) * 0.5%, 100%) clamp(0%, 50% - var(--apex-art-mtop, 0) * 0.5%, 100%);
+    }
+
+    .apex-collection-header--m-contain .apex-collection-header__art img {
+      object-fit: contain;
+    }
+
+    .apex-collection-header--m-center .apex-collection-header__art img {
+      object-position: clamp(0%, 50% - var(--apex-art-moff, 0) * 0.5%, 100%) clamp(0%, 50% - var(--apex-art-mtop, 0) * 0.5%, 100%);
+    }
+
+    .apex-collection-header__text {
+      max-width: 80vw;
+      font-size: 0.8125rem;
+      line-height: 1.25rem;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX collection header",
+  "tag": "section",
+  "class": "apex-collection-header-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Premium animal supplements",
+      "info": "A collection's own custom.eyebrow metafield replaces this."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_description",
+      "label": "Show the collection description",
+      "default": true
+    },
+    {
+      "type": "link_list",
+      "id": "menu",
+      "label": "Menu for category titles",
+      "info": "The title uses this menu's name for the collection (the Shop menu if left empty). A collection's own custom.header_title metafield replaces it."
+    },
+    {
+      "type": "text",
+      "id": "fallback_title",
+      "label": "Title when there's no collection",
+      "default": "Shop all"
+    },
+    {
+      "type": "image_picker",
+      "id": "decoration",
+      "label": "Header image on the right",
+      "info": "Line art or any graphic, ideally a transparent PNG (the snowflakes are 463 x 388). A collection's own custom.header_art metafield replaces this."
+    },
+    {
+      "type": "range",
+      "id": "art_width",
+      "label": "Image width",
+      "min": 100,
+      "max": 2000,
+      "step": 20,
+      "unit": "px",
+      "default": 460,
+      "info": "Width on a full-size desktop screen; it scales down on smaller screens. Anything outside the panel is cropped. A collection's own custom.header_art_width, custom.header_art_top and custom.header_art_right metafields replace these three sliders."
+    },
+    {
+      "type": "range",
+      "id": "art_top",
+      "label": "Image distance from the top",
+      "min": 0,
+      "max": 200,
+      "step": 2,
+      "unit": "px",
+      "default": 46
+    },
+    {
+      "type": "range",
+      "id": "art_right",
+      "label": "Image distance from the right",
+      "min": -200,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "default": 20,
+      "info": "Negative values push the image past the right edge of the panel."
+    },
+    {
+      "type": "header",
+      "content": "Header image on phones"
+    },
+    {
+      "type": "paragraph",
+      "content": "Used on screens 749px wide and under, separate from the desktop sliders above."
+    },
+    {
+      "type": "select",
+      "id": "mobile_art_fit",
+      "label": "Image fit",
+      "options": [
+        { "value": "custom", "label": "Custom size" },
+        { "value": "cover", "label": "Cover the panel" },
+        { "value": "contain", "label": "Fit inside the panel" }
+      ],
+      "default": "custom",
+      "info": "Cover fills the whole panel and crops the edges. Fit inside shows the whole image. With these two, width zooms the image (100% = as fitted) and the offsets pan the picture inside the panel without leaving gaps (top 0 = centred, 100 = shows the very top of the image)."
+    },
+    {
+      "type": "select",
+      "id": "mobile_art_align",
+      "label": "Image position",
+      "options": [
+        { "value": "right", "label": "Right" },
+        { "value": "center", "label": "Centre" }
+      ],
+      "default": "right"
+    },
+    {
+      "type": "range",
+      "id": "mobile_art_width",
+      "label": "Image width",
+      "min": 10,
+      "max": 200,
+      "step": 5,
+      "unit": "%",
+      "default": 40,
+      "info": "Percentage of the screen width. A collection's own custom.header_art_mobile_width, custom.header_art_mobile_top and custom.header_art_mobile_offset metafields replace these three sliders."
+    },
+    {
+      "type": "range",
+      "id": "mobile_art_top",
+      "label": "Image distance from the top",
+      "min": -100,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "mobile_art_offset",
+      "label": "Image side offset",
+      "min": -200,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "default": -8,
+      "info": "Right: distance from the right edge (negative goes past it). Centre: moves the image left (positive) or right (negative) of centre."
+    },
+    {
+      "type": "range",
+      "id": "mobile_art_opacity",
+      "label": "Image opacity",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 40
+    },
+    {
+      "type": "color",
+      "id": "gradient_from",
+      "label": "Panel colour (right)",
+      "default": "#40443D",
+      "info": "A collection's own custom.header_color metafield replaces this."
+    },
+    {
+      "type": "color",
+      "id": "gradient_to",
+      "label": "Panel middle colour",
+      "default": "#A0AA98",
+      "info": "Fades to clear on the left. A collection's own custom.header_color_middle metafield replaces this."
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX collection header"
+    }
+  ]
+}
+{% endschema %}

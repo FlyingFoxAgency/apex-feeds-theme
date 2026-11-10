@@ -1,0 +1,108 @@
+{% comment %}
+  APEX 404 page (Figma "APEX 404 Page" > 404 / Content): centred eyebrow, Dharma title, short
+  text and two buttons (home, shop all).
+{% endcomment %}
+<div class="apex-404">
+  <div class="apex-container apex-404__inner">
+    {%- if section.settings.eyebrow != blank -%}
+      <p class="apex-eyebrow apex-404__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {%- endif -%}
+    <h1 class="apex-404__title">{{ section.settings.title | escape }}</h1>
+    {%- if section.settings.text != blank -%}
+      <div class="apex-404__text">{{ section.settings.text }}</div>
+    {%- endif -%}
+    <div class="apex-404__actions">
+      <a class="apex-button apex-404__primary" href="{{ section.settings.primary_link | default: routes.root_url }}">{{ section.settings.primary_label | escape }}</a>
+      <a class="apex-button apex-404__secondary" href="{{ section.settings.secondary_link | default: '/collections/all' }}">{{ section.settings.secondary_label | escape }}</a>
+    </div>
+  </div>
+</div>
+
+{% stylesheet %}
+  /* Figma: eyebrow 96px under the header, title 102px Dharma, text 560 wide, buttons 24px apart */
+  .apex-404 {
+    padding-block: 96px 160px;
+    text-align: center;
+  }
+
+  .apex-404__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .apex-404__eyebrow {
+    margin: 0;
+  }
+
+  .apex-404__title {
+    margin: 24px 0 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: clamp(4rem, 9vw, 6.375rem);
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-404__text {
+    max-width: 560px;
+    margin-block-start: 24px;
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+    color: var(--apex-burrow);
+  }
+
+  .apex-404__text > * {
+    margin: 0;
+  }
+
+  .apex-404__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+    margin-block-start: 48px;
+  }
+
+  .apex-404__primary {
+    background: var(--apex-dried-moss);
+    border-color: var(--apex-dried-moss);
+    color: var(--apex-stone-100);
+  }
+
+  .apex-404__secondary {
+    background: transparent;
+    border-color: var(--apex-burrow);
+    color: var(--apex-burrow);
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-404 {
+      padding-block: 64px 96px;
+    }
+
+    .apex-404__actions {
+      flex-direction: column;
+      align-self: stretch;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX 404",
+  "tag": "section",
+  "class": "apex-404-section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Error 404" },
+    { "type": "text", "id": "title", "label": "Title", "default": "This page escaped the tub" },
+    { "type": "richtext", "id": "text", "label": "Text", "default": "<p>Like a cricket with no Fluon, it’s made a break for it.<br>We’re still chasing it, so why not hop over to the shop?</p>" },
+    { "type": "text", "id": "primary_label", "label": "First button label", "default": "Back to home" },
+    { "type": "url", "id": "primary_link", "label": "First button link" },
+    { "type": "text", "id": "secondary_label", "label": "Second button label", "default": "Shop all products" },
+    { "type": "url", "id": "secondary_link", "label": "Second button link", "info": "Leave blank for Shop all." }
+  ],
+  "presets": [{ "name": "APEX 404" }]
+}
+{% endschema %}
