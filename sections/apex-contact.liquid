@@ -1,0 +1,586 @@
+{% comment %}
+  APEX contact page (Figma "APEX Contact Page" > Contact / Content).
+  Left: eyebrow, Dharma title, intro text and a Business details card. Right: "Send us an
+  enquiry" card holding Shopify's contact form (messages go to the store's sender email).
+  Below: the dark "Follow the Apex pack" community panel with social icons (Theme settings >
+  APEX Feeds) and a newsletter sign-up (Shopify customer form, tagged newsletter).
+{% endcomment %}
+<div class="apex-contact">
+  <div class="apex-container">
+    <div class="apex-contact__grid">
+      <div class="apex-contact__left">
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="apex-eyebrow apex-contact__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+        <h1 class="apex-contact__title">{{ section.settings.title | default: page.title | escape }}</h1>
+        {%- if section.settings.intro != blank -%}
+          <div class="apex-contact__intro">{{ section.settings.intro }}</div>
+        {%- endif -%}
+
+        <div class="apex-contact__card apex-contact__details">
+          <h2 class="apex-contact__card-title">{{ section.settings.details_title | escape }}</h2>
+          <dl class="apex-contact__list">
+            {%- if section.settings.email != blank -%}
+              <div>
+                <dt>Email</dt>
+                <dd><a href="mailto:{{ section.settings.email | escape }}">{{ section.settings.email | escape }}</a></dd>
+              </div>
+            {%- endif -%}
+            {%- if section.settings.website != blank -%}
+              <div>
+                <dt>Website</dt>
+                <dd>{{ section.settings.website | escape }}</dd>
+              </div>
+            {%- endif -%}
+            {%- if section.settings.phone != blank -%}
+              <div>
+                <dt>Phone</dt>
+                <dd><a href="tel:{{ section.settings.phone | remove: ' ' | escape }}">{{ section.settings.phone | escape }}</a></dd>
+              </div>
+            {%- endif -%}
+            {%- if section.settings.location != blank -%}
+              <div>
+                <dt>Location</dt>
+                <dd>{{ section.settings.location | escape }}</dd>
+              </div>
+            {%- endif -%}
+          </dl>
+        </div>
+      </div>
+
+      <div class="apex-contact__card apex-contact__form-card" id="enquiry">
+        <h2 class="apex-contact__form-title">{{ section.settings.form_title | escape }}</h2>
+        {%- form 'contact', id: 'ApexContactForm', class: 'apex-contact__form' -%}
+          {%- if form.posted_successfully? -%}
+            <p class="apex-contact__notice apex-contact__notice--ok" role="status">
+              {{ section.settings.success_message | escape }}
+            </p>
+          {%- elsif form.errors -%}
+            <p class="apex-contact__notice apex-contact__notice--error" role="alert">
+              {{ form.errors | default_errors }}
+            </p>
+          {%- endif -%}
+          <p class="apex-contact__required">Fields marked * are required.</p>
+
+          <div class="apex-contact__row">
+            <label class="apex-field">
+              <span class="apex-field__label">Name *</span>
+              <input class="apex-field__input" type="text" name="contact[name]" autocomplete="name" placeholder="Your full name" required value="{{ form.name }}">
+            </label>
+            <label class="apex-field">
+              <span class="apex-field__label">Contact number *</span>
+              <input class="apex-field__input" type="tel" name="contact[phone]" autocomplete="tel" placeholder="04XX XXX XXX" required value="{{ form.phone }}">
+            </label>
+          </div>
+
+          <label class="apex-field">
+            <span class="apex-field__label">Email *</span>
+            <input class="apex-field__input" type="email" name="contact[email]" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="you@example.com" required value="{{ form.email }}">
+          </label>
+
+          <div class="apex-contact__row">
+            <label class="apex-field">
+              <span class="apex-field__label">Enquiry type</span>
+              {%- assign types = section.settings.enquiry_types | newline_to_br | split: '<br />' -%}
+              <span class="apex-field__select">
+                <select class="apex-field__input" name="contact[Enquiry type]">
+                  <option value="">Select one</option>
+                  {%- for type in types -%}
+                    {%- assign t = type | strip -%}
+                    {%- if t != blank -%}
+                      <option value="{{ t | escape }}">{{ t | escape }}</option>
+                    {%- endif -%}
+                  {%- endfor -%}
+                </select>
+              </span>
+            </label>
+            <label class="apex-field">
+              <span class="apex-field__label">Order number (if applicable)</span>
+              <input class="apex-field__input" type="text" name="contact[Order number]" placeholder="#1001">
+            </label>
+          </div>
+
+          <label class="apex-field">
+            <span class="apex-field__label">Comments *</span>
+            <textarea class="apex-field__input apex-field__input--area" name="contact[body]" rows="6" placeholder="Tell us how we can help, including any order or delivery issues" required>{{ form.body }}</textarea>
+          </label>
+
+          <button type="submit" class="apex-button apex-contact__submit">{{ section.settings.button_label | escape }}</button>
+        {%- endform -%}
+      </div>
+    </div>
+
+    {%- if section.settings.show_community -%}
+      <div class="apex-contact__community">
+        <div class="apex-contact__community-col">
+          <p class="apex-eyebrow apex-contact__community-eyebrow">{{ section.settings.community_eyebrow | escape }}</p>
+          <h2 class="apex-contact__community-title">{{ section.settings.community_title | escape }}</h2>
+          <div class="apex-contact__community-text">{{ section.settings.community_text }}</div>
+          <div class="apex-contact__social">
+            {%- assign platforms = 'instagram,facebook,youtube,tiktok' | split: ',' -%}
+            {%- for platform in platforms -%}
+              {%- assign setting_id = 'apex_social_' | append: platform -%}
+              {%- assign link_url = settings[setting_id] -%}
+              {%- if link_url != blank -%}
+                <a class="apex-contact__social-link" href="{{ link_url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ platform | capitalize }}">
+                  <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    {%- render 'icon', icon: platform -%}
+                  </svg>
+                </a>
+              {%- endif -%}
+            {%- endfor -%}
+            {%- if section.settings.handle != blank -%}
+              <span class="apex-contact__handle">{{ section.settings.handle | escape }}</span>
+            {%- endif -%}
+          </div>
+        </div>
+
+        <div class="apex-contact__community-col apex-contact__newsletter">
+          <h2 class="apex-contact__newsletter-title">{{ section.settings.newsletter_title | escape }}</h2>
+          <p class="apex-contact__newsletter-text">{{ section.settings.newsletter_text | escape }}</p>
+          {%- form 'customer', id: 'ApexContactNewsletter', class: 'apex-contact__signup' -%}
+            <input type="hidden" name="contact[tags]" value="newsletter">
+            {%- if form.posted_successfully? -%}
+              <p class="apex-contact__signup-msg" role="status">Thanks for subscribing.</p>
+            {%- else -%}
+              <label class="visually-hidden" for="ApexContactNewsletterEmail">Email</label>
+              <input id="ApexContactNewsletterEmail" class="apex-contact__signup-input" type="email" name="contact[email]" placeholder="Enter your email" autocomplete="email" required>
+              <button type="submit" class="apex-button apex-contact__signup-btn">Subscribe</button>
+            {%- endif -%}
+          {%- endform -%}
+          <p class="apex-contact__fineprint">By subscribing you agree to receive marketing emails from Apex Feeds.</p>
+        </div>
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+{% stylesheet %}
+  /* Figma: content starts 85px under the header; left column 520 wide, form card 628 wide */
+  .apex-contact {
+    padding-block: 85px 96px;
+  }
+
+  .apex-contact__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 520px) minmax(0, 628px);
+    justify-content: space-between;
+    align-items: start;
+    gap: 48px;
+  }
+
+  .apex-contact__eyebrow {
+    margin: 0;
+  }
+
+  .apex-contact__title {
+    margin: 24px 0 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: clamp(4rem, 7vw, 6.375rem);
+    line-height: 0.9;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-contact__intro {
+    margin-block-start: 24px;
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+    color: var(--apex-burrow);
+  }
+
+  .apex-contact__intro > * {
+    margin: 0 0 16px;
+  }
+
+  .apex-contact__intro > :last-child {
+    margin-block-end: 0;
+  }
+
+  .apex-contact__card {
+    background: var(--apex-stone-100);
+    border-radius: var(--apex-radius-xl);
+  }
+
+  .apex-contact__details {
+    margin-block-start: 48px;
+    padding: 32px;
+  }
+
+  .apex-contact__card-title,
+  .apex-contact__form-title,
+  .apex-contact__newsletter-title {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 2.5rem;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-contact__list {
+    display: grid;
+    gap: 24px;
+    margin: 24px 0 0;
+  }
+
+  .apex-contact__list dt {
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-contact__list dd {
+    margin: 4px 0 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+    color: var(--apex-burrow);
+  }
+
+  .apex-contact__list a {
+    display: inline-block;
+    color: inherit;
+    text-decoration: none;
+    transition: scale 0.2s ease;
+  }
+
+  .apex-contact__list a:hover {
+    scale: 1.06;
+  }
+
+  .apex-contact__form-card {
+    padding: 48px;
+    box-shadow: 0 30px 60px rgb(0 0 0 / 0.08);
+  }
+
+  .apex-contact__form {
+    display: grid;
+    gap: 24px;
+  }
+
+  .apex-contact__required {
+    margin: -8px 0 0;
+    font-size: 0.8125rem;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-contact__form-title + .apex-contact__form {
+    margin-block-start: 24px;
+  }
+
+  .apex-contact__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .apex-field {
+    display: grid;
+    gap: 8px;
+  }
+
+  .apex-field__label {
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+    color: var(--apex-burrow);
+  }
+
+  .apex-field__input {
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 12px;
+    border: 1px solid var(--apex-dried-moss);
+    border-radius: var(--apex-radius-sm);
+    background: var(--apex-stone-100);
+    font: inherit;
+    font-size: 0.875rem;
+    color: var(--apex-burrow);
+    box-sizing: border-box;
+  }
+
+  .apex-field__input::placeholder {
+    color: var(--apex-dried-moss);
+    opacity: 1;
+  }
+
+  .apex-field__input:focus-visible {
+    outline: 2px solid var(--apex-olive);
+    outline-offset: 1px;
+  }
+
+  .apex-field__input--area {
+    min-height: 180px;
+    resize: vertical;
+  }
+
+  .apex-field__select {
+    position: relative;
+    display: block;
+  }
+
+  .apex-field__select select {
+    appearance: none;
+    padding-inline-end: 36px;
+  }
+
+  .apex-field__select::after {
+    content: '';
+    position: absolute;
+    inset-inline-end: 14px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-right: 1.5px solid var(--apex-burrow);
+    border-bottom: 1.5px solid var(--apex-burrow);
+    transform: translateY(-70%) rotate(45deg);
+    pointer-events: none;
+  }
+
+  .apex-contact__submit {
+    justify-self: start;
+    background: var(--apex-dried-moss);
+    border-color: var(--apex-dried-moss);
+    color: var(--apex-stone-100);
+  }
+
+  .apex-contact__notice {
+    margin: 0;
+    padding: 12px 16px;
+    border-radius: var(--apex-radius-md);
+    font-size: 0.875rem;
+  }
+
+  .apex-contact__notice--ok {
+    background: rgb(100 105 53 / 0.12);
+    color: var(--apex-olive);
+  }
+
+  .apex-contact__notice--error {
+    background: rgb(230 150 64 / 0.15);
+    color: var(--apex-burrow);
+  }
+
+  .apex-contact__notice--error ul {
+    margin: 0;
+    padding-inline-start: 18px;
+  }
+
+  /* Community panel: dark burrow card with two columns */
+  .apex-contact__community {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    margin-block-start: 96px;
+    padding: 64px;
+    border-radius: var(--apex-radius-xl);
+    background: var(--apex-burrow);
+    color: var(--apex-sandstone);
+  }
+
+  .apex-contact__community-eyebrow {
+    margin: 0;
+    color: var(--apex-sandstone);
+  }
+
+  .apex-contact__community-title {
+    margin: 24px 0 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 3.8rem;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--apex-sandstone);
+  }
+
+  .apex-contact__community-text {
+    margin-block-start: 24px;
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-contact__community-text > * {
+    margin: 0;
+  }
+
+  .apex-contact__social {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-block-start: 24px;
+  }
+
+  .apex-contact__social-link {
+    display: inline-flex;
+    width: 32px;
+    height: 32px;
+    color: var(--apex-sandstone);
+    transition: scale 0.2s ease;
+  }
+
+  .apex-contact__social-link:hover {
+    scale: 1.06;
+  }
+
+  .apex-contact__social-link svg {
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+  }
+
+  .apex-contact__handle {
+    margin-inline-start: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .apex-contact__newsletter {
+    align-self: center;
+  }
+
+  .apex-contact__newsletter-title {
+    color: var(--apex-sandstone);
+  }
+
+  .apex-contact__newsletter-text {
+    margin: 16px 0 0;
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-contact__signup {
+    display: flex;
+    gap: 12px;
+    margin-block-start: 24px;
+  }
+
+  .apex-contact__signup-input {
+    flex: 1;
+    min-width: 0;
+    height: 48px;
+    padding: 0 20px;
+    border: 0;
+    border-radius: var(--apex-radius-pill);
+    background: var(--apex-stone-100);
+    font: inherit;
+    font-size: 0.875rem;
+    color: var(--apex-burrow);
+  }
+
+  .apex-contact__signup-btn {
+    background: var(--apex-dried-moss);
+    border-color: var(--apex-dried-moss);
+    color: var(--apex-stone-100);
+  }
+
+  .apex-contact__fineprint {
+    margin: 16px 0 0;
+    font-size: 0.6875rem;
+    opacity: 0.8;
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-contact__grid,
+    .apex-contact__community {
+      grid-template-columns: 1fr;
+    }
+
+    .apex-contact__community {
+      gap: 40px;
+      padding: 40px 32px;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-contact {
+      padding-block: 40px 64px;
+    }
+
+    .apex-contact__form-card {
+      padding: 28px 20px;
+      border-radius: 24px;
+    }
+
+    .apex-contact__details {
+      margin-block-start: 32px;
+      border-radius: 24px;
+    }
+
+    .apex-contact__row {
+      grid-template-columns: 1fr;
+    }
+
+    .apex-contact__card-title,
+    .apex-contact__form-title,
+    .apex-contact__newsletter-title {
+      font-size: 2rem;
+    }
+
+    .apex-contact__community {
+      margin-block-start: 64px;
+      padding: 32px 20px;
+      border-radius: 24px;
+    }
+
+    .apex-contact__community-title {
+      font-size: 2.75rem;
+    }
+
+    .apex-contact__signup {
+      flex-direction: column;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX contact",
+  "tag": "section",
+  "class": "apex-contact-section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Get in touch" },
+    { "type": "text", "id": "title", "label": "Title", "default": "Contact us", "info": "Leave blank to use the page title." },
+    {
+      "type": "richtext",
+      "id": "intro",
+      "label": "Intro text",
+      "default": "<p>Whether you’re looking to place an order, enquire about our products, discuss wholesale opportunities, or need help with an existing purchase, the Apex Feeds team is here to help.</p><p>We pride ourselves on prompt, professional support. For the fastest and most accurate help, please send your enquiry using the form. It lets our team review your request, look into any order or shipping concerns, and reply in detail about sales, wholesale applications, product information, deliveries and accounts.</p>"
+    },
+    { "type": "header", "content": "Business details" },
+    { "type": "text", "id": "details_title", "label": "Card title", "default": "Business details" },
+    { "type": "text", "id": "email", "label": "Email", "default": "Sales@apexfeeds.com.au" },
+    { "type": "text", "id": "website", "label": "Website", "default": "www.apexfeeds.com.au" },
+    { "type": "text", "id": "phone", "label": "Phone", "info": "Optional." },
+    { "type": "text", "id": "location", "label": "Location", "default": "Sydney, Australia" },
+    { "type": "header", "content": "Enquiry form" },
+    { "type": "text", "id": "form_title", "label": "Form title", "default": "Send us an enquiry" },
+    {
+      "type": "textarea",
+      "id": "enquiry_types",
+      "label": "Enquiry types",
+      "default": "Order enquiry\nProduct question\nShipping & delivery\nWholesale\nAccount help\nOther",
+      "info": "One per line."
+    },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "Send enquiry" },
+    { "type": "text", "id": "success_message", "label": "Success message", "default": "Thanks for getting in touch. We’ll get back to you as soon as we can." },
+    { "type": "header", "content": "Community panel" },
+    { "type": "checkbox", "id": "show_community", "label": "Show community panel", "default": true },
+    { "type": "text", "id": "community_eyebrow", "label": "Eyebrow", "default": "Join the community" },
+    { "type": "text", "id": "community_title", "label": "Title", "default": "Follow the Apex pack" },
+    {
+      "type": "richtext",
+      "id": "community_text",
+      "label": "Text",
+      "default": "<p>Follow along for feeding tips, new product drops, and a look behind the scenes in our breeding rooms. Tag us in your feeding shots, we love seeing your animals thrive.</p>"
+    },
+    { "type": "text", "id": "handle", "label": "Social handle", "default": "@apexfeeds", "info": "Icons use the links in Theme settings > APEX Feeds." },
+    { "type": "text", "id": "newsletter_title", "label": "Newsletter title", "default": "Newsletter" },
+    { "type": "text", "id": "newsletter_text", "label": "Newsletter text", "default": "Sign up for product launches, member-only offers and husbandry tips. No spam, unsubscribe any time." }
+  ],
+  "presets": [{ "name": "APEX contact" }]
+}
+{% endschema %}
