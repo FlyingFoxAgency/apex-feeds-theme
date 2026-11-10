@@ -4,7 +4,7 @@
       "type": "apex-404",
       "settings": {
         "title": "This page escaped the tub",
-        "text": "<p>Like a cricket with no Fluon, it’s made a break for it. We’re still chasing it, so why not hop over to the shop?</p>"
+        "text": "<p>Like a cricket with no Fluon, it’s made a break for it.<br>We’re still chasing it, so why not hop over to the shop?</p>"
       }
     }
   },
