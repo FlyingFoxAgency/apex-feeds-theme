@@ -9,6 +9,10 @@
   custom.header_color_middle (colour), and the image's width, distance from the top and
   distance from the right in px: custom.header_art_width, custom.header_art_top,
   custom.header_art_right (integers). Without them the section settings are used.
+  Phones (749px and under) have their own image settings: how it fits (custom size, cover,
+  contain), where it sits (right or centre), width as a % of the screen, top and side offsets
+  and opacity. custom.header_art_mobile_width, custom.header_art_mobile_top and
+  custom.header_art_mobile_offset (integers) replace the width and offsets per collection.
 
   Title order: the collection's custom.header_title, then the name of the matching item in the
   shop menu, then the collection's own title.
@@ -23,6 +27,15 @@
   assign art_right = collection.metafields.custom.header_art_right.value
   if art_right == blank
     assign art_right = section.settings.art_right
+  endif
+  assign art_mw = collection.metafields.custom.header_art_mobile_width.value | default: section.settings.mobile_art_width
+  assign art_mtop = collection.metafields.custom.header_art_mobile_top.value
+  if art_mtop == blank
+    assign art_mtop = section.settings.mobile_art_top
+  endif
+  assign art_moff = collection.metafields.custom.header_art_mobile_offset.value
+  if art_moff == blank
+    assign art_moff = section.settings.mobile_art_offset
   endif
   assign title = collection.title | default: section.settings.fallback_title
   if request.page_type == 'search' or collection.handle == 'all'
@@ -50,8 +63,8 @@
   endif
 -%}
 <div
-  class="apex-collection-header"
-  style="--apex-collection-from: {{ panel_from }}; --apex-collection-to: {{ panel_to }}; --apex-art-w: {{ art_w }}; --apex-art-top: {{ art_top }}; --apex-art-right: {{ art_right }};"
+  class="apex-collection-header apex-collection-header--m-{{ section.settings.mobile_art_fit }} apex-collection-header--m-{{ section.settings.mobile_art_align }}"
+  style="--apex-collection-from: {{ panel_from }}; --apex-collection-to: {{ panel_to }}; --apex-art-w: {{ art_w }}; --apex-art-top: {{ art_top }}; --apex-art-right: {{ art_right }}; --apex-art-mw: {{ art_mw }}; --apex-art-mtop: {{ art_mtop }}; --apex-art-moff: {{ art_moff }}; --apex-art-mop: {{ section.settings.mobile_art_opacity | divided_by: 100.0 }};"
 >
   <div class="apex-container apex-collection-header__inner">
     <div class="apex-collection-header__content">
@@ -66,7 +79,7 @@
 
     {%- if art != blank -%}
       <div class="apex-collection-header__art" aria-hidden="true">
-        {{ art | image_url: width: 1000 | image_tag: loading: 'eager', alt: '', sizes: '(min-width: 990px) 463px, 50vw' }}
+        {{ art | image_url: width: 1000 | image_tag: loading: 'eager', alt: '', sizes: '(min-width: 990px) 463px, 100vw' }}
       </div>
     {%- endif -%}
   </div>
@@ -186,10 +199,48 @@
       opacity: 0.6;
     }
   }
-  /* Phones: image at 40%, smaller description in 80% of the screen width */
+  /* Phones: the image has its own settings, measured from the panel edges (not the grid).
+     Custom size: width as a % of the screen, offset from the right edge, or from the centre.
+     Cover fills the whole panel (cropping); contain fits the whole image inside it. */
   @media screen and (max-width: 749px) {
+    .apex-collection-header__inner {
+      position: static;
+    }
+
     .apex-collection-header__art {
-      opacity: 0.4;
+      inset-block-start: calc(var(--apex-art-mtop, 24) * 1px);
+      inset-inline-end: calc(var(--apex-art-moff, -8) * 1px);
+      width: calc(var(--apex-art-mw, 40) * 1vw);
+      opacity: var(--apex-art-mop, 0.4);
+    }
+
+    .apex-collection-header--m-center .apex-collection-header__art {
+      inset-inline-end: auto;
+      inset-inline-start: 50%;
+      transform: translateX(calc(-50% - var(--apex-art-moff, 0) * 1px));
+    }
+
+    .apex-collection-header--m-cover .apex-collection-header__art,
+    .apex-collection-header--m-contain .apex-collection-header__art {
+      inset: 0;
+      width: auto;
+      transform: none;
+    }
+
+    .apex-collection-header--m-cover .apex-collection-header__art img,
+    .apex-collection-header--m-contain .apex-collection-header__art img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: right center;
+    }
+
+    .apex-collection-header--m-contain .apex-collection-header__art img {
+      object-fit: contain;
+    }
+
+    .apex-collection-header--m-center .apex-collection-header__art img {
+      object-position: center;
     }
 
     .apex-collection-header__text {
@@ -268,6 +319,78 @@
       "unit": "px",
       "default": 20,
       "info": "Negative values push the image past the right edge of the panel."
+    },
+    {
+      "type": "header",
+      "content": "Header image on phones"
+    },
+    {
+      "type": "paragraph",
+      "content": "Used on screens 749px wide and under, separate from the desktop sliders above."
+    },
+    {
+      "type": "select",
+      "id": "mobile_art_fit",
+      "label": "Image fit",
+      "options": [
+        { "value": "custom", "label": "Custom size" },
+        { "value": "cover", "label": "Cover the panel" },
+        { "value": "contain", "label": "Fit inside the panel" }
+      ],
+      "default": "custom",
+      "info": "Cover fills the whole panel and crops the edges. Fit inside shows the whole image. Width and offsets only apply to Custom size."
+    },
+    {
+      "type": "select",
+      "id": "mobile_art_align",
+      "label": "Image position",
+      "options": [
+        { "value": "right", "label": "Right" },
+        { "value": "center", "label": "Centre" }
+      ],
+      "default": "right"
+    },
+    {
+      "type": "range",
+      "id": "mobile_art_width",
+      "label": "Image width",
+      "min": 10,
+      "max": 200,
+      "step": 5,
+      "unit": "%",
+      "default": 40,
+      "info": "Percentage of the screen width. A collection's own custom.header_art_mobile_width, custom.header_art_mobile_top and custom.header_art_mobile_offset metafields replace these three sliders."
+    },
+    {
+      "type": "range",
+      "id": "mobile_art_top",
+      "label": "Image distance from the top",
+      "min": -100,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "mobile_art_offset",
+      "label": "Image side offset",
+      "min": -200,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "default": -8,
+      "info": "Right: distance from the right edge (negative goes past it). Centre: moves the image left (positive) or right (negative) of centre."
+    },
+    {
+      "type": "range",
+      "id": "mobile_art_opacity",
+      "label": "Image opacity",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 40
     },
     {
       "type": "color",
