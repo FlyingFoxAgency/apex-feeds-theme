@@ -195,10 +195,11 @@
     fill: var(--apex-stone-200);
   }
 
+  /* Ell: 10px from the card's top right corner */
   .apex-product-card__rating {
     position: absolute;
-    inset-block-start: 26px;
-    inset-inline-end: 22px;
+    inset-block-start: 10px;
+    inset-inline-end: 10px;
     display: inline-flex;
     align-items: center;
     gap: 3px;
@@ -430,14 +431,6 @@
     .apex-product-card__cart,
     .apex-product-card__quick {
       transition: none;
-    }
-  }
-
-  /* Phones: the rating pill sits 10px from the card's top right corner */
-  @media screen and (max-width: 749px) {
-    .apex-product-card__rating {
-      inset-block-start: 10px;
-      inset-inline-end: 10px;
     }
   }
 {% endstylesheet %}
