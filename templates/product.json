@@ -22,6 +22,24 @@
     "main": {
       "type": "product-information",
       "blocks": {
+        "disclosures": {
+          "type": "disclosures",
+          "settings": {
+            "heading": "Disclosures",
+            "heading_preset": "h4",
+            "open_by_default": false,
+            "icon": "caret",
+            "disclosure_heading_preset": "h5",
+            "text_color": "",
+            "dividers": true,
+            "divider_color": "",
+            "padding-block-start": 0,
+            "padding-block-end": 0,
+            "padding-inline-start": 0,
+            "padding-inline-end": 0
+          },
+          "blocks": {}
+        },
         "media-gallery": {
           "type": "_product-media-gallery",
           "static": true,
@@ -35,6 +53,7 @@
             "slideshow_mobile_controls_style": "dots",
             "thumbnail_position": "right",
             "thumbnail_width": 72,
+            "thumbnail_radius": 10,
             "aspect_ratio": "1",
             "constrain_to_viewport": true,
             "media_fit": "contain",
@@ -46,9 +65,14 @@
             "padding-block-start": 0,
             "padding-block-end": 0,
             "padding-inline-start": 0,
-            "padding-inline-end": 0,
-            "thumbnail_radius": 10
+            "padding-inline-end": 0
           },
+          "blocks": {}
+        },
+        "apex-summary": {
+          "type": "apex-product-summary",
+          "static": true,
+          "settings": {},
           "blocks": {}
         },
         "product-details": {
@@ -64,11 +88,13 @@
             "gap": 22,
             "sticky_details_desktop": false,
             "background_media": "none",
+            "background_color": "",
             "video_position": "cover",
             "background_image_position": "cover",
             "border": "none",
             "border_width": 1,
             "border_opacity": 100,
+            "border_color": "",
             "border_radius": 0,
             "padding-block-start": 0,
             "padding-block-end": 0,
@@ -97,6 +123,7 @@
                 "line_height": "normal",
                 "letter_spacing": "normal",
                 "case": "none",
+                "text_color": "",
                 "padding-block-start": 0,
                 "padding-block-end": 0,
                 "padding-inline-start": 0,
@@ -109,6 +136,15 @@
               "settings": {
                 "variant_style": "buttons",
                 "show_swatches": false,
+                "option_label_text_color": "",
+                "variant_style_class": "default",
+                "custom_variant_background": "{{ settings.color_palette.background }}",
+                "custom_variant_text": "{{ settings.color_palette.foreground }}",
+                "custom_variant_border": "{{ settings.color_palette.foreground }}",
+                "selected_variant_style_class": "default",
+                "custom_selected_variant_background": "{{ settings.color_palette.foreground }}",
+                "custom_selected_variant_text": "{{ settings.color_palette.background }}",
+                "custom_selected_variant_border": "{{ settings.color_palette.foreground }}",
                 "alignment": "left",
                 "padding-block-start": 0,
                 "padding-block-end": 0,
@@ -132,8 +168,23 @@
               "type": "buy-buttons",
               "settings": {
                 "stacking": false,
+                "text_color": "",
                 "show_pickup_availability": false,
                 "gift_card_form": true,
+                "recipient_button_style": "default",
+                "recipient_button_background": "{{ settings.color_palette.background }}",
+                "recipient_button_text": "{{ settings.color_palette.foreground }}",
+                "recipient_button_border": "{{ settings.color_palette.foreground }}",
+                "selected_recipient_button_style": "default",
+                "selected_recipient_button_background": "{{ settings.color_palette.foreground }}",
+                "selected_recipient_button_text": "{{ settings.color_palette.background }}",
+                "selected_recipient_button_border": "{{ settings.color_palette.foreground }}",
+                "input_style": "default",
+                "input_background_color": "{{ settings.color_palette.background }}",
+                "input_text_color": "{{ settings.color_palette.foreground }}",
+                "input_border_color": "{{ settings.color_palette.foreground }}",
+                "border_width": 1,
+                "border_radius": 0,
                 "padding-block-start": 0,
                 "padding-block-end": 0,
                 "padding-inline-start": 0,
@@ -143,14 +194,24 @@
                 "quantity": {
                   "type": "quantity",
                   "static": true,
-                  "settings": {},
+                  "settings": {
+                    "input_style": "default",
+                    "input_background_color": "{{ settings.color_palette.background }}",
+                    "input_text_color": "{{ settings.color_palette.foreground }}",
+                    "input_border_color": "{{ settings.color_palette.foreground }}",
+                    "border_width": 1,
+                    "border_radius": 0
+                  },
                   "blocks": {}
                 },
                 "add-to-cart": {
                   "type": "add-to-cart",
                   "static": true,
                   "settings": {
-                    "style_class": "button"
+                    "style_class": "button",
+                    "custom_button_background": "{{ settings.color_palette.foreground }}",
+                    "custom_button_text": "{{ settings.color_palette.background }}",
+                    "custom_button_border": "{{ settings.color_palette.background }}"
                   },
                   "blocks": {}
                 },
@@ -165,7 +226,10 @@
             },
             "apex_shipping": {
               "type": "apex-shipping-note",
-              "settings": {},
+              "settings": {
+                "heading": "Currently shipping to QLD, NSW, ACT and VIC",
+                "detail": "Dispatched in 1 to 2 business days. Free shipping on orders over $150."
+              },
               "blocks": {}
             }
           },
@@ -177,14 +241,6 @@
             "buy_buttons_eYQEYi",
             "apex_shipping"
           ]
-        },
-        "disclosures": {
-          "type": "disclosures",
-          "settings": {
-            "padding-block-start": 0,
-            "padding-block-end": 0
-          },
-          "blocks": {}
         }
       },
       "block_order": [
@@ -196,9 +252,10 @@
         "equal_columns": false,
         "limit_details_width": false,
         "gap": 48,
+        "enable_sticky_add_to_cart": false,
+        "background_color": "",
         "padding-block-start": 0,
-        "padding-block-end": 0,
-        "enable_sticky_add_to_cart": false
+        "padding-block-end": 0
       }
     },
     "apex_product_info": {
@@ -262,14 +319,13 @@
         "row_4",
         "row_5"
       ],
+      "custom_css": [],
       "settings": {
         "title": "Product information"
       }
     },
     "apex_reviews": {
       "type": "apex-reviews",
-      "blocks": {},
-      "block_order": [],
       "settings": {
         "title": "Customer reviews",
         "more_label": "Read more reviews",
@@ -284,7 +340,9 @@
         "indicator_label": "",
         "title": "Customers also bought",
         "source": "recommendations",
+        "collection": "",
         "products_to_show": 8,
+        "title_link": "",
         "show_buttons": true,
         "band": true,
         "decoration_side": "left"
