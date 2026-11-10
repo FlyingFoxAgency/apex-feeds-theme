@@ -53,6 +53,8 @@
       {%- endif -%}
     </a>
   {%- endif -%}
+  {%- comment -%} Phones: the short description sits here, above the price {%- endcomment -%}
+  {%- render 'apex-product-summary', product: product, placement: 'details' -%}
 </div>
 
 {% stylesheet %}

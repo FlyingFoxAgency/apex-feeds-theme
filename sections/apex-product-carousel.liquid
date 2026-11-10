@@ -351,6 +351,12 @@
       opacity: 0.5;
     }
 
+    /* The arrows are taller than the phone title, so the band starts right under them instead of
+       tucking up behind the header */
+    .apex-product-carousel--band .apex-product-carousel__inner::before {
+      margin-block-start: 0;
+    }
+
     /* Right-hand line art (the gecko) 1.5x bigger, growing down from where it starts */
     .apex-product-carousel--art-right .apex-product-carousel__decoration {
       width: 45vw;

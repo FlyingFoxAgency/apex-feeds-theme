@@ -139,7 +139,7 @@ document.addEventListener('shopify:section:load', (event) => setUpReviewToggles(
  * - Inside the product information section: swapped from the HTML the variant picker already
  *   fetched.
  * - In another section (data-section-id): that section is fetched for the new variant.
- * Open accordion rows stay open.
+ * Open accordion rows stay open, closed ones stay closed. On phones all rows start closed.
  */
 class ApexVariantContent extends HTMLElement {
   #abort = null;
@@ -147,6 +147,10 @@ class ApexVariantContent extends HTMLElement {
   connectedCallback() {
     // Capture phase, so the event is seen here whether or not it bubbles
     document.addEventListener(StandardEvents.productSelect, this.#onProductSelect, true);
+    // Phones: every accordion row starts closed
+    if (window.matchMedia('(max-width: 749px)').matches) {
+      for (const details of this.querySelectorAll('details[open]')) details.open = false;
+    }
   }
 
   disconnectedCallback() {
@@ -188,7 +192,7 @@ class ApexVariantContent extends HTMLElement {
         this.innerHTML = source.innerHTML;
         for (const details of this.querySelectorAll('details')) {
           const title = details.querySelector('summary')?.textContent.trim();
-          if (openTitles.size) details.open = openTitles.has(title);
+          details.open = openTitles.has(title);
         }
       })
       .catch(() => {});

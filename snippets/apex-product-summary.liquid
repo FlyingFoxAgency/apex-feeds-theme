@@ -1,0 +1,33 @@
+{%- comment -%}
+  APEX product summary markup: short description + "Product Net Weight | Serving Size" line.
+  Rendered by blocks/apex-product-summary (under the gallery) and blocks/apex-product-heading
+  (above the price, shown on phones only).
+  - product: the product
+  - placement: 'gallery' (default) or 'details'
+  - attributes: block.shopify_attributes, if any
+{%- endcomment -%}
+{%- liquid
+  assign variant = product.selected_or_first_available_variant
+  assign summary = variant.metafields.custom.short_description.value | default: product.metafields.custom.short_description.value
+  if summary == blank and product.description != blank
+    assign summary = product.description | split: '</p>' | first | strip_html | strip
+  endif
+  assign net_weight = variant.metafields.custom.net_weight.value | default: product.metafields.custom.net_weight.value
+  assign serving = variant.metafields.custom.serving_size.value | default: product.metafields.custom.serving_size.value
+-%}
+<apex-variant-content class="apex-product-summary-wrap apex-product-summary-wrap--{{ placement | default: 'gallery' }}" data-key="summary-{{ placement | default: 'gallery' }}" {{ attributes }}>
+{%- if summary != blank or net_weight != blank or serving != blank -%}
+  <div class="apex-product-summary">
+    {%- if summary != blank -%}
+      <p class="apex-product-summary__text">{{ summary | escape | newline_to_br }}</p>
+    {%- endif -%}
+    {%- if net_weight != blank or serving != blank -%}
+      <p class="apex-product-summary__specs">
+        {%- if net_weight != blank -%}Product Net Weight: {{ net_weight | escape }}{%- endif -%}
+        {%- if net_weight != blank and serving != blank %} <span aria-hidden="true">&nbsp;|&nbsp;</span> {% endif -%}
+        {%- if serving != blank -%}Serving Size: {{ serving | escape }}{%- endif -%}
+      </p>
+    {%- endif -%}
+  </div>
+{%- endif -%}
+</apex-variant-content>

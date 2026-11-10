@@ -7,32 +7,7 @@
   - Grouped products: the selected variant's own metafields with the same keys win, and the block
     re-renders when another variant is picked (assets/apex-product.js).
 {% endcomment %}
-{%- liquid
-  assign product = closest.product
-  assign variant = product.selected_or_first_available_variant
-  assign summary = variant.metafields.custom.short_description.value | default: product.metafields.custom.short_description.value
-  if summary == blank and product.description != blank
-    assign summary = product.description | split: '</p>' | first | strip_html | strip
-  endif
-  assign net_weight = variant.metafields.custom.net_weight.value | default: product.metafields.custom.net_weight.value
-  assign serving = variant.metafields.custom.serving_size.value | default: product.metafields.custom.serving_size.value
--%}
-<apex-variant-content class="apex-product-summary-wrap" data-key="summary" {{ block.shopify_attributes }}>
-{%- if summary != blank or net_weight != blank or serving != blank -%}
-  <div class="apex-product-summary">
-    {%- if summary != blank -%}
-      <p class="apex-product-summary__text">{{ summary | escape | newline_to_br }}</p>
-    {%- endif -%}
-    {%- if net_weight != blank or serving != blank -%}
-      <p class="apex-product-summary__specs">
-        {%- if net_weight != blank -%}Product Net Weight: {{ net_weight | escape }}{%- endif -%}
-        {%- if net_weight != blank and serving != blank %} <span aria-hidden="true">&nbsp;|&nbsp;</span> {% endif -%}
-        {%- if serving != blank -%}Serving Size: {{ serving | escape }}{%- endif -%}
-      </p>
-    {%- endif -%}
-  </div>
-{%- endif -%}
-</apex-variant-content>
+{%- render 'apex-product-summary', product: closest.product, placement: 'gallery', attributes: block.shopify_attributes -%}
 <script src="{{ 'apex-product.js' | asset_url }}" type="module"></script>
 
 {% stylesheet %}
@@ -59,10 +34,28 @@
     line-height: 1.5rem;
   }
 
+  /* The copy in the right-hand column (above the price) is for phones only; there the one under
+     the gallery is hidden */
+  .apex-product-summary-wrap--details {
+    display: none;
+  }
+
   @media screen and (max-width: 749px) {
-    .apex-product-summary {
-      margin-block-start: 20px;
-      padding-inline: var(--page-margin, 16px);
+    .apex-product-summary-wrap--gallery {
+      display: none;
+    }
+
+    .apex-product-summary-wrap--details {
+      display: block;
+    }
+
+    .apex-product-summary-wrap--details .apex-product-summary {
+      margin-block-start: 16px;
+      padding-inline: 0;
+    }
+
+    .apex-product-summary-wrap--details .apex-product-summary__specs {
+      margin-block-start: 12px;
     }
 
     .apex-product-summary__text,
