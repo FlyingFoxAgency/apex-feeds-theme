@@ -226,6 +226,8 @@
 .product-information:has(.apex-product-heading) .variant-option__button-label:has(:checked) {
   color: var(--apex-burrow);
   font-weight: 700;
+  /* Thin amber ring just inside the burrow border marks the chosen pill */
+  box-shadow: inset 0 0 0 1px var(--apex-amber);
 }
 
 /* No sliding fill: the chosen pill just gets the darker outline */
