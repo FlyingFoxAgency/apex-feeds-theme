@@ -33,7 +33,7 @@
         "mobile_art_fit": "cover",
         "mobile_art_align": "center",
         "mobile_art_width": 100,
-        "mobile_art_top": 104,
+        "mobile_art_top": 200,
         "mobile_art_offset": -100,
         "mobile_art_opacity": 40,
         "gradient_from": "{{ settings.color_palette.color5 }}",
