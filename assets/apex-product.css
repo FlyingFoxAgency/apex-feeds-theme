@@ -51,6 +51,13 @@
 }
 
 /* ---- Gallery: white rounded card, thumbnail column on the right ---- */
+/* The main image stays put (it would slide over the text under it); only the thumbnails follow
+   the page down, and stop at the bottom of the main image */
+.product-information:has(.apex-product-heading) media-gallery.sticky-content {
+  position: relative;
+  top: auto;
+}
+
 .product-information:has(.apex-product-heading) .media-gallery--carousel slideshow-container {
   overflow: hidden;
   border-radius: var(--apex-radius-lg);
@@ -80,8 +87,9 @@
   .product-information:has(.apex-product-heading) slideshow-controls[thumbnails] {
     --slideshow-thumbnails-padding-inline: 0;
     --slideshow-thumbnails-padding-block: 0;
-    align-self: stretch;
-    position: relative;
+    align-self: start;
+    position: sticky;
+    top: calc(var(--sticky-header-offset, 0px) + 24px);
   }
 
   .product-information:has(.apex-product-heading) .slideshow-controls__thumbnails-container {
@@ -205,7 +213,7 @@
   min-height: var(--apex-pdp-control-height);
   padding: 8px 20px;
   font-size: 0.9375rem;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.5rem;
   text-transform: uppercase;
   transition: scale 0.2s ease, color 0.2s ease;
@@ -217,6 +225,7 @@
 
 .product-information:has(.apex-product-heading) .variant-option__button-label:has(:checked) {
   color: var(--apex-burrow);
+  font-weight: 700;
 }
 
 /* No sliding fill: the chosen pill just gets the darker outline */
@@ -301,11 +310,11 @@
   padding-block: 0;
   border: 0;
   border-radius: var(--apex-pdp-pill-radius);
-  background-color: var(--apex-burrow);
-  color: var(--apex-stone-100);
+  background-color: var(--apex-amber);
+  color: var(--apex-burrow);
   font-family: var(--font-body--family);
   font-size: 0.9375rem;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   transition: scale 0.2s ease;
@@ -337,6 +346,11 @@
   margin-block-start: 8px;
 }
 
+/* ---- Stone gap between the product information band and Customers also bought ---- */
+.apex-product-info-section + .shopify-section .apex-product-carousel--band {
+  margin-block-start: 80px;
+}
+
 /* ---- Phone ---- */
 @media screen and (max-width: 749px) {
   .product-information:has(.apex-product-heading) {
@@ -353,6 +367,10 @@
 
   .product-information:has(.apex-product-heading) product-price .price {
     font-size: 1.5rem;
+  }
+
+  .apex-product-info-section + .shopify-section .apex-product-carousel--band {
+    margin-block-start: 48px;
   }
 
   .product-information:has(.apex-product-heading) .variant-option__button-label {
