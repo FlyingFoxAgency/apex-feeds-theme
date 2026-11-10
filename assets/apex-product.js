@@ -160,7 +160,10 @@ class ApexVariantContent extends HTMLElement {
     event.promise
       ?.then(async ({ variant, detail }) => {
         const html = detail?.html;
-        const variantId = variant?.id ?? html?.querySelector('input[name="id"]')?.value ?? detail?.variantId;
+        // The variant id can come as a GID (gid://shopify/ProductVariant/123): keep the number only
+        const rawId =
+          html?.querySelector('input[name="id"]')?.value ?? event.detail?.variantId ?? variant?.id ?? detail?.variantId;
+        const variantId = rawId ? String(rawId).split('/').pop() : '';
         if (!variantId) return;
 
         let source = null;
