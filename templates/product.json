@@ -345,7 +345,8 @@
         "title_link": "",
         "show_buttons": true,
         "band": true,
-        "decoration_side": "left"
+        "decoration": "shopify://shop_images/Group_98.png",
+        "decoration_side": "right"
       }
     }
   },
