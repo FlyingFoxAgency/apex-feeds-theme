@@ -220,15 +220,16 @@
       transform: translateX(calc(-50% - var(--apex-art-moff, 0) * 1px));
     }
 
-    /* Cover / fit inside: the image fills the panel first, then width zooms it (100% = as
-       fitted) and the top and side offsets nudge it, so every slider still does something. */
+    /* Cover / fit inside: the image fills the panel, width zooms it (100% = as fitted), and
+       the top and side offsets pan the picture inside the panel without ever leaving a gap: top 0
+       is centred, 100 shows the very top of the image, -100 the very bottom; side 0 hugs the
+       right (or centre), 200 slides it fully to its left edge. */
     .apex-collection-header--m-cover .apex-collection-header__art,
     .apex-collection-header--m-contain .apex-collection-header__art {
       inset: 0;
       width: auto;
       transform-origin: right top;
-      transform: translate(calc(var(--apex-art-moff, 0) * -1px), calc(var(--apex-art-mtop, 0) * 1px))
-        scale(calc(var(--apex-art-mw, 100) / 100));
+      transform: scale(calc(var(--apex-art-mw, 100) / 100));
     }
 
     .apex-collection-header--m-center.apex-collection-header--m-cover .apex-collection-header__art,
@@ -241,7 +242,7 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      object-position: right center;
+      object-position: clamp(0%, 100% - var(--apex-art-moff, 0) * 0.5%, 100%) clamp(0%, 50% - var(--apex-art-mtop, 0) * 0.5%, 100%);
     }
 
     .apex-collection-header--m-contain .apex-collection-header__art img {
@@ -249,7 +250,7 @@
     }
 
     .apex-collection-header--m-center .apex-collection-header__art img {
-      object-position: center;
+      object-position: clamp(0%, 50% - var(--apex-art-moff, 0) * 0.5%, 100%) clamp(0%, 50% - var(--apex-art-mtop, 0) * 0.5%, 100%);
     }
 
     .apex-collection-header__text {
@@ -347,7 +348,7 @@
         { "value": "contain", "label": "Fit inside the panel" }
       ],
       "default": "custom",
-      "info": "Cover fills the whole panel and crops the edges. Fit inside shows the whole image. With these two, width zooms the image (100% = as fitted) and the offsets nudge it."
+      "info": "Cover fills the whole panel and crops the edges. Fit inside shows the whole image. With these two, width zooms the image (100% = as fitted) and the offsets pan the picture inside the panel without leaving gaps (top 0 = centred, 100 = shows the very top of the image)."
     },
     {
       "type": "select",
