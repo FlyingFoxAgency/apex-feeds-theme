@@ -1,0 +1,314 @@
+{% comment %}
+  APEX product information (Figma product page): a stone band with the "Product information"
+  title and accordions for Long description, Directions, Ingredients, Storage and Guaranteed
+  nutritional values.
+  - Each row reads the product description or a product metafield (e.g. custom.directions), or
+    its own text. Rows with nothing to show are left out.
+  - Plus / minus icons, first row open by default (per row setting).
+{% endcomment %}
+{%- liquid
+  assign product = closest.product | default: product
+  if request.visual_preview_mode and product == blank
+    assign product = collections.all.products.first
+  endif
+-%}
+
+{%- capture rows -%}
+  {%- for block in section.blocks -%}
+    {%- liquid
+      assign body = ''
+      case block.settings.source
+        when 'description'
+          assign body = product.description
+        when 'metafield'
+          assign mf_key = block.settings.metafield | strip
+          assign mf_parts = mf_key | split: '.'
+          if mf_parts.size == 2
+            assign mf = product.metafields[mf_parts[0]][mf_parts[1]]
+            if mf != blank
+              if mf.type == 'rich_text_field'
+                assign body = mf | metafield_tag
+              elsif mf.type == 'multi_line_text_field'
+                assign body = mf.value | escape | newline_to_br | prepend: '<p>' | append: '</p>'
+              else
+                assign body = mf | metafield_tag
+              endif
+            endif
+          endif
+      endcase
+      if body == blank
+        assign body = block.settings.content
+      endif
+      if body == blank and request.design_mode
+        assign body = '<p class="apex-info__empty">Nothing to show yet. Fill in the product metafield ' | append: block.settings.metafield | append: ', or add text to this row. This row is hidden on the live store until then.</p>'
+      endif
+    -%}
+    {%- if body != blank and block.settings.title != blank -%}
+      <details class="apex-info__row" {% if block.settings.open %}open{% endif %} {{ block.shopify_attributes }}>
+        <summary class="apex-info__summary">
+          <span class="apex-info__title">{{ block.settings.title | escape }}</span>
+          <span class="apex-info__icon" aria-hidden="true"></span>
+        </summary>
+        <div class="apex-info__body rte">{{ body }}</div>
+      </details>
+    {%- endif -%}
+  {%- endfor -%}
+{%- endcapture -%}
+
+{%- if rows != blank -%}
+  <div class="apex-info" id="product-information">
+    <div class="apex-info__inner apex-container">
+      {%- if section.settings.title != blank -%}
+        <h2 class="apex-section-title apex-info__heading">{{ section.settings.title | escape }}</h2>
+      {%- endif -%}
+      <div class="apex-info__list">{{ rows }}</div>
+    </div>
+  </div>
+{%- endif -%}
+
+{% stylesheet %}
+  /* Figma: 697px stone band, soft stone at the top easing to a warmer moss at the bottom */
+  .apex-info {
+    position: relative;
+    padding-block: 34px 72px;
+    background: linear-gradient(180deg, rgb(221 221 209 / 0.95) 0%, rgb(221 221 209 / 0.9) 45%, rgb(137 134 113 / 0.55) 100%);
+    color: var(--apex-burrow);
+  }
+
+  .apex-info__heading {
+    max-width: 18ch;
+  }
+
+  .apex-info__list {
+    margin-block-start: 34px;
+    margin-inline-start: auto;
+    width: min(100%, 1059px);
+  }
+
+  .apex-info__row {
+    border-block-end: 1px solid rgb(64 68 61 / 0.25);
+  }
+
+  .apex-info__row:last-child {
+    border-block-end: 0;
+  }
+
+  .apex-info__summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding-block: 22px;
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .apex-info__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .apex-info__summary:focus-visible {
+    outline: 2px solid var(--apex-burrow);
+    outline-offset: 4px;
+  }
+
+  .apex-info__title {
+    font-size: 1.375rem;
+    font-weight: 500;
+    line-height: 1.875rem;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    transform-origin: left center;
+    transition: scale 0.2s ease;
+  }
+
+  .apex-info__summary:hover .apex-info__title {
+    scale: 1.06;
+  }
+
+  /* Plus that turns into a minus (Figma add / minus icons, 34px) */
+  .apex-info__icon {
+    position: relative;
+    flex: none;
+    width: 34px;
+    height: 34px;
+    transition: scale 0.2s ease;
+  }
+
+  .apex-info__summary:hover .apex-info__icon {
+    scale: 1.06;
+  }
+
+  .apex-info__icon::before,
+  .apex-info__icon::after {
+    content: '';
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: 17px;
+    height: 1.5px;
+    border-radius: 1px;
+    background-color: currentcolor;
+    translate: -50% -50%;
+    transition: rotate 0.25s ease;
+  }
+
+  .apex-info__icon::after {
+    rotate: 90deg;
+  }
+
+  .apex-info__row[open] .apex-info__icon::after {
+    rotate: 0deg;
+  }
+
+  .apex-info__body {
+    max-width: 850px;
+    padding-block-end: 24px;
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-info__body > :first-child {
+    margin-block-start: 0;
+  }
+
+  .apex-info__body > :last-child {
+    margin-block-end: 0;
+  }
+
+  .apex-info__body table {
+    width: 100%;
+    max-width: 560px;
+    border-collapse: collapse;
+  }
+
+  .apex-info__body :is(td, th) {
+    padding: 6px 0;
+    border-block-end: 1px solid rgb(64 68 61 / 0.2);
+    text-align: start;
+  }
+
+  .apex-info__empty {
+    font-style: normal;
+    opacity: 0.7;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .apex-info__row[open] .apex-info__body {
+      animation: apex-info-open 0.3s ease;
+    }
+  }
+
+  @keyframes apex-info-open {
+    from {
+      opacity: 0;
+      translate: 0 -6px;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-info {
+      padding-block: 40px 48px;
+    }
+
+    .apex-info__list {
+      margin-block-start: 16px;
+    }
+
+    .apex-info__summary {
+      padding-block: 16px;
+    }
+
+    .apex-info__title {
+      font-size: 1rem;
+      line-height: 1.5rem;
+    }
+
+    .apex-info__icon {
+      width: 24px;
+      height: 24px;
+    }
+
+    .apex-info__icon::before,
+    .apex-info__icon::after {
+      width: 14px;
+    }
+
+    .apex-info__body {
+      font-size: 0.875rem;
+      line-height: 1.375rem;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX product information",
+  "tag": "section",
+  "class": "apex-product-info-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Product information"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "row",
+      "name": "Accordion row",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Directions"
+        },
+        {
+          "type": "select",
+          "id": "source",
+          "label": "Content from",
+          "options": [
+            { "value": "description", "label": "Product description" },
+            { "value": "metafield", "label": "Product metafield" },
+            { "value": "text", "label": "Text below" }
+          ],
+          "default": "metafield"
+        },
+        {
+          "type": "text",
+          "id": "metafield",
+          "label": "Metafield",
+          "default": "custom.directions",
+          "info": "namespace.key, e.g. custom.directions. Multi-line text or rich text."
+        },
+        {
+          "type": "richtext",
+          "id": "content",
+          "label": "Text",
+          "info": "Used when the source is empty, or when Content from is Text below."
+        },
+        {
+          "type": "checkbox",
+          "id": "open",
+          "label": "Open by default",
+          "default": false
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX product information",
+      "blocks": [
+        { "type": "row", "settings": { "title": "Long description", "source": "description", "metafield": "", "open": true } },
+        { "type": "row", "settings": { "title": "Directions", "source": "metafield", "metafield": "custom.directions" } },
+        { "type": "row", "settings": { "title": "Ingredients", "source": "metafield", "metafield": "custom.ingredients" } },
+        { "type": "row", "settings": { "title": "Storage", "source": "metafield", "metafield": "custom.storage" } },
+        { "type": "row", "settings": { "title": "Guaranteed nutritional values", "source": "metafield", "metafield": "custom.nutritional_values" } }
+      ]
+    }
+  ],
+  "enabled_on": { "templates": ["product"] }
+}
+{% endschema %}

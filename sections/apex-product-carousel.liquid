@@ -4,6 +4,9 @@
   lizard) sits behind the top left.
 {% endcomment %}
 <script src="{{ 'apex-home.js' | asset_url }}" type="module"></script>
+{%- if section.settings.source == 'recommendations' -%}
+  <script src="{{ 'apex-product.js' | asset_url }}" type="module"></script>
+{%- endif -%}
 
 {%- liquid
   # On a category page, that category's own custom.cross_sell collection (if set) replaces the
@@ -12,6 +15,25 @@
   assign collection = section.settings.collection
   if page_collection.metafields.custom.cross_sell.value != blank
     assign collection = page_collection.metafields.custom.cross_sell.value
+  endif
+
+  # Product pages: Shopify's recommendations for this product, fetched after load (see
+  # assets/apex-product.js). Until they arrive, or when there are none, the product's own
+  # category collection shows (or the section's collection).
+  assign use_recommendations = false
+  if section.settings.source == 'recommendations' and product != blank
+    assign use_recommendations = true
+    if collection == blank
+      assign category_handle = product.metafields.custom.shop_category.value | default: product.metafields.custom.shop_nav_category.value
+      if category_handle.first != blank
+        assign category_handle = category_handle.first
+      endif
+      assign category_handle = category_handle | handleize
+      if category_handle == 'ancilleries'
+        assign category_handle = 'ancillaries'
+      endif
+      assign collection = collections[category_handle] | default: product.collections.first
+    endif
   endif
 
   assign title_link = section.settings.title_link
@@ -51,11 +73,27 @@
       </div>
     </div>
 
-    <ul class="apex-product-carousel__track list-unstyled" data-track role="list">
-      {%- if collection != blank and collection.products_count > 0 -%}
-        {%- for product in collection.products limit: section.settings.products_to_show -%}
+    {%- if use_recommendations -%}
+      <apex-recommendations
+        class="apex-product-carousel__recommendations"
+        data-url="{{ routes.product_recommendations_url }}?product_id={{ product.id }}&limit={{ section.settings.products_to_show }}&section_id={{ section.id }}&intent=related"
+      >
+    {%- endif -%}
+    <ul class="apex-product-carousel__track list-unstyled" data-track role="list"{% if recommendations.performed? %} data-recommended{% endif %}>
+      {%- if recommendations.performed? and recommendations.products_count > 0 -%}
+        {%- for item in recommendations.products -%}
           <li class="apex-product-carousel__item">
-            {%- render 'apex-product-card', product: product, show_buttons: section.settings.show_buttons -%}
+            {%- render 'apex-product-card', product: item, show_buttons: section.settings.show_buttons -%}
+          </li>
+        {%- endfor -%}
+      {%- elsif collection != blank and collection.products_count > 0 -%}
+        {%- assign shown = 0 -%}
+        {%- for item in collection.products -%}
+          {%- if item.id == product.id -%}{%- continue -%}{%- endif -%}
+          {%- if shown >= section.settings.products_to_show -%}{%- break -%}{%- endif -%}
+          {%- assign shown = shown | plus: 1 -%}
+          <li class="apex-product-carousel__item">
+            {%- render 'apex-product-card', product: item, show_buttons: section.settings.show_buttons -%}
           </li>
         {%- endfor -%}
       {%- else -%}
@@ -80,10 +118,17 @@
         {%- endfor -%}
       {%- endif -%}
     </ul>
+    {%- if use_recommendations -%}
+      </apex-recommendations>
+    {%- endif -%}
   </apex-carousel>
 </div>
 
 {% stylesheet %}
+  .apex-product-carousel__recommendations {
+    display: contents;
+  }
+
   .apex-product-carousel {
     position: relative;
     isolation: isolate;
@@ -326,6 +371,17 @@
       "id": "title",
       "label": "Section title",
       "default": "Best sellers"
+    },
+    {
+      "type": "select",
+      "id": "source",
+      "label": "Products",
+      "options": [
+        { "value": "collection", "label": "From a collection" },
+        { "value": "recommendations", "label": "Recommended for this product" }
+      ],
+      "default": "collection",
+      "info": "Recommended for this product only works on product pages. Until Shopify has learned what sells together, the product's own category (or the collection below) shows."
     },
     {
       "type": "collection",

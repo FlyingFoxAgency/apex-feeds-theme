@@ -1,0 +1,77 @@
+{% comment %}
+  APEX product summary (Figma product page, under the gallery): a short description and a
+  "Product Net Weight: 250g | Serving Size: 50g" line.
+  - Text: product metafield custom.short_description (multi-line text), else the first paragraph
+    of the product description.
+  - Weight / serving: product metafields custom.net_weight and custom.serving_size (single line text).
+{% endcomment %}
+{%- liquid
+  assign product = closest.product
+  assign summary = product.metafields.custom.short_description.value
+  if summary == blank and product.description != blank
+    assign summary = product.description | split: '</p>' | first | strip_html | strip
+  endif
+  assign net_weight = product.metafields.custom.net_weight.value
+  assign serving = product.metafields.custom.serving_size.value
+-%}
+{%- if summary != blank or net_weight != blank or serving != blank -%}
+  <div class="apex-product-summary" {{ block.shopify_attributes }}>
+    {%- if summary != blank -%}
+      <p class="apex-product-summary__text">{{ summary | escape | newline_to_br }}</p>
+    {%- endif -%}
+    {%- if net_weight != blank or serving != blank -%}
+      <p class="apex-product-summary__specs">
+        {%- if net_weight != blank -%}Product Net Weight: {{ net_weight | escape }}{%- endif -%}
+        {%- if net_weight != blank and serving != blank %} <span aria-hidden="true">&nbsp;|&nbsp;</span> {% endif -%}
+        {%- if serving != blank -%}Serving Size: {{ serving | escape }}{%- endif -%}
+      </p>
+    {%- endif -%}
+  </div>
+{%- endif -%}
+
+{% stylesheet %}
+  .apex-product-summary {
+    max-width: 551px;
+    margin-block-start: 32px;
+    padding-inline: 18px;
+    color: var(--apex-burrow);
+  }
+
+  .apex-product-summary__text {
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-product-summary__specs {
+    margin: 24px 0 0;
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-product-summary {
+      margin-block-start: 20px;
+      padding-inline: var(--page-margin, 16px);
+    }
+
+    .apex-product-summary__text,
+    .apex-product-summary__specs {
+      font-size: 0.875rem;
+      line-height: 1.375rem;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX product summary",
+  "tag": null,
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Text from the product metafield custom.short_description (else the first paragraph of the description). Weight line from custom.net_weight and custom.serving_size."
+    }
+  ]
+}
+{% endschema %}

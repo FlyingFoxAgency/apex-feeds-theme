@@ -1,0 +1,142 @@
+{% comment %}
+  APEX product heading (Figma product page, right column top): range eyebrow, the product name in
+  large Dharma, a one-line subtitle and the star rating with review count.
+  - Eyebrow: the product's Shop Nav Category + " range" (e.g. "Frozen Meals range"), or the block
+    setting when filled in.
+  - Subtitle: product metafield custom.subtitle (single line text).
+  - Rating: reviews.rating / reviews.rating_count (review apps fill these in), else custom.rating.
+    Hidden when there is no rating.
+{% endcomment %}
+{%- liquid
+  assign product = closest.product
+  assign eyebrow = block.settings.eyebrow
+  if eyebrow == blank and product != blank
+    assign category = product.metafields.custom.shop_category.value | default: product.metafields.custom.shop_nav_category.value
+    if category != blank
+      assign first_category = category | first
+      if category.first == blank
+        assign first_category = category
+      endif
+      assign eyebrow = first_category | append: ' range'
+    endif
+  endif
+
+  assign rating = product.metafields.reviews.rating.value.rating
+  assign rating_count = product.metafields.reviews.rating_count.value
+  if rating == blank
+    assign rating_field = product.metafields.custom.rating | default: product.metafields.custom.star_rating
+    assign rating = rating_field.value.rating | default: rating_field.value
+  endif
+  assign rating_scale = product.metafields.reviews.rating.value.scale_max | default: 5
+-%}
+<div class="apex-product-heading" {{ block.shopify_attributes }}>
+  {%- if eyebrow != blank -%}
+    <p class="apex-eyebrow apex-product-heading__eyebrow">{{ eyebrow | escape }}</p>
+  {%- endif -%}
+  <h1 class="apex-product-heading__title">{{ product.title | default: 'Product title' | escape }}</h1>
+  {%- assign subtitle = product.metafields.custom.subtitle.value -%}
+  {%- if subtitle != blank -%}
+    <p class="apex-product-heading__subtitle">{{ subtitle | escape }}</p>
+  {%- endif -%}
+  {%- if rating != blank -%}
+    {%- assign rating_number = rating | times: 1.0 -%}
+    {%- assign percent = rating_number | divided_by: rating_scale | times: 100 -%}
+    <a class="apex-product-heading__rating" href="#reviews" aria-label="Rated {{ rating_number | round: 1 }} out of {{ rating_scale }}{% if rating_count %}, {{ rating_count }} reviews{% endif %}">
+      <span class="apex-product-heading__stars" style="--apex-stars: {{ percent }}%;" aria-hidden="true">
+        <span class="apex-product-heading__stars-base">★★★★★</span>
+        <span class="apex-product-heading__stars-fill">★★★★★</span>
+      </span>
+      <span class="apex-product-heading__score">{{ rating_number | round: 1 }}</span>
+      {%- if rating_count != blank -%}
+        <span class="apex-product-heading__divider" aria-hidden="true">|</span>
+        <span class="apex-product-heading__count">{{ rating_count }} {% if rating_count == 1 %}review{% else %}reviews{% endif %}</span>
+      {%- endif -%}
+    </a>
+  {%- endif -%}
+</div>
+
+{% stylesheet %}
+  .apex-product-heading__eyebrow {
+    margin: 0;
+  }
+
+  /* Figma: Dharma 83px line, upper case, burrow */
+  .apex-product-heading__title {
+    margin: 12px 0 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: clamp(3rem, 5.8vw, 5.25rem);
+    line-height: 0.95;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-product-heading__subtitle {
+    margin: 10px 0 0;
+    font-size: 0.875rem;
+    color: var(--apex-burrow);
+  }
+
+  .apex-product-heading__rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-block-start: 12px;
+    font-size: 0.875rem;
+    color: var(--apex-burrow);
+    text-decoration: none;
+    transform-origin: left center;
+    transition: scale 0.2s ease;
+  }
+
+  .apex-product-heading__rating:hover {
+    scale: 1.06;
+  }
+
+  .apex-product-heading__stars {
+    position: relative;
+    display: inline-block;
+    font-size: 1.5rem;
+    line-height: 1;
+    letter-spacing: 4px;
+  }
+
+  .apex-product-heading__stars-base {
+    color: rgb(64 68 61 / 0.2);
+  }
+
+  .apex-product-heading__stars-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--apex-stars, 100%);
+    overflow: hidden;
+    white-space: nowrap;
+    color: var(--apex-burrow);
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-product-heading__stars {
+      font-size: 1.125rem;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX product heading",
+  "tag": null,
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "info": "Leave blank to show the product's Shop Nav Category + \" range\"."
+    },
+    {
+      "type": "paragraph",
+      "content": "The subtitle comes from the product metafield custom.subtitle. The rating comes from a reviews app, or custom.rating."
+    }
+  ],
+  "presets": [{ "name": "APEX product heading" }]
+}
+{% endschema %}

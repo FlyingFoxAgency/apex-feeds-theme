@@ -1,0 +1,451 @@
+{% comment %}
+  APEX customer reviews (Figma product page): a centred title, a sliding row of white review
+  cards with round arrows either side, Read more reviews / Leave a review buttons, and optional
+  line art (the frog) behind the bottom right.
+  - Cards come from "Review" blocks. A reviews app can add its own widget as an app block, which
+    shows under the cards.
+  - With no reviews and no app block the section is hidden on the live store. In the theme editor
+    sample cards show so the layout can be checked; they never show to shoppers.
+{% endcomment %}
+<script src="{{ 'apex-home.js' | asset_url }}" type="module"></script>
+<script src="{{ 'apex-product.js' | asset_url }}" type="module"></script>
+
+{%- liquid
+  assign review_count = 0
+  assign app_count = 0
+  for block in section.blocks
+    if block.type == 'review'
+      assign review_count = review_count | plus: 1
+    elsif block.type == '@app'
+      assign app_count = app_count | plus: 1
+    endif
+  endfor
+  assign show_samples = false
+  if review_count == 0 and request.design_mode
+    assign show_samples = true
+  endif
+-%}
+
+{%- if review_count > 0 or app_count > 0 or show_samples -%}
+  <div class="apex-reviews" id="reviews">
+    {%- if section.settings.decoration != blank -%}
+      <div class="apex-decoration apex-reviews__decoration" aria-hidden="true">
+        {{ section.settings.decoration | image_url: width: 800 | image_tag: loading: 'lazy', alt: '' }}
+      </div>
+    {%- endif -%}
+
+    <div class="apex-reviews__inner apex-container">
+      {%- if section.settings.title != blank -%}
+        <h2 class="apex-section-title apex-reviews__title">{{ section.settings.title | escape }}</h2>
+      {%- endif -%}
+
+      {%- if review_count > 0 or show_samples -%}
+        <apex-carousel class="apex-reviews__carousel">
+          <button type="button" class="apex-product-carousel__arrow apex-product-carousel__arrow--prev apex-reviews__arrow apex-reviews__arrow--prev" data-prev aria-label="Previous reviews">
+            {{- 'apex-icon-arrow-circle.svg' | inline_asset_content -}}
+          </button>
+
+          <ul class="apex-reviews__track list-unstyled" data-track role="list">
+            {%- if show_samples -%}
+              {%- for i in (1..4) -%}
+                <li class="apex-reviews__item">
+                  <article class="apex-review">
+                    <div class="apex-review__top">
+                      <span class="apex-review__stars" style="--apex-stars: 100%;" aria-label="Rated 5 out of 5">
+                        <span class="apex-review__stars-base" aria-hidden="true">★★★★★</span>
+                        <span class="apex-review__stars-fill" aria-hidden="true">★★★★★</span>
+                      </span>
+                      <span class="apex-review__date">24/10/26</span>
+                    </div>
+                    <p class="apex-review__name">Sample review (editor only)</p>
+                    <div class="apex-review__text" data-review-text>
+                      <p><strong>Add Review blocks or a reviews app.</strong> These sample cards only show in the theme editor, so you can check the layout. On the live store this section stays hidden until there are real reviews.</p>
+                    </div>
+                  </article>
+                </li>
+              {%- endfor -%}
+            {%- else -%}
+              {%- for block in section.blocks -%}
+                {%- if block.type != 'review' -%}{%- continue -%}{%- endif -%}
+                {%- assign percent = block.settings.rating | times: 20 -%}
+                <li class="apex-reviews__item" {{ block.shopify_attributes }}>
+                  <article class="apex-review">
+                    <div class="apex-review__top">
+                      <span class="apex-review__stars" style="--apex-stars: {{ percent }}%;" role="img" aria-label="Rated {{ block.settings.rating }} out of 5">
+                        <span class="apex-review__stars-base" aria-hidden="true">★★★★★</span>
+                        <span class="apex-review__stars-fill" aria-hidden="true">★★★★★</span>
+                      </span>
+                      {%- if block.settings.date != blank -%}
+                        <span class="apex-review__date">{{ block.settings.date | escape }}</span>
+                      {%- endif -%}
+                    </div>
+                    {%- if block.settings.name != blank -%}
+                      <p class="apex-review__name">{{ block.settings.name | escape }}</p>
+                    {%- endif -%}
+                    <div class="apex-review__text" id="ReviewText-{{ block.id }}" data-review-text>
+                      {%- if block.settings.heading != blank -%}
+                        <p class="apex-review__heading">{{ block.settings.heading | escape }}</p>
+                      {%- endif -%}
+                      {{ block.settings.text }}
+                    </div>
+                    {%- if block.settings.link != blank -%}
+                      <a class="apex-review__more" href="{{ block.settings.link }}">Full review</a>
+                    {%- else -%}
+                      <button type="button" class="apex-review__more" aria-expanded="false" aria-controls="ReviewText-{{ block.id }}" data-review-toggle hidden>
+                        Full review
+                      </button>
+                    {%- endif -%}
+                  </article>
+                </li>
+              {%- endfor -%}
+            {%- endif -%}
+          </ul>
+
+          <button type="button" class="apex-product-carousel__arrow apex-reviews__arrow apex-reviews__arrow--next" data-next aria-label="Next reviews">
+            {{- 'apex-icon-arrow-circle.svg' | inline_asset_content -}}
+          </button>
+        </apex-carousel>
+      {%- endif -%}
+
+      {%- for block in section.blocks -%}
+        {%- if block.type == '@app' -%}
+          <div class="apex-reviews__app">{% render block %}</div>
+        {%- endif -%}
+      {%- endfor -%}
+
+      {%- if section.settings.more_label != blank or section.settings.leave_label != blank -%}
+        <div class="apex-reviews__buttons">
+          {%- if section.settings.more_label != blank and section.settings.more_link != blank -%}
+            <a class="apex-button apex-button--dark" href="{{ section.settings.more_link }}">
+              <span class="apex-button__label">{{ section.settings.more_label | escape }}</span>
+            </a>
+          {%- endif -%}
+          {%- if section.settings.leave_label != blank and section.settings.leave_link != blank -%}
+            <a class="apex-button apex-reviews__leave" href="{{ section.settings.leave_link }}">
+              {{- section.settings.leave_label | escape -}}
+            </a>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+{%- endif -%}
+
+{% stylesheet %}
+  .apex-reviews {
+    position: relative;
+    isolation: isolate;
+    padding-block: 120px 96px;
+    color: var(--apex-burrow);
+  }
+
+  /* Figma frog: 296px wide, sitting under the bottom right of the cards */
+  .apex-reviews__decoration {
+    inset-block-end: -40px;
+    inset-inline-end: max(16px, calc(50% - 720px + 120px));
+    width: min(296px, 22vw);
+  }
+
+  .apex-reviews__inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  .apex-reviews__title {
+    text-align: center;
+  }
+
+  .apex-reviews__carousel {
+    position: relative;
+    display: grid;
+    grid-template-columns: 41px minmax(0, 1fr) 41px;
+    align-items: center;
+    gap: 29px;
+    margin-block-start: 27px;
+  }
+
+  .apex-reviews__track {
+    --apex-carousel-gap: 47px;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: calc((100% - 2 * var(--apex-carousel-gap)) / 3);
+    gap: var(--apex-carousel-gap);
+    margin: 0;
+    padding: 4px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .apex-reviews__track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .apex-reviews__item {
+    display: flex;
+    scroll-snap-align: start;
+  }
+
+  .apex-reviews__arrow {
+    position: static;
+  }
+
+  .apex-review {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 381px;
+    padding: 26px 25px 24px;
+    border: 1px solid var(--apex-border-grey);
+    border-radius: var(--apex-radius-md);
+    background-color: #fff;
+    box-shadow: 0 4px 4px rgb(0 0 0 / 0.08);
+  }
+
+  .apex-review__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .apex-review__stars {
+    position: relative;
+    display: inline-block;
+    font-size: 1.375rem;
+    line-height: 1;
+    letter-spacing: 1px;
+  }
+
+  .apex-review__stars-base {
+    color: rgb(100 105 53 / 0.2);
+  }
+
+  .apex-review__stars-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--apex-stars, 100%);
+    overflow: hidden;
+    white-space: nowrap;
+    color: var(--apex-olive);
+  }
+
+  .apex-review__date,
+  .apex-review__name {
+    font-size: 0.75rem;
+    line-height: 0.875rem;
+  }
+
+  .apex-review__name {
+    margin: 24px 0 0;
+  }
+
+  .apex-review__text {
+    display: -webkit-box;
+    margin-block-start: 46px;
+    overflow: hidden;
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+  }
+
+  .apex-review__text.is-expanded {
+    display: block;
+  }
+
+  .apex-review__text p {
+    display: inline;
+    margin: 0;
+  }
+
+  .apex-review__heading {
+    font-weight: 700;
+    text-transform: capitalize;
+  }
+
+  .apex-review__heading::after {
+    content: '. ';
+  }
+
+  .apex-review__more {
+    align-self: flex-start;
+    margin-block-start: auto;
+    padding: 24px 0 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    transform-origin: left center;
+    transition: scale 0.2s ease;
+  }
+
+  .apex-review__more:hover {
+    scale: 1.06;
+  }
+
+  .apex-reviews__app {
+    margin-block-start: 32px;
+  }
+
+  .apex-reviews__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px 25px;
+    margin-block-start: 26px;
+  }
+
+  .apex-reviews__leave {
+    border: 2px solid var(--apex-burrow);
+    background: transparent;
+    color: var(--apex-burrow);
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-reviews__track {
+      --apex-carousel-gap: 20px;
+      grid-auto-columns: calc((100% - var(--apex-carousel-gap)) / 2);
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-reviews {
+      padding-block: 64px 72px;
+    }
+
+    .apex-reviews__carousel {
+      display: block;
+      margin-block-start: 20px;
+    }
+
+    .apex-reviews__arrow {
+      display: none;
+    }
+
+    .apex-reviews__track {
+      --apex-carousel-gap: 16px;
+      grid-auto-columns: 82%;
+      margin-inline: calc(-1 * var(--page-margin, 16px));
+      padding-inline: var(--page-margin, 16px);
+      scroll-padding-inline: var(--page-margin, 16px);
+    }
+
+    .apex-review {
+      min-height: 320px;
+      padding: 20px;
+    }
+
+    .apex-review__text {
+      margin-block-start: 24px;
+      font-size: 0.875rem;
+      line-height: 1.375rem;
+    }
+
+    .apex-reviews__decoration {
+      width: 160px;
+      inset-block-end: -24px;
+    }
+
+    .apex-reviews__buttons .apex-button {
+      flex: 1 1 100%;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX customer reviews",
+  "tag": "section",
+  "class": "apex-reviews-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Customer reviews"
+    },
+    {
+      "type": "text",
+      "id": "more_label",
+      "label": "First button text",
+      "default": "Read more reviews"
+    },
+    {
+      "type": "url",
+      "id": "more_link",
+      "label": "First button link"
+    },
+    {
+      "type": "text",
+      "id": "leave_label",
+      "label": "Second button text",
+      "default": "Leave a review"
+    },
+    {
+      "type": "url",
+      "id": "leave_link",
+      "label": "Second button link"
+    },
+    {
+      "type": "image_picker",
+      "id": "decoration",
+      "label": "Line art",
+      "info": "Figma uses the frog, bottom right. Transparent PNG or SVG."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "review",
+      "name": "Review",
+      "settings": [
+        {
+          "type": "range",
+          "id": "rating",
+          "label": "Stars",
+          "min": 1,
+          "max": 5,
+          "step": 1,
+          "default": 5
+        },
+        {
+          "type": "text",
+          "id": "name",
+          "label": "Name"
+        },
+        {
+          "type": "text",
+          "id": "date",
+          "label": "Date",
+          "info": "e.g. 24/10/26"
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Headline"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Review"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Full review link",
+          "info": "Leave blank to open the full text in place."
+        }
+      ]
+    },
+    {
+      "type": "@app"
+    }
+  ],
+  "presets": [{ "name": "APEX customer reviews" }]
+}
+{% endschema %}

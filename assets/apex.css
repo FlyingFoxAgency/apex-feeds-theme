@@ -968,3 +968,9 @@ html {
   :is(.menu-drawer__menu-item, .apex-drawer-social__link):active {
   color: var(--apex-amber);
 }
+
+/* Variant picker: the chosen value after the option name ("Age range: Adult") only shows on the
+   APEX product page (assets/apex-product.css) */
+.variant-option__selected-value {
+  display: none;
+}

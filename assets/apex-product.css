@@ -1,0 +1,378 @@
+/* ==========================================================================
+   APEX product page (Figma "APEX Product Page")
+   Restyles Horizon's product information section (gallery, price, variant picker, quantity,
+   Add to cart) to the APEX design. Everything is scoped to a product information section that
+   holds the APEX product heading block, so other product layouts keep Horizon's look.
+   ========================================================================== */
+
+.product-information:has(.apex-product-heading) {
+  --apex-pdp-pill-radius: var(--apex-radius-md);
+  --apex-pdp-control-height: 47px;
+  --apex-pdp-line: rgb(137 134 113 / 0.55);
+
+  /* Horizon variant button colours, APEX style: outlined, burrow when chosen */
+  --color-variant-background: transparent;
+  --color-variant-border: var(--apex-pdp-line);
+  --color-variant-text: var(--apex-dried-moss);
+  --color-variant-hover-background: transparent;
+  --color-variant-hover-border: var(--apex-burrow);
+  --color-variant-hover-text: var(--apex-burrow);
+  --color-selected-variant-background: transparent;
+  --color-selected-variant-border: var(--apex-burrow);
+  --color-selected-variant-text: var(--apex-burrow);
+  --color-selected-variant-hover-background: transparent;
+  --color-selected-variant-hover-border: var(--apex-burrow);
+  --color-selected-variant-hover-text: var(--apex-burrow);
+  --options-border-width: 1.5px;
+  --options-border-radius: var(--apex-pdp-pill-radius);
+
+  padding-block: 62px 72px;
+  color: var(--apex-burrow);
+}
+
+/* ---- Two columns: 685px gallery (image + thumbnails), 475px details, 84px apart ---- */
+@media screen and (min-width: 750px) {
+  .product-information:has(.apex-product-heading) .product-information__grid.product-information--media-left {
+    grid-template-columns: minmax(0, 685fr) minmax(0, 475fr);
+    column-gap: clamp(32px, 5.8vw, 84px);
+    width: 100%;
+    max-width: var(--narrow-page-width);
+    margin-inline: auto;
+  }
+
+  .product-information:has(.apex-product-heading) .product-information__media,
+  .product-information:has(.apex-product-heading) .product-details {
+    padding-inline: 0;
+  }
+}
+
+.product-information:has(.apex-product-heading) .product-details > .group-block {
+  padding-block: 0;
+}
+
+/* ---- Gallery: white rounded card, thumbnail column on the right ---- */
+.product-information:has(.apex-product-heading) .media-gallery--carousel slideshow-container {
+  overflow: hidden;
+  border-radius: var(--apex-radius-lg);
+  background-color: #fff;
+}
+
+.product-information:has(.apex-product-heading) .media-gallery--carousel slideshow-slide {
+  background-color: #fff;
+}
+
+.product-information:has(.apex-product-heading) .media-gallery--carousel .product-media img {
+  object-fit: contain;
+  padding: 4%;
+}
+
+.product-information:has(.apex-product-heading) .media-gallery--carousel slideshow-arrows {
+  display: none;
+}
+
+@media screen and (min-width: 750px) {
+  .product-information:has(.apex-product-heading)
+    .media-gallery--carousel
+    slideshow-component:has(slideshow-controls[thumbnails]) {
+    column-gap: 14px;
+  }
+
+  .product-information:has(.apex-product-heading) slideshow-controls[thumbnails] {
+    --slideshow-thumbnails-padding-inline: 0;
+    --slideshow-thumbnails-padding-block: 0;
+    align-self: stretch;
+    position: relative;
+  }
+
+  .product-information:has(.apex-product-heading) .slideshow-controls__thumbnails-container {
+    max-height: 100%;
+  }
+
+  .product-information:has(.apex-product-heading) slideshow-controls[thumbnails] .slideshow-controls__thumbnails {
+    gap: 16px;
+  }
+
+  .product-information:has(.apex-product-heading)
+    slideshow-controls[thumbnails]
+    .slideshow-controls__thumbnails
+    .slideshow-control {
+    width: clamp(72px, 8.4vw, 120px);
+    aspect-ratio: 120 / 121;
+    border: 1px solid transparent;
+    border-radius: var(--apex-radius-md);
+    outline: none;
+    background-color: #fff;
+    transition: scale 0.2s ease, border-color 0.2s ease;
+  }
+
+  .product-information:has(.apex-product-heading)
+    slideshow-controls[thumbnails]
+    .slideshow-controls__thumbnails
+    .slideshow-control
+    img {
+    padding: 10%;
+    object-fit: contain;
+    border-radius: 0;
+  }
+
+  .product-information:has(.apex-product-heading)
+    slideshow-controls[thumbnails]
+    .slideshow-controls__thumbnails
+    .slideshow-control:hover {
+    scale: 1.06;
+  }
+
+  .product-information:has(.apex-product-heading)
+    slideshow-controls[thumbnails]
+    .slideshow-controls__thumbnails
+    .slideshow-control[aria-selected='true'] {
+    border-color: var(--apex-burrow);
+    outline: none;
+  }
+}
+
+/* ---- Price + Afterpay / instalments line ---- */
+.product-information:has(.apex-product-heading) product-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 18px;
+  row-gap: 4px;
+  margin-block-start: -4px;
+}
+
+.product-information:has(.apex-product-heading) product-price .price {
+  font-size: 1.875rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--apex-olive);
+}
+
+.product-information:has(.apex-product-heading) product-price .compare-at-price {
+  font-size: 1.125rem;
+  color: var(--apex-dried-moss);
+}
+
+.product-information:has(.apex-product-heading) product-price :is(.installments, .tax-note) {
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  color: var(--apex-dried-moss);
+}
+
+.product-information:has(.apex-product-heading) product-price .tax-note {
+  flex-basis: 100%;
+}
+
+.product-information:has(.apex-product-heading) product-price .installments b,
+.product-information:has(.apex-product-heading) product-price .installments strong {
+  color: var(--apex-burrow);
+}
+
+/* ---- Option pills (Size, Age range, Flavour) ---- */
+.product-information:has(.apex-product-heading) .variant-picker__form {
+  display: grid;
+  gap: 22px;
+}
+
+.product-information:has(.apex-product-heading) .variant-option--buttons {
+  gap: 8px 10px;
+}
+
+.product-information:has(.apex-product-heading) .variant-option--buttons legend,
+.product-information:has(.apex-product-heading) .variant-option[data-testid='variant-option-single'] {
+  margin-block-end: 8px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.375rem;
+  text-transform: uppercase;
+  color: var(--apex-olive);
+}
+
+.product-information:has(.apex-product-heading) .variant-option__selected-value {
+  display: inline;
+}
+
+.product-information:has(.apex-product-heading) .variant-option[data-testid='variant-option-single'] {
+  margin-block-end: 0;
+}
+
+.product-information:has(.apex-product-heading) .variant-option[data-testid='variant-option-single'] .variant-option__swatch-value {
+  color: var(--apex-burrow);
+}
+
+.product-information:has(.apex-product-heading) .variant-option__button-label {
+  min-width: 110px;
+  min-height: var(--apex-pdp-control-height);
+  padding: 8px 20px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.5rem;
+  text-transform: uppercase;
+  transition: scale 0.2s ease, color 0.2s ease;
+}
+
+.product-information:has(.apex-product-heading) .variant-option__button-label:hover {
+  scale: 1.06;
+}
+
+.product-information:has(.apex-product-heading) .variant-option__button-label:has(:checked) {
+  color: var(--apex-burrow);
+}
+
+/* No sliding fill: the chosen pill just gets the darker outline */
+.product-information:has(.apex-product-heading) .variant-option__button-label__pill {
+  display: none;
+}
+
+/* Sold out / unavailable: faded and struck through, still clickable (shows Sold out) */
+.product-information:has(.apex-product-heading) .variant-option__button-label:has([data-option-available='false']) {
+  border-width: var(--options-border-width);
+  border-color: rgb(137 134 113 / 0.3);
+  color: rgb(137 134 113 / 0.55);
+  text-decoration: line-through;
+}
+
+.product-information:has(.apex-product-heading)
+  .variant-option__button-label:has([data-option-available='false'])::after,
+.product-information:has(.apex-product-heading)
+  .variant-option__button-label:has([data-option-available='false'])
+  svg {
+  display: none;
+}
+
+/* ---- Quantity + Add to cart row ---- */
+.product-information:has(.apex-product-heading) .buy-buttons-block {
+  display: block;
+}
+
+.product-information:has(.apex-product-heading) .product-form-buttons {
+  flex-wrap: nowrap;
+  gap: 16px;
+}
+
+.product-information:has(.apex-product-heading) .quantity-selector {
+  --quantity-selector-width: 110px;
+  flex: 0 0 110px;
+  height: var(--apex-pdp-control-height);
+  border: 1.5px solid var(--apex-pdp-line);
+  border-radius: var(--apex-pdp-pill-radius);
+  background: transparent;
+  color: var(--apex-burrow);
+}
+
+.product-information:has(.apex-product-heading) .quantity-selector :is(.quantity-minus, .quantity-plus) {
+  width: 32px;
+  height: 100%;
+  color: var(--apex-burrow);
+  transition: scale 0.2s ease;
+}
+
+.product-information:has(.apex-product-heading) .quantity-selector :is(.quantity-minus, .quantity-plus):hover {
+  scale: 1.2;
+}
+
+/* Figma uses chevrons for the stepper */
+.product-information:has(.apex-product-heading) .quantity-selector :is(.quantity-minus, .quantity-plus) .svg-wrapper {
+  display: none;
+}
+
+.product-information:has(.apex-product-heading) .quantity-selector :is(.quantity-minus, .quantity-plus)::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-block-start: 1.5px solid currentcolor;
+  border-inline-start: 1.5px solid currentcolor;
+  rotate: -45deg;
+  translate: 2px 0;
+}
+
+.product-information:has(.apex-product-heading) .quantity-selector .quantity-plus::before {
+  rotate: 135deg;
+  translate: -2px 0;
+}
+
+.product-information:has(.apex-product-heading) .quantity-selector input {
+  font-size: 0.9375rem;
+  color: var(--apex-burrow);
+}
+
+.product-information:has(.apex-product-heading) .product-form-buttons .add-to-cart-button {
+  min-height: var(--apex-pdp-control-height);
+  padding-block: 0;
+  border: 0;
+  border-radius: var(--apex-pdp-pill-radius);
+  background-color: var(--apex-burrow);
+  color: var(--apex-stone-100);
+  font-family: var(--font-body--family);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: scale 0.2s ease;
+}
+
+.product-information:has(.apex-product-heading) .product-form-buttons .add-to-cart-button:not([disabled]):hover {
+  scale: 1.06;
+}
+
+.product-information:has(.apex-product-heading) .product-form-buttons .add-to-cart-button .add-to-cart-icon {
+  display: none;
+}
+
+.product-information:has(.apex-product-heading) .product-form-buttons .add-to-cart-button[disabled] {
+  opacity: 0.5;
+}
+
+/* Figma has no express checkout buttons on the product page */
+.product-information:has(.apex-product-heading) .accelerated-checkout-block {
+  display: none;
+}
+
+/* ---- Spacing between the right-hand blocks (Figma rhythm) ---- */
+.product-information:has(.apex-product-heading) .apex-purchase {
+  margin-block-start: 2px;
+}
+
+.product-information:has(.apex-product-heading) .apex-shipping-note {
+  margin-block-start: 8px;
+}
+
+/* ---- Phone ---- */
+@media screen and (max-width: 749px) {
+  .product-information:has(.apex-product-heading) {
+    padding-block: 0 48px;
+  }
+
+  .product-information:has(.apex-product-heading) .product-details {
+    padding-inline: var(--page-margin, 16px);
+  }
+
+  .product-information:has(.apex-product-heading) .media-gallery--carousel slideshow-container {
+    border-radius: 0;
+  }
+
+  .product-information:has(.apex-product-heading) product-price .price {
+    font-size: 1.5rem;
+  }
+
+  .product-information:has(.apex-product-heading) .variant-option__button-label {
+    min-width: 0;
+    flex: 1 1 auto;
+    padding-inline: 14px;
+    font-size: 0.875rem;
+  }
+
+  .product-information:has(.apex-product-heading) .product-form-buttons {
+    gap: 10px;
+  }
+
+  .product-information:has(.apex-product-heading) .quantity-selector {
+    flex-basis: 100px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-information:has(.apex-product-heading) :is(.variant-option__button-label, .add-to-cart-button, .slideshow-control) {
+    transition: none;
+  }
+}

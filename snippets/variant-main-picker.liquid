@@ -97,6 +97,9 @@
               {{ product_option.name | escape -}}
               {%- if variant_style == 'swatch' -%}
                 <span class="variant-option__swatch-value">{{ product_option.selected_value }}</span>
+              {%- else -%}
+                {%- comment -%} APEX: "Age range: Adult" (hidden unless the APEX product styles show it) {%- endcomment -%}
+                <span class="variant-option__selected-value">: {{ product_option.selected_value | escape }}</span>
               {%- endif %}
             </legend>
             {%- for product_option_value in product_option.values -%}

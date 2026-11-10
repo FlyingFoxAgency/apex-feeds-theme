@@ -1,0 +1,410 @@
+{% comment %}
+  APEX purchase options (Figma product page): "One-time purchase" and "Subscribe and Save" cards
+  above Add to cart. It needs a subscriptions app (e.g. Shopify Subscriptions) that adds selling
+  plans to the product; without one, nothing shows on the live store. In the theme editor a
+  preview shows instead, so the layout can be checked.
+  - The chosen plan is sent with Add to cart through a hidden selling_plan input that belongs to
+    the buy buttons form (form="BuyButtons-ProductForm-<section id>").
+  - The cards re-render when the shopper picks another variant, so prices follow the variant.
+{% endcomment %}
+{%- liquid
+  assign product = closest.product
+  assign variant = product.selected_or_first_available_variant
+  assign form_id = 'BuyButtons-ProductForm-' | append: section.id
+  assign has_plans = false
+  if product.selling_plan_groups.size > 0
+    assign has_plans = true
+  endif
+  assign preview = false
+  if has_plans == false and request.design_mode and block.settings.editor_preview
+    assign preview = true
+  endif
+
+  assign first_allocation = variant.selling_plan_allocations.first
+  assign default_plan = first_allocation.selling_plan
+  assign sub_price = first_allocation.price | default: variant.price
+  assign save_label = ''
+  assign adjustment = default_plan.price_adjustments.first
+  if adjustment.value_type == 'percentage'
+    assign save_label = 'Save ' | append: adjustment.value | append: '%'
+  elsif first_allocation.compare_at_price > first_allocation.price
+    assign saved = first_allocation.compare_at_price | minus: first_allocation.price | money_without_trailing_zeros
+    assign save_label = 'Save ' | append: saved
+  endif
+
+  if preview
+    assign sub_price = variant.price | times: 0.85 | round
+    assign save_label = 'Save 15%'
+  endif
+
+  assign subscribe_first = false
+  if block.settings.default_option == 'subscribe' or product.requires_selling_plan
+    assign subscribe_first = true
+  endif
+-%}
+{%- if has_plans or preview -%}
+  <apex-purchase-options
+    class="apex-purchase"
+    data-block-id="{{ block.id }}"
+    data-product-id="{{ product.id }}"
+    {{ block.shopify_attributes }}
+  >
+    <input
+      type="hidden"
+      name="selling_plan"
+      form="{{ form_id }}"
+      value="{% if subscribe_first and preview == false %}{{ default_plan.id }}{% endif %}"
+      data-plan-input
+    >
+    <fieldset class="apex-purchase__options">
+      <legend class="visually-hidden">Purchase options</legend>
+
+      {%- unless product.requires_selling_plan -%}
+        <label class="apex-purchase__card">
+          <input
+            class="apex-purchase__radio"
+            type="radio"
+            name="apex-purchase-{{ block.id }}"
+            value="once"
+            {% unless subscribe_first %}checked{% endunless %}
+            data-purchase-type
+          >
+          <span class="apex-purchase__row">
+            <span class="apex-purchase__label">One-time purchase</span>
+            <span class="apex-purchase__price">{{ variant.price | money }}</span>
+          </span>
+        </label>
+      {%- endunless -%}
+
+      <label class="apex-purchase__card apex-purchase__card--subscribe">
+        <input
+          class="apex-purchase__radio"
+          type="radio"
+          name="apex-purchase-{{ block.id }}"
+          value="subscribe"
+          {% if subscribe_first %}checked{% endif %}
+          data-purchase-type
+        >
+        <span class="apex-purchase__row">
+          <span class="apex-purchase__label">
+            Subscribe and Save
+            {%- if save_label != blank %} <span class="apex-purchase__badge">{{ save_label }}</span>{% endif -%}
+          </span>
+          <span class="apex-purchase__price">
+            {%- if sub_price < variant.price -%}
+              <s class="apex-purchase__was">{{ variant.price | money }}</s>
+            {%- endif %}
+            <span data-sub-price>{{ sub_price | money }}</span>
+          </span>
+        </span>
+      </label>
+
+      <div class="apex-purchase__details">
+        <label class="apex-purchase__frequency">
+          <span class="apex-purchase__frequency-label">Frequency:</span>
+          <select class="apex-purchase__select" data-plan-select{% if preview %} disabled{% endif %}>
+            {%- if preview -%}
+              <option>Deliver every month</option>
+            {%- else -%}
+              {%- for allocation in variant.selling_plan_allocations -%}
+                <option
+                  value="{{ allocation.selling_plan.id }}"
+                  data-price="{{ allocation.price | money | escape }}"
+                >
+                  {{- allocation.selling_plan.name | escape -}}
+                </option>
+              {%- endfor -%}
+            {%- endif -%}
+          </select>
+          <span class="apex-purchase__chevron" aria-hidden="true">
+            <svg width="12" height="7" viewBox="0 0 12 7" fill="none"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </label>
+        {%- if block.settings.perks != blank -%}
+          <div class="apex-purchase__perks">{{ block.settings.perks }}</div>
+        {%- endif -%}
+      </div>
+    </fieldset>
+
+    {%- if block.settings.details_label != blank -%}
+      {%- if block.settings.details_link != blank -%}
+        <a class="apex-purchase__more" href="{{ block.settings.details_link }}">
+      {%- else -%}
+        <p class="apex-purchase__more">
+      {%- endif -%}
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        {{ block.settings.details_label | escape }}
+      {%- if block.settings.details_link != blank -%}</a>{%- else -%}</p>{%- endif -%}
+    {%- endif -%}
+  </apex-purchase-options>
+
+  <script type="module" src="{{ 'apex-product.js' | asset_url }}"></script>
+{%- endif -%}
+
+{% stylesheet %}
+  .apex-purchase {
+    display: block;
+    color: var(--apex-burrow);
+  }
+
+  .apex-purchase__options {
+    display: grid;
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .apex-purchase__card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 18px 28px 18px 30px;
+    border-radius: var(--apex-radius-sm);
+    background-color: rgb(221 221 209 / 0.75);
+    cursor: pointer;
+    transition: scale 0.2s ease;
+  }
+
+  .apex-purchase__card:hover {
+    scale: 1.02;
+  }
+
+  .apex-purchase__card--subscribe {
+    padding-block-end: 0;
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+  }
+
+  .apex-purchase__card--subscribe:hover {
+    scale: 1;
+  }
+
+  /* Round radio, burrow ring with a dot when chosen (Figma ellipses 23px / 11px) */
+  .apex-purchase__radio {
+    appearance: none;
+    flex: none;
+    display: grid;
+    place-content: center;
+    width: 23px;
+    height: 23px;
+    margin: 0;
+    border: 2px solid var(--apex-burrow);
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .apex-purchase__radio::before {
+    content: '';
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background-color: var(--apex-burrow);
+    scale: 0;
+    transition: scale 0.15s ease;
+  }
+
+  .apex-purchase__radio:checked::before {
+    scale: 1;
+  }
+
+  .apex-purchase__radio:focus-visible {
+    outline: 2px solid var(--apex-burrow);
+    outline-offset: 3px;
+  }
+
+  .apex-purchase__row {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 16px;
+    min-height: 23px;
+    padding-block-start: 1px;
+  }
+
+  .apex-purchase__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1.375rem;
+  }
+
+  .apex-purchase__badge {
+    padding: 0 7px;
+    border-radius: 2px;
+    background-color: var(--apex-burrow);
+    color: var(--apex-stone-100);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1.0625rem;
+  }
+
+  .apex-purchase__price {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.375rem;
+    white-space: nowrap;
+  }
+
+  .apex-purchase__was {
+    margin-inline-end: 6px;
+    color: rgb(64 68 61 / 0.7);
+  }
+
+  /* Plan details sit under the subscribe card, on the same panel */
+  .apex-purchase__details {
+    margin-block-start: -14px;
+    padding: 8px 28px 18px 69px;
+    border-end-start-radius: var(--apex-radius-sm);
+    border-end-end-radius: var(--apex-radius-sm);
+    background-color: rgb(221 221 209 / 0.75);
+  }
+
+  .apex-purchase:has([data-purchase-type][value='once']:checked) .apex-purchase__details {
+    opacity: 0.55;
+  }
+
+  .apex-purchase__frequency {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 27px;
+    padding-inline: 20px 36px;
+    border: 1px solid var(--apex-dried-moss);
+    border-radius: var(--apex-radius-sm);
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-purchase__select {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 0;
+    border: 0;
+    background: transparent;
+    appearance: none;
+    font: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .apex-purchase__select:focus-visible {
+    outline: none;
+  }
+
+  .apex-purchase__frequency:focus-within {
+    outline: 2px solid var(--apex-burrow);
+    outline-offset: 2px;
+  }
+
+  .apex-purchase__chevron {
+    position: absolute;
+    inset-inline-end: 14px;
+    display: flex;
+    pointer-events: none;
+  }
+
+  .apex-purchase__perks {
+    margin-block-start: 12px;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+  }
+
+  .apex-purchase__perks :is(ul, ol) {
+    margin: 0;
+    padding-inline-start: 18px;
+  }
+
+  .apex-purchase__perks p {
+    margin: 0;
+  }
+
+  .apex-purchase__perks strong {
+    font-weight: 700;
+  }
+
+  .apex-purchase__more {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 12px 0 0 14px;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: var(--apex-burrow);
+    text-decoration: none;
+    transition: scale 0.2s ease;
+    transform-origin: left center;
+  }
+
+  a.apex-purchase__more:hover {
+    scale: 1.06;
+    text-decoration: underline;
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-purchase__card {
+      padding-inline: 16px;
+    }
+
+    .apex-purchase__details {
+      padding-inline: 16px;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX purchase options",
+  "tag": null,
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Shows One-time purchase and Subscribe and Save when a subscriptions app has added selling plans to the product. Hidden otherwise."
+    },
+    {
+      "type": "select",
+      "id": "default_option",
+      "label": "Selected by default",
+      "options": [
+        { "value": "once", "label": "One-time purchase" },
+        { "value": "subscribe", "label": "Subscribe and Save" }
+      ],
+      "default": "once"
+    },
+    {
+      "type": "richtext",
+      "id": "perks",
+      "label": "Subscription perks",
+      "default": "<ul><li><strong>30% Off Your First Subscription’s RRP</strong></li><li><strong>Save 15% every recurring delivery</strong></li><li>No commitment – cancel anytime.</li></ul>"
+    },
+    {
+      "type": "text",
+      "id": "details_label",
+      "label": "Details link text",
+      "default": "Subscription details"
+    },
+    {
+      "type": "url",
+      "id": "details_link",
+      "label": "Details link"
+    },
+    {
+      "type": "checkbox",
+      "id": "editor_preview",
+      "label": "Preview in the theme editor without a subscriptions app",
+      "default": true
+    }
+  ],
+  "presets": [{ "name": "APEX purchase options" }]
+}
+{% endschema %}

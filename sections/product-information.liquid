@@ -8,6 +8,12 @@
     id: 'media-gallery',
     closest.product: closest.product
   -%}
+  {%- comment -%} APEX: short description and net weight under the gallery (Figma product page) {%- endcomment -%}
+  {%- content_for 'block',
+    type: 'apex-product-summary',
+    id: 'apex-summary',
+    closest.product: closest.product
+  -%}
 {% endcapture %}
 
 {% capture product_details %}
