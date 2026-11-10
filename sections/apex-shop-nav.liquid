@@ -32,13 +32,35 @@
           </a>
         </li>
       {%- endif -%}
+      {%- liquid
+        # Product pages: highlight the product's own category (Shop Nav Category metafield)
+        assign product_category = blank
+        if product != blank
+          assign product_category = product.metafields.custom.shop_category.value | default: product.metafields.custom.shop_nav_category.value
+          if product_category.first != blank
+            assign product_category = product_category.first
+          endif
+          assign product_category = product_category | handleize
+          if product_category == 'ancilleries'
+            assign product_category = 'ancillaries'
+          endif
+        endif
+      -%}
       {%- for link in menu.links -%}
+        {%- liquid
+          assign link_state = ''
+          if link.current or link.child_active
+            assign link_state = 'page'
+          elsif product_category != blank and link.type == 'collection_link' and link.object.handle == product_category
+            assign link_state = 'true'
+          endif
+        -%}
         <li class="apex-shop-nav__item">
           <a
             class="apex-shop-nav__link"
             href="{{ link.url }}"
-            {% if link.current or link.child_active %}
-              aria-current="page"
+            {% if link_state != blank %}
+              aria-current="{{ link_state }}"
             {% endif %}
           >
             <span>{{ link.title | escape }}</span>
@@ -191,11 +213,11 @@
 
   /* Current category: a very soft oval glow of white behind the link, fading out to clear
      (Ell: no hard edges) */
-  .apex-shop-nav__link[aria-current='page'] {
+  .apex-shop-nav__link[aria-current] {
     isolation: isolate;
   }
 
-  .apex-shop-nav__link[aria-current='page']::before {
+  .apex-shop-nav__link[aria-current]::before {
     content: '';
     position: absolute;
     z-index: -1;
@@ -224,7 +246,7 @@
     transition: scale 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .apex-shop-nav__link:is(:hover, :focus-visible, [aria-current='page'])::after {
+  .apex-shop-nav__link:is(:hover, :focus-visible, [aria-current])::after {
     scale: 1 1;
   }
 

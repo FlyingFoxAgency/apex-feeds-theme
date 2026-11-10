@@ -25,6 +25,7 @@
     {%- render 'color-palette' -%}
     {%- render 'apex-brand' -%}
     {{ 'apex.css' | asset_url | stylesheet_tag }}
+    {%- if template.name == 'product' -%}{{ 'apex-product.css' | asset_url | stylesheet_tag }}{%- endif -%}
 
     {% if request.design_mode %}
       {%- render 'theme-editor' -%}

@@ -1,0 +1,80 @@
+{% comment %}
+  APEX product summary (Figma product page, under the gallery): a short description and a
+  "Product Net Weight: 250g | Serving Size: 50g" line.
+  - Text: product metafield custom.short_description (multi-line text), else the first paragraph
+    of the product description.
+  - Weight / serving: product metafields custom.net_weight and custom.serving_size (single line text).
+  - Grouped products: the selected variant's own metafields with the same keys win, and the block
+    re-renders when another variant is picked (assets/apex-product.js).
+{% endcomment %}
+{%- render 'apex-product-summary', product: closest.product, placement: 'gallery', attributes: block.shopify_attributes -%}
+<script src="{{ 'apex-product.js' | asset_url }}" type="module"></script>
+
+{% stylesheet %}
+  .apex-product-summary-wrap {
+    display: block;
+  }
+
+  .apex-product-summary {
+    max-width: 551px;
+    margin-block-start: 32px;
+    padding-inline: 18px;
+    color: var(--apex-burrow);
+  }
+
+  .apex-product-summary__text {
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-product-summary__specs {
+    margin: 24px 0 0;
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+  }
+
+  /* The copy in the right-hand column (above the price) is for phones only; there the one under
+     the gallery is hidden */
+  .apex-product-summary-wrap--details {
+    display: none;
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-product-summary-wrap--gallery {
+      display: none;
+    }
+
+    .apex-product-summary-wrap--details {
+      display: block;
+    }
+
+    .apex-product-summary-wrap--details .apex-product-summary {
+      margin-block-start: 16px;
+      padding-inline: 0;
+    }
+
+    .apex-product-summary-wrap--details .apex-product-summary__specs {
+      margin-block-start: 12px;
+    }
+
+    .apex-product-summary__text,
+    .apex-product-summary__specs {
+      font-size: 0.875rem;
+      line-height: 1.375rem;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX product summary",
+  "tag": null,
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Text from the product metafield custom.short_description (else the first paragraph of the description). Weight line from custom.net_weight and custom.serving_size."
+    }
+  ]
+}
+{% endschema %}
