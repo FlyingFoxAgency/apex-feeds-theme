@@ -5,12 +5,16 @@
   - Each row reads the product description or a product metafield (e.g. custom.directions), or
     its own text. Rows with nothing to show are left out.
   - Plus / minus icons, first row open by default (per row setting).
+  - Grouped products (Flavour / Age range pills): a variant metafield with the same key (e.g. the
+    variant's custom.ingredients) wins over the product's, and the rows re-render when the shopper
+    picks another variant (assets/apex-product.js).
 {% endcomment %}
 {%- liquid
   assign product = closest.product | default: product
   if request.visual_preview_mode and product == blank
     assign product = collections.all.products.first
   endif
+  assign variant = product.selected_or_first_available_variant
 -%}
 
 {%- capture rows -%}
@@ -24,7 +28,10 @@
           assign mf_key = block.settings.metafield | strip
           assign mf_parts = mf_key | split: '.'
           if mf_parts.size == 2
-            assign mf = product.metafields[mf_parts[0]][mf_parts[1]]
+            assign mf = variant.metafields[mf_parts[0]][mf_parts[1]]
+            if mf == blank
+              assign mf = product.metafields[mf_parts[0]][mf_parts[1]]
+            endif
             if mf != blank
               if mf.type == 'rich_text_field'
                 assign body = mf | metafield_tag
@@ -56,15 +63,17 @@
 {%- endcapture -%}
 
 {%- if rows != blank -%}
-  <div class="apex-info" id="product-information">
+  <div class="apex-info" id="product-information" data-section-id="{{ section.id }}">
     <div class="apex-info__inner apex-container">
       {%- if section.settings.title != blank -%}
         <h2 class="apex-section-title apex-info__heading">{{ section.settings.title | escape }}</h2>
       {%- endif -%}
-      <div class="apex-info__list">{{ rows }}</div>
+      <apex-variant-content class="apex-info__list" data-section-id="{{ section.id }}" data-key="info">{{ rows }}</apex-variant-content>
     </div>
   </div>
 {%- endif -%}
+
+<script src="{{ 'apex-product.js' | asset_url }}" type="module"></script>
 
 {% stylesheet %}
   /* Figma: 697px stone band, soft stone at the top easing to a warmer moss at the bottom */
@@ -80,6 +89,7 @@
   }
 
   .apex-info__list {
+    display: block;
     margin-block-start: 34px;
     margin-inline-start: auto;
     width: min(100%, 1059px);

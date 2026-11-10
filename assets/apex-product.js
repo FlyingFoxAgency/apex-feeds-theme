@@ -131,3 +131,67 @@ function setUpReviewToggles(root = document) {
 
 setUpReviewToggles();
 document.addEventListener('shopify:section:load', (event) => setUpReviewToggles(event.target));
+
+/**
+ * APEX variant content: parts of the product page that follow the selected variant on grouped
+ * products (Flavour / Age range pills), e.g. the text under the gallery and the information
+ * accordions, which read the variant's own metafields first.
+ * - Inside the product information section: swapped from the HTML the variant picker already
+ *   fetched.
+ * - In another section (data-section-id): that section is fetched for the new variant.
+ * Open accordion rows stay open.
+ */
+class ApexVariantContent extends HTMLElement {
+  #abort = null;
+
+  connectedCallback() {
+    // Capture phase, so the event is seen here whether or not it bubbles
+    document.addEventListener(StandardEvents.productSelect, this.#onProductSelect, true);
+  }
+
+  disconnectedCallback() {
+    document.removeEventListener(StandardEvents.productSelect, this.#onProductSelect, true);
+  }
+
+  #onProductSelect = (event) => {
+    const target = event.target;
+    if (target instanceof Element && (target.closest('product-card') || target.closest('dialog'))) return;
+
+    event.promise
+      ?.then(async ({ variant, detail }) => {
+        const html = detail?.html;
+        const variantId = variant?.id ?? html?.querySelector('input[name="id"]')?.value ?? detail?.variantId;
+        if (!variantId) return;
+
+        let source = null;
+        if (this.dataset.sectionId) {
+          this.#abort?.abort();
+          this.#abort = new AbortController();
+          const url = new URL(window.location.href);
+          url.searchParams.set('variant', variantId);
+          url.searchParams.set('section_id', this.dataset.sectionId);
+          const response = await fetch(url, { signal: this.#abort.signal });
+          if (!response.ok) return;
+          const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
+          source = doc.querySelector(`apex-variant-content[data-key="${this.dataset.key}"]`);
+        } else if (html) {
+          source = html.querySelector(`apex-variant-content[data-key="${this.dataset.key}"]`);
+        }
+        if (!source || source.innerHTML === this.innerHTML) return;
+
+        const openTitles = new Set(
+          [...this.querySelectorAll('details[open] summary')].map((summary) => summary.textContent.trim())
+        );
+        this.innerHTML = source.innerHTML;
+        for (const details of this.querySelectorAll('details')) {
+          const title = details.querySelector('summary')?.textContent.trim();
+          if (openTitles.size) details.open = openTitles.has(title);
+        }
+      })
+      .catch(() => {});
+  };
+}
+
+if (!customElements.get('apex-variant-content')) {
+  customElements.define('apex-variant-content', ApexVariantContent);
+}

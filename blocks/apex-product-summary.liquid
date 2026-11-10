@@ -4,18 +4,22 @@
   - Text: product metafield custom.short_description (multi-line text), else the first paragraph
     of the product description.
   - Weight / serving: product metafields custom.net_weight and custom.serving_size (single line text).
+  - Grouped products: the selected variant's own metafields with the same keys win, and the block
+    re-renders when another variant is picked (assets/apex-product.js).
 {% endcomment %}
 {%- liquid
   assign product = closest.product
-  assign summary = product.metafields.custom.short_description.value
+  assign variant = product.selected_or_first_available_variant
+  assign summary = variant.metafields.custom.short_description.value | default: product.metafields.custom.short_description.value
   if summary == blank and product.description != blank
     assign summary = product.description | split: '</p>' | first | strip_html | strip
   endif
-  assign net_weight = product.metafields.custom.net_weight.value
-  assign serving = product.metafields.custom.serving_size.value
+  assign net_weight = variant.metafields.custom.net_weight.value | default: product.metafields.custom.net_weight.value
+  assign serving = variant.metafields.custom.serving_size.value | default: product.metafields.custom.serving_size.value
 -%}
+<apex-variant-content class="apex-product-summary-wrap" data-key="summary" {{ block.shopify_attributes }}>
 {%- if summary != blank or net_weight != blank or serving != blank -%}
-  <div class="apex-product-summary" {{ block.shopify_attributes }}>
+  <div class="apex-product-summary">
     {%- if summary != blank -%}
       <p class="apex-product-summary__text">{{ summary | escape | newline_to_br }}</p>
     {%- endif -%}
@@ -28,8 +32,14 @@
     {%- endif -%}
   </div>
 {%- endif -%}
+</apex-variant-content>
+<script src="{{ 'apex-product.js' | asset_url }}" type="module"></script>
 
 {% stylesheet %}
+  .apex-product-summary-wrap {
+    display: block;
+  }
+
   .apex-product-summary {
     max-width: 551px;
     margin-block-start: 32px;
