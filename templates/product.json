@@ -323,8 +323,9 @@
       "settings": {
         "title": "Product information",
         "decoration": "shopify://shop_images/Group_99.png",
+        "space_above": 130,
         "decoration_width": 220,
-        "decoration_top": -70,
+        "decoration_top": -200,
         "decoration_side_offset": 220,
         "decoration_mobile": true
       }

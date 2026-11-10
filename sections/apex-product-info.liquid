@@ -63,7 +63,7 @@
 {%- endcapture -%}
 
 {%- if rows != blank -%}
-  <div class="apex-info" id="product-information" data-section-id="{{ section.id }}">
+  <div class="apex-info" id="product-information" data-section-id="{{ section.id }}" style="--apex-space-above: {{ section.settings.space_above }}px;">
     {%- if section.settings.decoration != blank -%}
       <div
         class="apex-decoration apex-info__decoration{% if section.settings.decoration_mobile == false %} apex-info__decoration--desktop{% endif %}"
@@ -88,6 +88,7 @@
   /* Figma: 697px stone band, soft stone at the top easing to a warmer moss at the bottom */
   .apex-info {
     position: relative;
+    margin-block-start: var(--apex-space-above, 0px);
     padding-block: 34px 72px;
     background: linear-gradient(180deg, rgb(221 221 209 / 0.95) 0%, rgb(221 221 209 / 0.9) 45%, rgb(137 134 113 / 0.55) 100%);
     color: var(--apex-burrow);
@@ -240,6 +241,7 @@
 
   @media screen and (max-width: 749px) {
     .apex-info {
+      margin-block-start: calc(var(--apex-space-above, 0px) * 0.5);
       padding-block: 40px 48px;
     }
 
@@ -295,6 +297,17 @@
       "id": "title",
       "label": "Title",
       "default": "Product information"
+    },
+    {
+      "type": "range",
+      "id": "space_above",
+      "label": "Space above the band",
+      "info": "Gap between the short description and the band, e.g. room for the line art. Phones use half.",
+      "min": 0,
+      "max": 300,
+      "step": 10,
+      "unit": "px",
+      "default": 0
     },
     {
       "type": "header",
