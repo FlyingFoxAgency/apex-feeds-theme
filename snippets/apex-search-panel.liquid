@@ -1,0 +1,593 @@
+{% comment %}
+  APEX search panel (Figma "APEX Home Page - Search Open" > Search drop-down).
+  Replaces Horizon's search modal: the header search icon calls #search-modal/showDialog, so this
+  component keeps that id and method. A stone panel drops from the top of the screen with a pill
+  input, Close, typed-ahead suggestions, popular-search pills (Theme settings > APEX Feeds) and
+  the first 4 matching products from Shopify's predictive search (/search/suggest.json).
+{% endcomment %}
+{%- liquid
+  assign popular = settings.apex_popular_searches | split: ','
+-%}
+<apex-search-component
+  id="search-modal"
+  class="apex-search"
+  data-suggest-url="{{ routes.predictive_search_url }}.json"
+  data-search-url="{{ routes.search_url }}"
+  data-money-format="{{ shop.money_format | escape }}"
+  hidden
+>
+  <div class="apex-search__scrim" data-close></div>
+  <div
+    class="apex-search__panel"
+    role="dialog"
+    aria-modal="true"
+    aria-label="{{ 'content.search' | t | escape }}"
+  >
+    <div class="apex-search__inner">
+      <form action="{{ routes.search_url }}" method="get" role="search" class="apex-search__bar">
+        <label class="apex-search__field">
+          <span class="apex-search__icon" aria-hidden="true">{{ 'apex-icon-search.svg' | inline_asset_content }}</span>
+          <span class="visually-hidden">{{ 'content.search_input_label' | t }}</span>
+          <input
+            type="search"
+            name="q"
+            class="apex-search__input"
+            placeholder="Search products"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            data-input
+          >
+          <input type="hidden" name="type" value="product">
+          <button type="button" class="apex-search__clear" data-clear hidden>Clear</button>
+        </label>
+        <button type="button" class="apex-search__close" data-close>
+          <span class="apex-search__close-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+          </span>
+          <span class="apex-search__close-label">Close</span>
+        </button>
+      </form>
+
+      <div class="apex-search__results">
+        <div class="apex-search__side">
+          <div class="apex-search__group" data-suggestions hidden>
+            <p class="apex-search__heading">Suggestions</p>
+            <ul class="apex-search__suggestions" role="list" data-suggestion-list></ul>
+          </div>
+          {%- if popular.size > 0 -%}
+            <div class="apex-search__group">
+              <p class="apex-search__heading">Popular searches</p>
+              <ul class="apex-search__pills" role="list">
+                {%- for term in popular -%}
+                  {%- assign t = term | strip -%}
+                  {%- if t != blank -%}
+                    <li><a class="apex-search__pill" href="{{ routes.search_url }}?q={{ t | url_encode }}&type=product">{{ t | escape }}</a></li>
+                  {%- endif -%}
+                {%- endfor -%}
+              </ul>
+            </div>
+          {%- endif -%}
+        </div>
+
+        <div class="apex-search__products" data-products hidden>
+          <div class="apex-search__products-head">
+            <p class="apex-search__heading">Products</p>
+            <a class="apex-search__all" href="{{ routes.search_url }}" data-view-all>View all results</a>
+          </div>
+          <ul class="apex-search__grid" role="list" data-product-list></ul>
+          <p class="apex-search__empty" data-empty hidden></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</apex-search-component>
+
+{% raw %}
+<script type="module">
+  import { Component } from '@theme/component';
+
+  class ApexSearch extends Component {
+    connectedCallback() {
+      super.connectedCallback();
+      this.input = this.querySelector('[data-input]');
+      this.clearBtn = this.querySelector('[data-clear]');
+      this.suggestBox = this.querySelector('[data-suggestions]');
+      this.suggestList = this.querySelector('[data-suggestion-list]');
+      this.productBox = this.querySelector('[data-products]');
+      this.productList = this.querySelector('[data-product-list]');
+      this.viewAll = this.querySelector('[data-view-all]');
+      this.empty = this.querySelector('[data-empty]');
+      this.timer = null;
+      this.controller = null;
+
+      this.querySelectorAll('[data-close]').forEach((el) => el.addEventListener('click', () => this.closeDialog()));
+      this.clearBtn.addEventListener('click', () => {
+        this.input.value = '';
+        this.update();
+        this.input.focus();
+      });
+      this.input.addEventListener('input', () => {
+        clearTimeout(this.timer);
+        this.timer = setTimeout(() => this.update(), 180);
+      });
+      this.onKey = (e) => {
+        if (e.key === 'Escape') this.closeDialog();
+      };
+    }
+
+    showDialog() {
+      if (!this.hidden) return;
+      this.lastFocus = document.activeElement;
+      this.hidden = false;
+      document.documentElement.classList.add('apex-search-open');
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          this.classList.add('is-open');
+          this.input.focus({ preventScroll: true });
+        })
+      );
+      document.addEventListener('keydown', this.onKey);
+    }
+
+    closeDialog() {
+      if (this.hidden) return;
+      this.classList.remove('is-open');
+      document.removeEventListener('keydown', this.onKey);
+      document.documentElement.classList.remove('apex-search-open');
+      const done = () => {
+        this.hidden = true;
+      };
+      const panel = this.querySelector('.apex-search__panel');
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) done();
+      else panel.addEventListener('transitionend', done, { once: true });
+      setTimeout(done, 400);
+      this.lastFocus?.focus?.({ preventScroll: true });
+    }
+
+    escape(text) {
+      const div = document.createElement('div');
+      div.textContent = text ?? '';
+      return div.innerHTML;
+    }
+
+    money(amount) {
+      const value = Number(amount);
+      const format = this.dataset.moneyFormat || '${{amount}}';
+      const two = value.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      return format
+        .replace(/\{\{\s*amount_no_decimals\s*\}\}/, Math.round(value).toLocaleString())
+        .replace(/\{\{\s*amount_with_comma_separator\s*\}\}/, value.toFixed(2).replace('.', ','))
+        .replace(/\{\{\s*amount\s*\}\}/, two)
+        .replace(/<[^>]*>/g, '');
+    }
+
+    async update() {
+      const q = this.input.value.trim();
+      this.clearBtn.hidden = q === '';
+      if (!q) {
+        this.suggestBox.hidden = true;
+        this.productBox.hidden = true;
+        return;
+      }
+
+      this.controller?.abort();
+      this.controller = new AbortController();
+      const url = new URL(this.dataset.suggestUrl, location.origin);
+      url.searchParams.set('q', q);
+      url.searchParams.set('resources[type]', 'product,query');
+      url.searchParams.set('resources[limit]', '4');
+      url.searchParams.set('resources[limit_scope]', 'each');
+
+      let data;
+      try {
+        const res = await fetch(url, { signal: this.controller.signal });
+        data = await res.json();
+      } catch (error) {
+        if (error.name !== 'AbortError') console.error(error);
+        return;
+      }
+
+      const results = data?.resources?.results || {};
+      const queries = (results.queries || []).slice(0, 5);
+      const products = (results.products || []).slice(0, 4);
+      const searchHref = `${this.dataset.searchUrl}?q=${encodeURIComponent(q)}&type=product`;
+
+      // Suggestions: Shopify marks the typed part with <mark>; Figma bolds it.
+      this.suggestBox.hidden = queries.length === 0;
+      this.suggestList.innerHTML = queries
+        .map((item) => {
+          const styled = (item.styled_text || this.escape(item.text))
+            .replace(/<mark>/g, '<strong>')
+            .replace(/<\/mark>/g, '</strong>');
+          return `<li><a class="apex-search__suggestion" href="${item.url}">${styled}</a></li>`;
+        })
+        .join('');
+
+      this.productBox.hidden = false;
+      this.viewAll.href = searchHref;
+      this.empty.hidden = products.length > 0;
+      this.empty.textContent = products.length ? '' : `No products found for “${q}”.`;
+      this.productList.innerHTML = products
+        .map((p) => {
+          const varies = p.price_min && p.price_max && Number(p.price_min) !== Number(p.price_max);
+          const price = varies ? `From ${this.money(p.price_min)}` : this.money(p.price);
+          const img = p.featured_image?.url || p.image;
+          const media = img
+            ? `<img src="${img}${img.includes('?') ? '&' : '?'}width=420" alt="${this.escape(p.featured_image?.alt || p.title)}" loading="lazy" width="207" height="180">`
+            : '';
+          return `<li><a class="apex-search__product" href="${p.url}">
+              <span class="apex-search__media">${media}</span>
+              <span class="apex-search__title">${this.escape(p.title)}</span>
+              <span class="apex-search__price">${price}</span>
+            </a></li>`;
+        })
+        .join('');
+    }
+  }
+
+  if (!customElements.get('apex-search-component')) {
+    customElements.define('apex-search-component', ApexSearch);
+  }
+</script>
+{% endraw %}
+
+{% stylesheet %}
+  /* Panel drops from the top of the screen over the page; the page dims and blurs a touch. */
+  .apex-search {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+  }
+
+  .apex-search[hidden] {
+    display: none;
+  }
+
+  .apex-search__scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgb(36 38 35 / 0.18), rgb(36 38 35 / 0.06));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .apex-search__panel {
+    position: relative;
+    max-height: 100dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--apex-stone-100);
+    border-radius: 0 0 64px 64px;
+    box-shadow: 0 40px 80px rgb(0 0 0 / 0.12);
+    transform: translateY(-100%);
+    transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .apex-search.is-open .apex-search__scrim {
+    opacity: 1;
+  }
+
+  .apex-search.is-open .apex-search__panel {
+    transform: none;
+  }
+
+  html.apex-search-open {
+    overflow: hidden;
+  }
+
+  .apex-search__inner {
+    max-width: 1244px;
+    margin: 0 auto;
+    padding: 56px var(--page-margin, 16px) 64px;
+    box-sizing: content-box;
+  }
+
+  /* Bar: 134px pill with a thin olive outline, Close on the right */
+  .apex-search__bar {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .apex-search__field {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 134px;
+    padding: 0 25px;
+    background: #fff;
+    border: 1px solid var(--apex-olive);
+    border-radius: 999px;
+    cursor: text;
+  }
+
+  .apex-search__icon {
+    display: flex;
+    width: 24px;
+    height: 24px;
+    color: var(--apex-burrow);
+  }
+
+  .apex-search__icon svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .apex-search__input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: none;
+    padding: 0;
+    font: inherit;
+    font-size: 1.375rem;
+    color: var(--apex-burrow);
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .apex-search__input::-webkit-search-cancel-button {
+    display: none;
+  }
+
+  .apex-search__input::placeholder {
+    color: var(--apex-dried-moss);
+    opacity: 1;
+  }
+
+  .apex-search__clear {
+    border: 0;
+    background: none;
+    padding: 0;
+    font: inherit;
+    font-size: 0.8125rem;
+    color: var(--apex-dried-moss);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+
+  .apex-search__close {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 0;
+    background: none;
+    padding: 0;
+    font: inherit;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--apex-burrow);
+    cursor: pointer;
+  }
+
+  .apex-search__close-icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border: 1px solid var(--apex-burrow);
+    border-radius: 50%;
+  }
+
+  .apex-search__clear,
+  .apex-search__close,
+  .apex-search__pill,
+  .apex-search__suggestion,
+  .apex-search__all,
+  .apex-search__product {
+    transition: transform 0.2s ease;
+  }
+
+  .apex-search__clear:hover,
+  .apex-search__close:hover,
+  .apex-search__pill:hover,
+  .apex-search__all:hover,
+  .apex-search__product:hover {
+    transform: scale(1.06);
+  }
+
+  .apex-search__suggestion:hover {
+    transform: translateX(4px);
+  }
+
+  /* Results: 280px side column, products in 4 columns */
+  .apex-search__results {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 64px;
+    margin-block-start: 48px;
+  }
+
+  .apex-search__side {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .apex-search__heading {
+    margin: 0 0 16px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--apex-olive);
+  }
+
+  .apex-search__suggestions {
+    display: grid;
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .apex-search__suggestion {
+    display: inline-block;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    color: var(--apex-burrow);
+    text-decoration: none;
+  }
+
+  .apex-search__suggestion strong {
+    font-weight: 700;
+  }
+
+  .apex-search__pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .apex-search__pill {
+    display: inline-flex;
+    align-items: center;
+    height: 38px;
+    padding: 0 16px;
+    border: 1px solid var(--apex-burrow);
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    color: var(--apex-burrow);
+    text-decoration: none;
+  }
+
+  .apex-search__products-head .apex-search__heading {
+    margin: 0;
+  }
+
+  .apex-search__products-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .apex-search__all {
+    display: inline-block;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--apex-burrow);
+    text-underline-offset: 3px;
+  }
+
+  .apex-search__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 24px;
+    margin: 24px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .apex-search__product {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    color: var(--apex-burrow);
+    text-decoration: none;
+  }
+
+  .apex-search__media {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 207 / 180;
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .apex-search__media img {
+    width: 64%;
+    height: 81%;
+    object-fit: contain;
+  }
+
+  .apex-search__title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    line-height: 1.25rem;
+    text-transform: uppercase;
+    color: var(--apex-olive);
+  }
+
+  .apex-search__price {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--apex-burrow);
+  }
+
+  .apex-search__empty {
+    margin: 24px 0 0;
+    color: var(--apex-dried-moss);
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-search__results {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+
+    .apex-search__products {
+      order: -1;
+    }
+
+    .apex-search__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-search__panel {
+      border-radius: 0 0 32px 32px;
+    }
+
+    .apex-search__inner {
+      padding: 20px var(--page-margin, 16px) 32px;
+    }
+
+    .apex-search__bar {
+      gap: 12px;
+    }
+
+    .apex-search__field {
+      height: 56px;
+      padding: 0 18px;
+    }
+
+    .apex-search__input {
+      font-size: 1rem;
+    }
+
+    .apex-search__close-label {
+      display: none;
+    }
+
+    .apex-search__results {
+      margin-block-start: 24px;
+    }
+
+    .apex-search__title {
+      font-size: 0.8125rem;
+      line-height: 1.125rem;
+    }
+
+    .apex-search__price {
+      font-size: 0.8125rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .apex-search__panel,
+    .apex-search__scrim {
+      transition: none;
+    }
+  }
+{% endstylesheet %}
