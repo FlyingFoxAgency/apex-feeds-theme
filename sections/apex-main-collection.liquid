@@ -95,10 +95,11 @@
     -%}
     {%- if show_animals -%}
       <nav class="apex-collection__animals" aria-labelledby="ApexAnimalsLabel-{{ section.id }}">
+        <div class="apex-collection__animals-track" data-animal-track>
         <p class="apex-collection__animals-label" id="ApexAnimalsLabel-{{ section.id }}">
           {{- section.settings.animal_label | default: 'Shop for' | escape -}}
         </p>
-        <ul class="apex-collection__animals-track list-unstyled" role="list" data-animal-track>
+        <ul class="apex-collection__animals-list list-unstyled" role="list">
           {%- for value in animal_filter.values -%}
             {%- if value.count > 0 or value.active -%}
               <li>
@@ -116,6 +117,7 @@
             {%- endif -%}
           {%- endfor -%}
         </ul>
+        </div>
       </nav>
     {%- endif -%}
 
@@ -277,13 +279,27 @@
               if group_number <= 3 or filter.active_values.size > 0
                 assign group_open = true
               endif
+              # The third group opens on desktop only; phones open the first two
+              assign desktop_only_open = false
+              if group_number == 3 and filter.active_values.size == 0
+                assign desktop_only_open = true
+              endif
               if filter.type == 'price_range'
                 if filter.min_value.value != blank or filter.max_value.value != blank
                   assign group_open = true
                 endif
               endif
             -%}
-            <details class="apex-filters__group" data-filter-group="{{ filter.param_name | escape }}"{% if group_open %} open{% endif %}>
+            <details
+              class="apex-filters__group"
+              data-filter-group="{{ filter.param_name | escape }}"
+              {% if group_open %}
+                open
+              {% endif %}
+              {% if desktop_only_open %}
+                data-desktop-open
+              {% endif %}
+            >
               <summary class="apex-filters__legend">
                 {{- filter.label | escape -}}
                 <span class="apex-filters__caret" aria-hidden="true"></span>
@@ -377,6 +393,9 @@
           }
 
           this.desktop = window.matchMedia('(min-width: 990px)');
+          if (!this.desktop.matches) {
+            for (const group of this.querySelectorAll('[data-desktop-open]')) group.open = false;
+          }
 
           // Animal buttons: fade whichever edge has more buttons past it
           this.addEventListener('scroll', (event) => {
@@ -911,9 +930,6 @@
 
   /* One line of animal buttons that scrolls sideways; the edges fade while more are hidden */
   .apex-collection__animals {
-    display: flex;
-    align-items: center;
-    gap: var(--apex-space-16);
     margin-block-start: var(--apex-space-24);
   }
 
@@ -921,12 +937,13 @@
     flex: none;
   }
 
+  /* The label scrolls away with the buttons */
   .apex-collection__animals-track {
     --fade-start: 0px;
     --fade-end: 0px;
     display: flex;
-    flex: 1;
-    gap: var(--apex-space-8);
+    align-items: center;
+    gap: var(--apex-space-16);
     min-width: 0;
     margin: 0;
     padding: 4px 2px;
@@ -961,7 +978,15 @@
     --fade-end: 56px;
   }
 
-  .apex-collection__animals-track li {
+  .apex-collection__animals-list {
+    display: flex;
+    flex: none;
+    gap: var(--apex-space-8);
+    margin: 0;
+    padding: 0;
+  }
+
+  .apex-collection__animals-list li {
     flex: none;
   }
 
@@ -1173,14 +1198,24 @@
       padding-block: var(--apex-space-24) 116px;
     }
 
+    /* Show filters and Sort by share one line, the count sits under them */
     .apex-collection__toolbar {
       flex-wrap: wrap;
-      gap: var(--apex-space-12) var(--apex-space-16);
+      gap: var(--apex-space-12);
+      min-height: 0;
     }
 
     .apex-collection__filters-button {
-      min-height: 48px;
-      padding-inline: var(--apex-space-16);
+      gap: var(--apex-space-8);
+      min-height: 40px;
+      padding: 6px var(--apex-space-12);
+      border-width: 1.5px;
+      font-size: 0.75rem;
+    }
+
+    .apex-collection__filters-button svg {
+      width: 18px;
+      height: 18px;
     }
 
     .apex-collection__count {
@@ -1190,7 +1225,7 @@
     }
 
     .apex-collection__sort {
-      font-size: 0.875rem;
+      font-size: 0.8125rem;
     }
 
     .apex-collection__grid {

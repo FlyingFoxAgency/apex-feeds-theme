@@ -694,6 +694,8 @@ html:has(.menu-drawer-container[open]) .apex-help-button {
 
 @media screen and (max-width: 749px) {
   .apex-help-button {
+    /* Ell: on phones, in line with the content edge (the right arrow circles) */
+    inset-inline-end: var(--page-margin, 16px);
     width: 48px;
     height: 48px;
   }

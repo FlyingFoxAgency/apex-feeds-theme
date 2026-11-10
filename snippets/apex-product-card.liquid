@@ -432,4 +432,12 @@
       transition: none;
     }
   }
+
+  /* Phones: the rating pill sits 10px from the card's top right corner */
+  @media screen and (max-width: 749px) {
+    .apex-product-card__rating {
+      inset-block-start: 10px;
+      inset-inline-end: 10px;
+    }
+  }
 {% endstylesheet %}

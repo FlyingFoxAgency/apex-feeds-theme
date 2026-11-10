@@ -186,6 +186,18 @@
       opacity: 0.6;
     }
   }
+  /* Phones: image at 40%, smaller description in 80% of the screen width */
+  @media screen and (max-width: 749px) {
+    .apex-collection-header__art {
+      opacity: 0.4;
+    }
+
+    .apex-collection-header__text {
+      max-width: 80vw;
+      font-size: 0.8125rem;
+      line-height: 1.25rem;
+    }
+  }
 {% endstylesheet %}
 
 {% schema %}
