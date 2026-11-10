@@ -347,7 +347,7 @@
 }
 
 /* ---- Stone gap between the product information band and Customers also bought ---- */
-.apex-product-info-section + .shopify-section .apex-product-carousel--band {
+.apex-product-info-section ~ .shopify-section .apex-product-carousel--band {
   margin-block-start: 80px;
 }
 
@@ -369,7 +369,7 @@
     font-size: 1.5rem;
   }
 
-  .apex-product-info-section + .shopify-section .apex-product-carousel--band {
+  .apex-product-info-section ~ .shopify-section .apex-product-carousel--band {
     margin-block-start: 48px;
   }
 
