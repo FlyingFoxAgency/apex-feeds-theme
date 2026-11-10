@@ -6,7 +6,9 @@
   Per collection, the title, eyebrow and image can come from collection metafields:
   custom.header_title (single line text), custom.eyebrow (single line text) and
   custom.header_art (file, image), plus the panel colours custom.header_color and
-  custom.header_color_middle (colour). Without them the section settings are used.
+  custom.header_color_middle (colour), and the image's width, distance from the top and
+  distance from the right in px: custom.header_art_width, custom.header_art_top,
+  custom.header_art_right (integers). Without them the section settings are used.
 
   Title order: the collection's custom.header_title, then the name of the matching item in the
   shop menu, then the collection's own title.
@@ -16,6 +18,12 @@
   assign art = collection.metafields.custom.header_art.value | default: section.settings.decoration
   assign panel_from = collection.metafields.custom.header_color.value | default: section.settings.gradient_from
   assign panel_to = collection.metafields.custom.header_color_middle.value | default: section.settings.gradient_to
+  assign art_w = collection.metafields.custom.header_art_width.value | default: section.settings.art_width
+  assign art_top = collection.metafields.custom.header_art_top.value | default: section.settings.art_top
+  assign art_right = collection.metafields.custom.header_art_right.value
+  if art_right == blank
+    assign art_right = section.settings.art_right
+  endif
   assign title = collection.title | default: section.settings.fallback_title
   if request.page_type == 'search' or collection.handle == 'all'
     assign title = section.settings.fallback_title
@@ -43,7 +51,7 @@
 -%}
 <div
   class="apex-collection-header"
-  style="--apex-collection-from: {{ panel_from }}; --apex-collection-to: {{ panel_to }}; --apex-art-w: {{ section.settings.art_width }}; --apex-art-top: {{ section.settings.art_top }}; --apex-art-right: {{ section.settings.art_right }};"
+  style="--apex-collection-from: {{ panel_from }}; --apex-collection-to: {{ panel_to }}; --apex-art-w: {{ art_w }}; --apex-art-top: {{ art_top }}; --apex-art-right: {{ art_right }};"
 >
   <div class="apex-container apex-collection-header__inner">
     <div class="apex-collection-header__content">
@@ -226,7 +234,7 @@
       "step": 20,
       "unit": "px",
       "default": 460,
-      "info": "Width on a full-size desktop screen; it scales down on smaller screens. Anything outside the panel is cropped."
+      "info": "Width on a full-size desktop screen; it scales down on smaller screens. Anything outside the panel is cropped. A collection's own custom.header_art_width, custom.header_art_top and custom.header_art_right metafields replace these three sliders."
     },
     {
       "type": "range",
