@@ -5,7 +5,8 @@
 
   Per collection, the title, eyebrow and image can come from collection metafields:
   custom.header_title (single line text), custom.eyebrow (single line text) and
-  custom.header_art (file, image). Without them the section settings are used.
+  custom.header_art (file, image), plus the panel colours custom.header_color and
+  custom.header_color_middle (colour). Without them the section settings are used.
 
   Title order: the collection's custom.header_title, then the name of the matching item in the
   shop menu, then the collection's own title.
@@ -13,6 +14,8 @@
 {%- liquid
   assign eyebrow = collection.metafields.custom.eyebrow.value | default: section.settings.eyebrow
   assign art = collection.metafields.custom.header_art.value | default: section.settings.decoration
+  assign panel_from = collection.metafields.custom.header_color.value | default: section.settings.gradient_from
+  assign panel_to = collection.metafields.custom.header_color_middle.value | default: section.settings.gradient_to
   assign title = collection.title | default: section.settings.fallback_title
   if request.page_type == 'search' or collection.handle == 'all'
     assign title = section.settings.fallback_title
@@ -40,7 +43,7 @@
 -%}
 <div
   class="apex-collection-header"
-  style="--apex-collection-from: {{ section.settings.gradient_from }}; --apex-collection-to: {{ section.settings.gradient_to }}; --apex-art-w: {{ section.settings.art_width }}; --apex-art-top: {{ section.settings.art_top }}; --apex-art-right: {{ section.settings.art_right }};"
+  style="--apex-collection-from: {{ panel_from }}; --apex-collection-to: {{ panel_to }}; --apex-art-w: {{ section.settings.art_width }}; --apex-art-top: {{ section.settings.art_top }}; --apex-art-right: {{ section.settings.art_right }};"
 >
   <div class="apex-container apex-collection-header__inner">
     <div class="apex-collection-header__content">
@@ -250,14 +253,15 @@
       "type": "color",
       "id": "gradient_from",
       "label": "Panel colour (right)",
-      "default": "#40443D"
+      "default": "#40443D",
+      "info": "A collection's own custom.header_color metafield replaces this."
     },
     {
       "type": "color",
       "id": "gradient_to",
       "label": "Panel middle colour",
       "default": "#A0AA98",
-      "info": "Fades to clear on the left."
+      "info": "Fades to clear on the left. A collection's own custom.header_color_middle metafield replaces this."
     }
   ],
   "presets": [
