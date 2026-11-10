@@ -321,7 +321,12 @@
       ],
       "custom_css": [],
       "settings": {
-        "title": "Product information"
+        "title": "Product information",
+        "decoration": "shopify://shop_images/Group_99.png",
+        "decoration_width": 280,
+        "decoration_top": -120,
+        "decoration_side_offset": 0,
+        "decoration_mobile": true
       }
     },
     "apex_reviews": {
