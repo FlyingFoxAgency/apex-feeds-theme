@@ -1,0 +1,180 @@
+{% comment %}
+  APEX call to action (Figma "APEX About Us Page" > Looking forward): centred eyebrow, big Dharma
+  title, text and up to two buttons (filled moss, then outlined).
+{% endcomment %}
+<div class="apex-cta" style="--apex-cta-pb: {{ section.settings.padding_bottom }}px;">
+  <div class="apex-container apex-cta__inner">
+    {%- if section.settings.eyebrow != blank -%}
+      <p class="apex-eyebrow apex-cta__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {%- endif -%}
+    {%- if section.settings.title != blank -%}
+      <h2 class="apex-cta__title">{{ section.settings.title | escape }}</h2>
+    {%- endif -%}
+    {%- if section.settings.text != blank -%}
+      <div class="apex-cta__text">{{ section.settings.text }}</div>
+    {%- endif -%}
+    {%- if section.settings.button_label != blank or section.settings.button_2_label != blank -%}
+      <div class="apex-cta__buttons">
+        {%- if section.settings.button_label != blank -%}
+          <a class="apex-button apex-cta__button apex-cta__button--filled" href="{{ section.settings.button_link | default: routes.all_products_collection_url }}">
+            {{- section.settings.button_label | escape -}}
+          </a>
+        {%- endif -%}
+        {%- if section.settings.button_2_label != blank -%}
+          <a class="apex-button apex-cta__button apex-cta__button--outline" href="{{ section.settings.button_2_link | default: '/pages/stockists' }}">
+            {{- section.settings.button_2_label | escape -}}
+          </a>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+{% stylesheet %}
+  .apex-cta {
+    padding-block-end: var(--apex-cta-pb, 160px);
+  }
+
+  .apex-cta__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    text-align: center;
+  }
+
+  .apex-cta__eyebrow,
+  .apex-cta__title {
+    margin: 0;
+  }
+
+  /* Figma: Dharma 96/91 */
+  .apex-cta__title {
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: var(--font-size--h1);
+    line-height: 0.95;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-cta__text {
+    max-width: 720px;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    color: var(--apex-burrow);
+  }
+
+  .apex-cta__text > * {
+    margin: 0;
+  }
+
+  .apex-cta__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+    margin-block-start: 24px;
+  }
+
+  .apex-cta__button--filled {
+    background-color: var(--apex-dried-moss);
+    border-color: var(--apex-dried-moss);
+    color: var(--apex-sandstone);
+  }
+
+  .apex-cta__button--outline {
+    background-color: transparent;
+    border-color: var(--apex-dried-moss);
+    color: var(--apex-burrow);
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-cta {
+      padding-block-end: calc(var(--apex-cta-pb, 160px) * 0.5);
+    }
+
+    .apex-cta__inner {
+      gap: 16px;
+    }
+
+    .apex-cta__title {
+      font-size: 4rem;
+    }
+
+    .apex-cta__buttons {
+      flex-direction: column;
+      align-items: stretch;
+      width: 100%;
+      max-width: 320px;
+      gap: 12px;
+      margin-block-start: 8px;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX call to action",
+  "tag": "section",
+  "class": "apex-cta-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Looking forward"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Feed with confidence"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Text"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button 1 label",
+      "default": "Shop all products"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Button 1 link"
+    },
+    {
+      "type": "text",
+      "id": "button_2_label",
+      "label": "Button 2 label",
+      "default": "Become a stockist"
+    },
+    {
+      "type": "url",
+      "id": "button_2_link",
+      "label": "Button 2 link",
+      "info": "Empty: /pages/stockists"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Space below",
+      "info": "Phones use half.",
+      "min": 0,
+      "max": 240,
+      "step": 8,
+      "unit": "px",
+      "default": 160
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX call to action"
+    }
+  ]
+}
+{% endschema %}
