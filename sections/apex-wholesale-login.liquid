@@ -32,6 +32,12 @@
       {%- if section.settings.intro != blank -%}
         <div class="apex-wlogin__text">{{ section.settings.intro }}</div>
       {%- endif -%}
+    </div>
+
+    <div class="apex-wlogin__cta">
+      {%- if section.settings.apply_text != blank -%}
+        <p class="apex-wlogin__cta-text">{{ section.settings.apply_text | escape }}</p>
+      {%- endif -%}
       <a class="apex-button apex-wlogin__apply" href="{{ apply_url }}">
         {{- section.settings.apply_label | default: 'Wholesaler application form' | escape -}}
       </a>
@@ -82,11 +88,38 @@
     overflow-x: clip;
   }
 
+  /* Desktop: intro and the application call to action stack on the left, sign in on the right.
+     Phones: intro, then sign in, then the application call to action. */
   .apex-wlogin__grid {
     display: grid;
     grid-template-columns: minmax(0, 470px) minmax(0, 1fr);
-    gap: 48px;
-    align-items: center;
+    grid-template-areas:
+      'intro card'
+      'cta card';
+    column-gap: 48px;
+    row-gap: 0;
+  }
+
+  .apex-wlogin__intro {
+    grid-area: intro;
+    align-self: end;
+  }
+
+  .apex-wlogin__card {
+    grid-area: card;
+    align-self: center;
+  }
+
+  .apex-wlogin__cta {
+    grid-area: cta;
+    align-self: start;
+    padding-block-start: 24px;
+  }
+
+  .apex-wlogin__cta-text {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.5rem;
   }
 
   .apex-wlogin__eyebrow {
@@ -133,7 +166,7 @@
   }
 
   .apex-wlogin__apply {
-    margin-block-start: 32px;
+    margin-block-start: 24px;
   }
 
   /* Sign in card: a folder-style tab on a panel that runs off the right edge of the page */
@@ -290,7 +323,15 @@
 
     .apex-wlogin__grid {
       grid-template-columns: minmax(0, 1fr);
-      gap: 72px;
+      grid-template-areas:
+        'intro'
+        'card'
+        'cta';
+      row-gap: 56px;
+    }
+
+    .apex-wlogin__cta {
+      padding-block-start: 0;
     }
 
     .apex-wlogin__panel {
@@ -337,8 +378,9 @@
       "type": "richtext",
       "id": "intro",
       "label": "Intro",
-      "default": "<p>Our wholesale program is designed to provide retailers with competitive margins, reliable supply, quality products, and ongoing support to help grow their business and deliver value to their customers.</p><p>Apply for a wholesaler account today.</p>"
+      "default": "<p>Our wholesale program is designed to provide retailers with competitive margins, reliable supply, quality products, and ongoing support to help grow their business and deliver value to their customers.</p>"
     },
+    { "type": "text", "id": "apply_text", "label": "Application call to action", "default": "Apply for a wholesaler account today." },
     { "type": "text", "id": "apply_label", "label": "Application button label", "default": "Wholesaler application form" },
     { "type": "page", "id": "apply_page", "label": "Application page", "info": "Defaults to /pages/wholesale-application." },
     {
