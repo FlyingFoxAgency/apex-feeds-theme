@@ -1,0 +1,217 @@
+{% comment %}
+  APEX search header (Figma "APEX Search Results Page"): eyebrow, Dharma title, a search bar with
+  a Search button, and a results line ("11 results for “calcium”"). Searches are products only,
+  so the results line matches the product count in the grid below.
+{% endcomment %}
+<div class="apex-search-header" style="--apex-search-pt: {{ section.settings.padding_top }}px;">
+  <div class="apex-container">
+    {%- if section.settings.eyebrow != blank -%}
+      <p class="apex-eyebrow apex-search-header__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {%- endif -%}
+    <h1 class="apex-search-header__title">{{ section.settings.title | default: 'Search results' | escape }}</h1>
+
+    <form class="apex-search-header__form" action="{{ routes.search_url }}" method="get" role="search">
+      <input type="hidden" name="type" value="product">
+      <input type="hidden" name="options[prefix]" value="last">
+      <label class="apex-search-header__field">
+        <span class="visually-hidden">Search</span>
+        <span class="apex-search-header__icon" aria-hidden="true">{{- 'apex-icon-search.svg' | inline_asset_content -}}</span>
+        <input
+          type="search"
+          name="q"
+          value="{{ search.terms | escape }}"
+          placeholder="{{ section.settings.placeholder | escape }}"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+        >
+      </label>
+      <button type="submit" class="apex-button apex-search-header__button">
+        {{- section.settings.button_label | default: 'Search' | escape -}}
+      </button>
+    </form>
+
+    {%- if search.performed -%}
+      <p class="apex-search-header__summary" role="status">
+        {{ search.results_count }}
+        {% if search.results_count == 1 %}result{% else %}results{% endif %}
+        for “{{ search.terms | escape }}”
+      </p>
+    {%- endif -%}
+  </div>
+</div>
+
+{% stylesheet %}
+  .apex-search-header {
+    padding-block: var(--apex-search-pt, 64px) 25px;
+    color: var(--apex-burrow);
+  }
+
+  .apex-search-header__eyebrow {
+    margin: 0;
+  }
+
+  /* Figma: Dharma 128/102 */
+  .apex-search-header__title {
+    margin: 24px 0 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: clamp(4rem, 8.9vw, 8rem);
+    line-height: 0.8;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-search-header__form {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    max-width: 755px;
+    margin-block-start: 24px;
+  }
+
+  .apex-search-header__field {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    height: 50px;
+    padding-inline: 16px;
+    border: 1px solid var(--apex-dried-moss);
+    border-radius: var(--apex-radius-sm);
+    background: var(--apex-stone-100);
+  }
+
+  .apex-search-header__field:focus-within {
+    outline: 2px solid var(--apex-burrow);
+    outline-offset: 2px;
+  }
+
+  .apex-search-header__icon {
+    display: flex;
+    flex: none;
+    color: var(--apex-burrow);
+  }
+
+  .apex-search-header__icon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .apex-search-header .apex-search-header__field input {
+    flex: 1;
+    min-width: 0;
+    height: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    outline: none;
+    font: inherit;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: var(--apex-burrow);
+  }
+
+  .apex-search-header__field input::placeholder {
+    color: var(--apex-dried-moss);
+    opacity: 1;
+  }
+
+  .apex-search-header__field input::-webkit-search-cancel-button {
+    cursor: pointer;
+  }
+
+  .apex-search-header__button {
+    flex: none;
+    background-color: var(--apex-dried-moss);
+    border-color: var(--apex-dried-moss);
+    color: var(--apex-sandstone);
+  }
+
+  .apex-search-header__summary {
+    margin: 24px 0 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+    color: var(--apex-dried-moss);
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-search-header {
+      padding-block: calc(var(--apex-search-pt, 64px) * 0.5) 8px;
+    }
+
+    .apex-search-header__title {
+      margin-block-start: 16px;
+      font-size: 4.5rem;
+    }
+
+    .apex-search-header__form {
+      gap: 8px;
+      margin-block-start: 20px;
+    }
+
+    .apex-search-header__button {
+      padding-inline: 16px;
+    }
+
+    .apex-search-header__summary {
+      margin-block-start: 16px;
+      font-size: 0.875rem;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX search header",
+  "tag": "section",
+  "class": "apex-search-header-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Search"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Search results"
+    },
+    {
+      "type": "text",
+      "id": "placeholder",
+      "label": "Search box placeholder",
+      "default": "Search products"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label",
+      "default": "Search"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Space above",
+      "info": "Phones use half.",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "default": 64
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX search header"
+    }
+  ]
+}
+{% endschema %}
