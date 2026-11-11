@@ -158,28 +158,32 @@
         }
       }
     };
-    // Back to top: shows once the page has scrolled two screens
+    // Back to top: shows once the page has scrolled two screens. Measured from the policy's own
+    // position (works whichever element scrolls, including on phones), and moved to <body> so no
+    // transformed wrapper can stop it floating.
     const topButton = root.querySelector('[data-back-to-top]');
-    let scroller = document.scrollingElement;
+    let startTop = null;
+    if (topButton) document.body.appendChild(topButton);
     const updateTop = () => {
       if (!topButton) return;
-      const show = (scroller?.scrollTop ?? window.scrollY) > window.innerHeight * 2;
+      const top = root.getBoundingClientRect().top;
+      if (startTop === null || top > startTop) startTop = top;
+      const show = startTop - top > window.innerHeight * 2;
       if (show) topButton.hidden = false;
       topButton.classList.toggle('is-visible', show);
     };
     topButton?.addEventListener('click', () => {
       const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      (scroller ?? window).scrollTo({ top: 0, behavior: smooth ? 'smooth' : 'auto' });
+      const behavior = smooth ? 'smooth' : 'auto';
+      // Scroll whichever element holds the page, then the window as a fallback
+      let el = root.parentElement;
+      while (el && el !== document.body && el.scrollHeight <= el.clientHeight + 1) el = el.parentElement;
+      if (el && el !== document.body && el.scrollTop > 0) el.scrollTo({ top: 0, behavior });
+      window.scrollTo({ top: 0, behavior });
       root.querySelector('h1')?.focus({ preventScroll: true });
     });
 
-    const onScroll = (event) => {
-      const target = event?.target;
-      if (target && target !== document && target instanceof Element && target.scrollHeight > target.clientHeight) {
-        scroller = target;
-      } else if (target === document) {
-        scroller = document.scrollingElement;
-      }
+    const onScroll = () => {
       updateTop();
       if (ticking) return;
       ticking = true;
@@ -199,7 +203,7 @@
     position: fixed;
     inset-block-end: 40px;
     inset-inline-start: 50%;
-    z-index: 20;
+    z-index: 60;
     display: inline-flex;
     align-items: center;
     gap: 8px;
