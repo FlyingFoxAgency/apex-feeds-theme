@@ -1,0 +1,85 @@
+{
+  "sections": {
+    "main": {
+      "type": "apex-stockists",
+      "blocks": {
+        "stockist_1": {
+          "type": "stockist",
+          "settings": {
+            "name": "Stockist name",
+            "address": "Shop 1, 123 Example Street",
+            "suburb": "Suburb",
+            "state": "NSW",
+            "postcode": "2000",
+            "phone": "(02) 0000 0000",
+            "website": "",
+            "map_query": ""
+          }
+        },
+        "stockist_2": {
+          "type": "stockist",
+          "settings": {
+            "name": "Stockist name",
+            "address": "45 Sample Road",
+            "suburb": "Suburb",
+            "state": "NSW",
+            "postcode": "2150",
+            "phone": "(02) 0000 0000",
+            "website": "",
+            "map_query": ""
+          }
+        },
+        "stockist_3": {
+          "type": "stockist",
+          "settings": {
+            "name": "Stockist name",
+            "address": "Unit 3, 78 Placeholder Ave",
+            "suburb": "Suburb",
+            "state": "NSW",
+            "postcode": "2170",
+            "phone": "(02) 0000 0000",
+            "website": "",
+            "map_query": ""
+          }
+        },
+        "stockist_4": {
+          "type": "stockist",
+          "settings": {
+            "name": "Stockist name",
+            "address": "12 Demo Lane",
+            "suburb": "Suburb",
+            "state": "QLD",
+            "postcode": "4000",
+            "phone": "(07) 0000 0000",
+            "website": "",
+            "map_query": ""
+          }
+        },
+        "stockist_5": {
+          "type": "stockist",
+          "settings": {
+            "name": "Stockist name",
+            "address": "9 Mock Parade",
+            "suburb": "Suburb",
+            "state": "VIC",
+            "postcode": "3000",
+            "phone": "(03) 0000 0000",
+            "website": "",
+            "map_query": ""
+          }
+        }
+      },
+      "block_order": [
+        "stockist_1",
+        "stockist_2",
+        "stockist_3",
+        "stockist_4",
+        "stockist_5"
+      ],
+      "settings": {}
+    }
+  },
+  "order": [
+    "main"
+  ]
+}
