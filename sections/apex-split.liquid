@@ -1,0 +1,274 @@
+{% comment %}
+  APEX split (Figma "APEX About Us Page" > Hero, Our story, Naturals Range, Feeder insect care):
+  eyebrow, Dharma title and text on one side, a rounded image on the other.
+  - Title size: page title (h1, 128px) for the top of a page, or section title (h2, 64px).
+  - Without an image a stone panel shows in its place (its label shows only in the theme editor).
+  - Phones: text first, image below.
+{% endcomment %}
+{%- liquid
+  assign heading_tag = 'h2'
+  if section.settings.title_size == 'page'
+    assign heading_tag = 'h1'
+  endif
+-%}
+<div
+  class="apex-split apex-split--image-{{ section.settings.image_position }}"
+  style="--apex-split-pt: {{ section.settings.padding_top }}px; --apex-split-pb: {{ section.settings.padding_bottom }}px; --apex-split-img-h: {{ section.settings.image_height }}px;"
+>
+  <div class="apex-container apex-split__grid">
+    <div class="apex-split__text">
+      {%- if section.settings.eyebrow != blank -%}
+        <p class="apex-eyebrow apex-split__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+      {%- endif -%}
+      {%- if section.settings.title != blank -%}
+        <{{ heading_tag }} class="apex-split__title apex-split__title--{{ section.settings.title_size }}">
+          {{- section.settings.title | escape -}}
+        </{{ heading_tag }}>
+      {%- endif -%}
+      {%- if section.settings.text != blank -%}
+        <div class="apex-split__body">{{ section.settings.text }}</div>
+      {%- endif -%}
+    </div>
+
+    <div class="apex-split__media{% if section.settings.image == blank %} apex-split__media--empty{% endif %}">
+      {%- if section.settings.image != blank -%}
+        {{
+          section.settings.image
+          | image_url: width: 1600
+          | image_tag:
+            loading: 'lazy',
+            sizes: '(min-width: 750px) 46vw, 100vw',
+            widths: '400, 600, 800, 1200, 1600',
+            alt: section.settings.image.alt
+        }}
+      {%- elsif request.design_mode and section.settings.image_label != blank -%}
+        <span class="apex-split__label">{{ section.settings.image_label | escape }}</span>
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+
+{% stylesheet %}
+  .apex-split {
+    padding-block: var(--apex-split-pt, 0px) var(--apex-split-pb, 96px);
+  }
+
+  .apex-split__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 96px;
+    align-items: start;
+  }
+
+  .apex-split--image-left .apex-split__media {
+    order: -1;
+  }
+
+  .apex-split__eyebrow {
+    margin: 0;
+  }
+
+  .apex-split__title {
+    margin: 24px 0 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  /* Figma: 128/102 page title, 64/61 section title */
+  .apex-split__title--page {
+    font-size: clamp(4rem, 8.9vw, 8rem);
+    line-height: 0.8;
+  }
+
+  .apex-split__title--section {
+    font-size: var(--font-size--h2);
+    line-height: 0.95;
+  }
+
+  .apex-split__body {
+    margin-block-start: 24px;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    color: var(--apex-burrow);
+  }
+
+  .apex-split__body > * {
+    margin: 0 0 16px;
+  }
+
+  .apex-split__body > :last-child {
+    margin-block-end: 0;
+  }
+
+  .apex-split__media {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--apex-split-img-h, 460px);
+    margin-block-start: 3px;
+    overflow: hidden;
+    border-radius: var(--apex-radius-xl);
+    background: var(--apex-stone-200);
+  }
+
+  .apex-split__media img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .apex-split__label {
+    padding: 16px;
+    font-size: 0.625rem;
+    font-weight: 600;
+    line-height: 0.875rem;
+    letter-spacing: 0.5px;
+    text-align: center;
+    text-transform: uppercase;
+    color: var(--apex-dried-moss);
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-split__grid {
+      gap: 48px;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-split {
+      padding-block: calc(var(--apex-split-pt, 0px) * 0.5) calc(var(--apex-split-pb, 96px) * 0.6);
+    }
+
+    .apex-split__grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 32px;
+    }
+
+    .apex-split--image-left .apex-split__media {
+      order: 0;
+    }
+
+    .apex-split__title {
+      margin-block-start: 16px;
+    }
+
+    .apex-split__title--page {
+      font-size: 4.5rem;
+    }
+
+    .apex-split__media {
+      height: auto;
+      aspect-ratio: 4 / 3;
+      margin-block-start: 0;
+      border-radius: 24px;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX split",
+  "tag": "section",
+  "class": "apex-split-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Why we started"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Our story"
+    },
+    {
+      "type": "select",
+      "id": "title_size",
+      "label": "Title size",
+      "options": [
+        { "value": "page", "label": "Page title (top of the page)" },
+        { "value": "section", "label": "Section title" }
+      ],
+      "default": "section"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Text",
+      "default": "<p>Tell your story here.</p>"
+    },
+    {
+      "type": "header",
+      "content": "Image"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "image_label",
+      "label": "Placeholder label",
+      "info": "Shows on the stone panel in the theme editor until an image is picked."
+    },
+    {
+      "type": "select",
+      "id": "image_position",
+      "label": "Image position",
+      "options": [
+        { "value": "right", "label": "Right" },
+        { "value": "left", "label": "Left" }
+      ],
+      "default": "right"
+    },
+    {
+      "type": "range",
+      "id": "image_height",
+      "label": "Image height",
+      "min": 240,
+      "max": 800,
+      "step": 10,
+      "unit": "px",
+      "default": 460
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Space above",
+      "info": "Phones use half.",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Space below",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "default": 96
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX split"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,185 @@
+{% comment %}
+  APEX points panel (Figma "APEX About Us Page" > Our philosophy): a rounded burrow panel with an
+  eyebrow and a light Dharma title on the left, and on the right a lead-in paragraph followed by
+  amber-dot points (one block per point).
+{% endcomment %}
+<div class="apex-points" style="--apex-points-mb: {{ section.settings.margin_bottom }}px;">
+  <div class="apex-container">
+    <div class="apex-points__panel">
+      <div class="apex-points__left">
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="apex-eyebrow apex-points__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+        {%- if section.settings.title != blank -%}
+          <h2 class="apex-points__title">{{ section.settings.title | escape }}</h2>
+        {%- endif -%}
+      </div>
+
+      <div class="apex-points__right">
+        {%- if section.settings.text != blank -%}
+          <div class="apex-points__text">{{ section.settings.text }}</div>
+        {%- endif -%}
+        {%- if section.blocks.size > 0 -%}
+          <ul class="apex-points__list" role="list">
+            {%- for block in section.blocks -%}
+              {%- if block.settings.text != blank -%}
+                <li class="apex-points__item" {{ block.shopify_attributes }}>{{ block.settings.text | escape }}</li>
+              {%- endif -%}
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% stylesheet %}
+  .apex-points {
+    margin-block-end: var(--apex-points-mb, 96px);
+  }
+
+  .apex-points__panel {
+    display: grid;
+    grid-template-columns: minmax(0, 480px) minmax(0, 520px);
+    justify-content: space-between;
+    gap: 96px;
+    padding: 64px;
+    border-radius: var(--apex-radius-xl);
+    background: var(--apex-burrow);
+    color: var(--apex-sandstone);
+  }
+
+  .apex-points__eyebrow {
+    margin: 0;
+    color: var(--apex-sandstone);
+  }
+
+  .apex-points__title {
+    margin: 24px 0 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: var(--font-size--h2);
+    line-height: 0.95;
+    text-transform: uppercase;
+    color: var(--apex-sandstone);
+  }
+
+  .apex-points__text {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-points__text > * {
+    margin: 0;
+  }
+
+  .apex-points__list {
+    display: grid;
+    gap: 16px;
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .apex-points__item {
+    position: relative;
+    padding-inline-start: 20px;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+  }
+
+  .apex-points__item::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-start: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--apex-amber);
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-points__panel {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 48px;
+      padding: 48px;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-points {
+      margin-block-end: calc(var(--apex-points-mb, 96px) * 0.6);
+    }
+
+    .apex-points__panel {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 24px;
+      padding: 32px 24px;
+      border-radius: 24px;
+    }
+
+    .apex-points__title {
+      margin-block-start: 16px;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX points panel",
+  "tag": "section",
+  "class": "apex-points-section",
+  "max_blocks": 10,
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Our philosophy"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Great nutrition starts long before food reaches your animal"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Text above the points"
+    },
+    {
+      "type": "range",
+      "id": "margin_bottom",
+      "label": "Space below",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "default": 96
+    }
+  ],
+  "blocks": [
+    {
+      "type": "point",
+      "name": "Point",
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Text",
+          "default": "A point"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX points panel",
+      "blocks": [{ "type": "point" }, { "type": "point" }, { "type": "point" }]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,203 @@
+{% comment %}
+  APEX cards band (Figma "APEX About Us Page" > What we offer): a full-width band that runs from
+  burrow on the left into sage and then the stone page, with an eyebrow, a light Dharma title and
+  a row of rounded stone cards (title + text). Phones: the band runs top to bottom, cards stack.
+{% endcomment %}
+<div class="apex-cards-band" style="--apex-cards-mb: {{ section.settings.margin_bottom }}px;">
+  <div class="apex-container">
+    {%- if section.settings.eyebrow != blank -%}
+      <p class="apex-eyebrow apex-cards-band__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {%- endif -%}
+    {%- if section.settings.title != blank -%}
+      <h2 class="apex-cards-band__title">{{ section.settings.title | escape }}</h2>
+    {%- endif -%}
+
+    {%- if section.blocks.size > 0 -%}
+      <div class="apex-cards-band__cards">
+        {%- for block in section.blocks -%}
+          <div class="apex-cards-band__card" {{ block.shopify_attributes }}>
+            {%- if block.settings.title != blank -%}
+              <h3 class="apex-cards-band__card-title">{{ block.settings.title | escape }}</h3>
+            {%- endif -%}
+            {%- if block.settings.text != blank -%}
+              <div class="apex-cards-band__card-text">{{ block.settings.text }}</div>
+            {%- endif -%}
+          </div>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+{% stylesheet %}
+  /* Figma: 677px band, burrow to 31%, sage at 53%, clear by the right edge */
+  .apex-cards-band {
+    margin-block-end: var(--apex-cards-mb, 96px);
+    padding-block: 96px;
+    background: linear-gradient(
+      90deg,
+      var(--apex-burrow) 0%,
+      var(--apex-burrow) 31%,
+      var(--apex-sage) 53%,
+      rgb(160 170 152 / 0) 100%
+    );
+  }
+
+  .apex-cards-band__eyebrow {
+    margin: 0;
+    color: var(--apex-sandstone);
+  }
+
+  .apex-cards-band__title {
+    max-width: 420px;
+    margin: 24px 0 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: var(--font-size--h2);
+    line-height: 0.95;
+    text-transform: uppercase;
+    color: var(--apex-sandstone);
+  }
+
+  .apex-cards-band__cards {
+    display: grid;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    gap: 24px;
+    margin-block-start: 48px;
+  }
+
+  .apex-cards-band__card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 336px;
+    padding: 32px;
+    border-radius: var(--apex-radius-xl);
+    background: var(--apex-stone-100-alt);
+    color: var(--apex-burrow);
+  }
+
+  .apex-cards-band__card-title {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 2.5rem;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-cards-band__card-text {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-cards-band__card-text > * {
+    margin: 0 0 12px;
+  }
+
+  .apex-cards-band__card-text > :last-child {
+    margin-block-end: 0;
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-cards-band__cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-auto-flow: row;
+    }
+
+    .apex-cards-band__card {
+      min-height: 0;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-cards-band {
+      margin-block-end: calc(var(--apex-cards-mb, 96px) * 0.6);
+      padding-block: 56px;
+      background: linear-gradient(
+        180deg,
+        var(--apex-burrow) 0%,
+        var(--apex-burrow) 30%,
+        var(--apex-sage) 62%,
+        rgb(160 170 152 / 0) 100%
+      );
+    }
+
+    .apex-cards-band__cards {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 16px;
+      margin-block-start: 32px;
+    }
+
+    .apex-cards-band__card {
+      gap: 12px;
+      padding: 24px;
+      border-radius: 24px;
+    }
+
+    .apex-cards-band__card-title {
+      font-size: 2.25rem;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX cards band",
+  "tag": "section",
+  "class": "apex-cards-band-section",
+  "max_blocks": 4,
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "What we offer"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Nutrition from the ground up"
+    },
+    {
+      "type": "range",
+      "id": "margin_bottom",
+      "label": "Space below",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "default": 96
+    }
+  ],
+  "blocks": [
+    {
+      "type": "card",
+      "name": "Card",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Card title"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text",
+          "default": "<p>A short description.</p>"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX cards band",
+      "blocks": [{ "type": "card" }, { "type": "card" }, { "type": "card" }, { "type": "card" }]
+    }
+  ]
+}
+{% endschema %}

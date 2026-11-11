@@ -1,0 +1,174 @@
+{
+  "sections": {
+    "hero": {
+      "type": "apex-split",
+      "settings": {
+        "eyebrow": "Who we are",
+        "title": "About Apex Feeds",
+        "title_size": "page",
+        "text": "<p>At Apex Feeds we believe reptiles, amphibians, invertebrates, and other exotic animals deserve nutrition that reflects what nature intended.</p><p>Founded by passionate reptile keeper and breeder James Bindoff, Apex Feeds draws on over 15 years of industry knowledge, from private keeper all the way to pet store owner and pet product wholesaling.</p>",
+        "image_label": "Photo of James / the breeding facility",
+        "image_position": "right",
+        "image_height": 520,
+        "padding_top": 85,
+        "padding_bottom": 96
+      }
+    },
+    "story": {
+      "type": "apex-split",
+      "settings": {
+        "eyebrow": "Why we started",
+        "title": "Our story",
+        "title_size": "section",
+        "text": "<p>Like many reptile enthusiasts, we became frustrated by inconsistent feeder insect quality, limited nutritional options, and products that often prioritised cheap ingredients and convenience over genuine nutrition. We saw an opportunity to create something better.</p><p>What began as a breeding operation focused on producing healthy feeder insects has grown into a complete, vertically integrated nutrition business dedicated to advancing reptile feeding standards throughout Australia and the world.</p><p>By combining large-scale insect breeding, practical husbandry experience, and extensive research into reptile nutrition, Apex Feeds develops products that focus on quality ingredients, transparency, and real-world results.</p>",
+        "image_label": "Insect colonies",
+        "image_position": "left",
+        "image_height": 460,
+        "padding_top": 0,
+        "padding_bottom": 96
+      }
+    },
+    "offer": {
+      "type": "apex-cards-band",
+      "blocks": {
+        "card_1": {
+          "type": "card",
+          "settings": {
+            "title": "Feeder insects",
+            "text": "<p>We breed feeder insects for the reptile, amphibian, bird, fish and invertebrate industries. Our colonies are maintained with strict attention to nutrition, cleanliness and consistency, with careful gut-loading for superior nutritional value.</p>"
+          }
+        },
+        "card_2": {
+          "type": "card",
+          "settings": {
+            "title": "Frozen rodents",
+            "text": "<p>Quality frozen rodents for dragons, lizards, snakes, monitors, birds of prey and other carnivorous species, produced with animal welfare, quality control and consistency at the forefront.</p>"
+          }
+        },
+        "card_3": {
+          "type": "card",
+          "settings": {
+            "title": "Buffet Meals Range™",
+            "text": "<p>Developed for carnivores, omnivores, insectivores, turtles and vegetarian reptiles. Quality whole proteins combined with vegetables, fruits, vitamins and minerals for juvenile and adult animals.</p>"
+          }
+        },
+        "card_4": {
+          "type": "card",
+          "settings": {
+            "title": "NutriCore Range™",
+            "text": "<p>An affordable, nutritionally balanced everyday option. Carefully selected protein meals, freeze-dried and dehydrated ingredients, vitamins, minerals and functional ingredients.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "card_1",
+        "card_2",
+        "card_3",
+        "card_4"
+      ],
+      "settings": {
+        "eyebrow": "What we offer",
+        "title": "Nutrition from the ground up",
+        "margin_bottom": 96
+      }
+    },
+    "naturals": {
+      "type": "apex-split",
+      "settings": {
+        "eyebrow": "Where we stand apart",
+        "title": "Naturals Range",
+        "title_size": "section",
+        "text": "<p>Apex Feeds Naturals Range is where we truly stand apart. We have developed a growing range of complete and supplementary reptile foods using carefully selected ingredients including whole prey, quality meats, feeder insects, vegetables, fruits, vitamins, minerals and natural binders.</p><p>Rather than relying solely on inexpensive fillers, our formulations focus on genuine food ingredients that reptile keepers can recognise and trust.</p>",
+        "image_label": "Naturals Range product shot",
+        "image_position": "right",
+        "image_height": 460,
+        "padding_top": 0,
+        "padding_bottom": 96
+      }
+    },
+    "feeder_care": {
+      "type": "apex-split",
+      "settings": {
+        "eyebrow": "Healthy feeders, healthy reptiles",
+        "title": "Feeder insect care",
+        "title_size": "section",
+        "text": "<p>Healthy reptiles begin with healthy feeder insects. That is why we have developed products specifically for feeder insect care and nutrition.</p><p>HydroBlu Crystals™ provide a clean and convenient hydration source for feeder insects while reducing the drowning risks of open water dishes.</p><p>Our Gut Load™ insect food range is a nutrient-rich blend of vegetables, plant ingredients, vitamins and minerals for healthier feeder insects and improved nutritional value.</p>",
+        "image_label": "HydroBlu and Gut Load",
+        "image_position": "left",
+        "image_height": 460,
+        "padding_top": 0,
+        "padding_bottom": 96
+      }
+    },
+    "philosophy": {
+      "type": "apex-points-panel",
+      "blocks": {
+        "point_1": {
+          "type": "point",
+          "settings": {
+            "text": "Using quality fresh ingredients wherever possible"
+          }
+        },
+        "point_2": {
+          "type": "point",
+          "settings": {
+            "text": "Developing species-appropriate nutrition"
+          }
+        },
+        "point_3": {
+          "type": "point",
+          "settings": {
+            "text": "Continually improving our formulations"
+          }
+        },
+        "point_4": {
+          "type": "point",
+          "settings": {
+            "text": "Supporting responsible reptile keeping"
+          }
+        },
+        "point_5": {
+          "type": "point",
+          "settings": {
+            "text": "Producing products we would confidently use ourselves"
+          }
+        }
+      },
+      "block_order": [
+        "point_1",
+        "point_2",
+        "point_3",
+        "point_4",
+        "point_5"
+      ],
+      "settings": {
+        "eyebrow": "Our philosophy",
+        "title": "Great nutrition starts long before food reaches your animal",
+        "text": "<p>From the insects we breed, to the ingredients we source, to the products we manufacture, every stage is designed around quality, consistency and transparency. We are committed to:</p>",
+        "margin_bottom": 96
+      }
+    },
+    "looking_forward": {
+      "type": "apex-cta",
+      "settings": {
+        "eyebrow": "Looking forward",
+        "title": "Feed with confidence",
+        "text": "<p>Apex Feeds is continually expanding its product range, breeding programs and nutritional research. Whether you are caring for a single dragon, breeding Blue Tongue Skinks, maintaining a collection of monitors, or operating a pet store, we are committed to helping you feed with confidence.</p>",
+        "button_label": "Shop all products",
+        "button_link": "shopify://collections/all",
+        "button_2_label": "Become a stockist",
+        "button_2_link": "/pages/stockists",
+        "padding_bottom": 160
+      }
+    }
+  },
+  "order": [
+    "hero",
+    "story",
+    "offer",
+    "naturals",
+    "feeder_care",
+    "philosophy",
+    "looking_forward"
+  ]
+}
