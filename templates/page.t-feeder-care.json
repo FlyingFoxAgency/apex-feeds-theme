@@ -1,0 +1,21 @@
+{
+  "sections": {
+    "feeder_care": {
+      "type": "apex-split",
+      "settings": {
+        "eyebrow": "Healthy feeders, healthy reptiles",
+        "title": "Feeder insect care",
+        "title_size": "section",
+        "text": "<p>Healthy reptiles begin with healthy feeder insects. That is why we have developed products specifically for feeder insect care and nutrition.</p><p>HydroBlu Crystals™ provide a clean and convenient hydration source for feeder insects while reducing the drowning risks of open water dishes.</p><p>Our Gut Load™ insect food range is a nutrient-rich blend of vegetables, plant ingredients, vitamins and minerals for healthier feeder insects and improved nutritional value.</p>",
+        "image_label": "HydroBlu and Gut Load",
+        "image_position": "left",
+        "image_height": 460,
+        "padding_top": 0,
+        "padding_bottom": 96
+      }
+    }
+  },
+  "order": [
+    "feeder_care"
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "sections": {
+    "offer": {
+      "type": "apex-cards-band",
+      "blocks": {
+        "card_1": {
+          "type": "card",
+          "settings": {
+            "title": "Feeder insects",
+            "text": "<p>We breed feeder insects for the reptile, amphibian, bird, fish and invertebrate industries. Our colonies are maintained with strict attention to nutrition, cleanliness and consistency, with careful gut-loading for superior nutritional value.</p>"
+          }
+        },
+        "card_2": {
+          "type": "card",
+          "settings": {
+            "title": "Frozen rodents",
+            "text": "<p>Quality frozen rodents for dragons, lizards, snakes, monitors, birds of prey and other carnivorous species, produced with animal welfare, quality control and consistency at the forefront.</p>"
+          }
+        },
+        "card_3": {
+          "type": "card",
+          "settings": {
+            "title": "Buffet Meals Range™",
+            "text": "<p>Developed for carnivores, omnivores, insectivores, turtles and vegetarian reptiles. Quality whole proteins combined with vegetables, fruits, vitamins and minerals for juvenile and adult animals.</p>"
+          }
+        },
+        "card_4": {
+          "type": "card",
+          "settings": {
+            "title": "NutriCore Range™",
+            "text": "<p>An affordable, nutritionally balanced everyday option. Carefully selected protein meals, freeze-dried and dehydrated ingredients, vitamins, minerals and functional ingredients.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "card_1",
+        "card_2",
+        "card_3",
+        "card_4"
+      ],
+      "settings": {
+        "eyebrow": "What we offer",
+        "title": "Nutrition from the ground up",
+        "margin_bottom": 96
+      }
+    }
+  },
+  "order": [
+    "offer"
+  ]
+}

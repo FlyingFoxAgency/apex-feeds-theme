@@ -1,0 +1,21 @@
+{
+  "sections": {
+    "story": {
+      "type": "apex-split",
+      "settings": {
+        "eyebrow": "Why we started",
+        "title": "Our story",
+        "title_size": "section",
+        "text": "<p>Like many reptile enthusiasts, we became frustrated by inconsistent feeder insect quality, limited nutritional options, and products that often prioritised cheap ingredients and convenience over genuine nutrition. We saw an opportunity to create something better.</p><p>What began as a breeding operation focused on producing healthy feeder insects has grown into a complete, vertically integrated nutrition business dedicated to advancing reptile feeding standards throughout Australia and the world.</p><p>By combining large-scale insect breeding, practical husbandry experience, and extensive research into reptile nutrition, Apex Feeds develops products that focus on quality ingredients, transparency, and real-world results.</p>",
+        "image_label": "Insect colonies",
+        "image_position": "left",
+        "image_height": 460,
+        "padding_top": 0,
+        "padding_bottom": 96
+      }
+    }
+  },
+  "order": [
+    "story"
+  ]
+}
