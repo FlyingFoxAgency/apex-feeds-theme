@@ -1,0 +1,1247 @@
+{% comment %}
+  APEX wholesale application (Figma "APEX Wholesale Application Page").
+  - Top: eyebrow, Dharma title, James's intro and a button down to the form. Beside it, an
+    "Important information" panel with the account requirements and approval terms (accordions).
+  - "Start your application": intro and a "Before you start" list.
+  - The form: 7 sections shown one at a time with a progress bar, Continue and Return buttons.
+    It is Shopify's contact form, so each application arrives at the store's sender email
+    (Settings > Notifications) and in the customer list, tagged wholesale-application.
+    Only section 1 is designed in Figma; sections 2 to 7 follow the same style.
+{% endcomment %}
+<div class="apex-wholesale" data-apex-wholesale>
+  <div class="apex-container">
+    <div class="apex-wholesale__top">
+      <div class="apex-wholesale__intro">
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="apex-eyebrow apex-wholesale__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+        <h1 class="apex-wholesale__title">{{ section.settings.title | default: page.title | escape }}</h1>
+        {%- if section.settings.intro != blank -%}
+          <div class="apex-wholesale__text">{{ section.settings.intro }}</div>
+        {%- endif -%}
+        <a class="apex-button apex-wholesale__start" href="#apply">
+          {{- section.settings.start_label | default: 'Start the application form' | escape -}}
+        </a>
+      </div>
+
+      <aside class="apex-wholesale__info" aria-labelledby="ApexWholesaleInfo">
+        <h2 class="apex-wholesale__info-title" id="ApexWholesaleInfo">{{ section.settings.info_title | escape }}</h2>
+        {%- if section.settings.info_subtitle != blank -%}
+          <p class="apex-wholesale__info-sub">{{ section.settings.info_subtitle | escape }}</p>
+        {%- endif -%}
+        <details class="apex-wholesale__acc">
+          <summary class="apex-wholesale__acc-head">
+            <span>{{ section.settings.requirements_title | escape }}</span>
+            <span class="apex-wholesale__acc-icon" aria-hidden="true"></span>
+          </summary>
+          <div class="apex-wholesale__acc-body rte">{{ section.settings.requirements_text }}</div>
+        </details>
+        <details class="apex-wholesale__acc" open>
+          <summary class="apex-wholesale__acc-head">
+            <span>{{ section.settings.approval_title | escape }}</span>
+            <span class="apex-wholesale__acc-icon" aria-hidden="true"></span>
+          </summary>
+          <div class="apex-wholesale__acc-body rte">{{ section.settings.approval_text }}</div>
+        </details>
+      </aside>
+    </div>
+
+    <div class="apex-wholesale__start-block" id="apply">
+      <h2 class="apex-wholesale__h2">{{ section.settings.form_title | escape }}</h2>
+      {%- if section.settings.form_intro != blank -%}
+        <div class="apex-wholesale__text apex-wholesale__text--wide">{{ section.settings.form_intro }}</div>
+      {%- endif -%}
+    </div>
+
+    <div class="apex-wholesale__card">
+      {%- form 'contact', id: 'ApexWholesaleForm', class: 'apex-wholesale__form', novalidate: 'novalidate' -%}
+        {%- if form.posted_successfully? -%}
+          <div class="apex-wholesale__done" role="status" tabindex="-1" data-wholesale-done>
+            <p class="apex-wholesale__step-label">Application sent</p>
+            <h2 class="apex-wholesale__step-title">{{ section.settings.success_title | escape }}</h2>
+            <div class="apex-wholesale__text">{{ section.settings.success_text }}</div>
+          </div>
+        {%- else -%}
+          {%- if form.errors -%}
+            <div class="apex-wholesale__errors" role="alert">{{ form.errors | default_errors }}</div>
+          {%- endif -%}
+          <input type="hidden" name="contact[Form]" value="Wholesale application">
+          <input type="hidden" name="contact[tags]" value="wholesale-application">
+
+          <div class="apex-wholesale__progress" aria-hidden="true">
+            <div class="apex-wholesale__track"><span class="apex-wholesale__fill" data-wholesale-fill></span></div>
+            <div class="apex-wholesale__progress-meta">
+              <span data-wholesale-count>Section 1 of 7</span>
+              <span>Progress</span>
+            </div>
+          </div>
+
+          <fieldset class="apex-wholesale__step" data-step="1">
+            <p class="apex-wholesale__step-label">Section 1</p>
+            <legend class="apex-wholesale__step-title">Business details</legend>
+            <div class="apex-wholesale__fields">
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-1-0">Your registered business name <span aria-hidden="true">*</span></label>
+                <span class="apex-wholesale__input">
+                  <input id="ApexWholesale-1-0" class="apex-field__input" type="text" name="contact[Business name]" autocomplete="organization" required>
+                  <span class="apex-wholesale__arrow" aria-hidden="true">{{- 'apex-icon-arrow.svg' | inline_asset_content -}}</span>
+                </span>
+              </div>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-1-1">Your trading name (if different)</label>
+                <span class="apex-wholesale__input">
+                  <input id="ApexWholesale-1-1" class="apex-field__input" type="text" name="contact[Trading name]">
+                  <span class="apex-wholesale__arrow" aria-hidden="true">{{- 'apex-icon-arrow.svg' | inline_asset_content -}}</span>
+                </span>
+              </div>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-1-2">ABN <span aria-hidden="true">*</span></label>
+                <span class="apex-wholesale__input">
+                  <input id="ApexWholesale-1-2" class="apex-field__input" type="text" name="contact[ABN]" inputmode="numeric" placeholder="11 222 333 444" required>
+                  <span class="apex-wholesale__arrow" aria-hidden="true">{{- 'apex-icon-arrow.svg' | inline_asset_content -}}</span>
+                </span>
+              </div>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-1-3">Business type <span aria-hidden="true">*</span></label>
+                <span class="apex-field__select">
+                  <select id="ApexWholesale-1-3" class="apex-field__input" name="contact[Business type]" required><option value="">Select one</option><option value="Pet store">Pet store</option><option value="Reptile specialist store">Reptile specialist store</option><option value="Aquarium store">Aquarium store</option><option value="Produce or farm store">Produce or farm store</option><option value="Veterinary clinic">Veterinary clinic</option><option value="Zoo, wildlife park or education">Zoo, wildlife park or education</option><option value="Other">Other</option></select>
+                </span>
+              </div>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-1-4">How long has your business been trading? <span aria-hidden="true">*</span></label>
+                <span class="apex-wholesale__input">
+                  <input id="ApexWholesale-1-4" class="apex-field__input" type="text" name="contact[Years trading]" placeholder="e.g. 3 years" required>
+                  <span class="apex-wholesale__arrow" aria-hidden="true">{{- 'apex-icon-arrow.svg' | inline_asset_content -}}</span>
+                </span>
+              </div>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-1-5">Website URL</label>
+                <span class="apex-wholesale__input">
+                  <input id="ApexWholesale-1-5" class="apex-field__input" type="url" name="contact[Website]" placeholder="https://">
+                  <span class="apex-wholesale__arrow" aria-hidden="true">{{- 'apex-icon-arrow.svg' | inline_asset_content -}}</span>
+                </span>
+              </div>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-1-6">Links to your social media pages</label>
+                <span class="apex-wholesale__input">
+                  <input id="ApexWholesale-1-6" class="apex-field__input" type="text" name="contact[Social media]">
+                  <span class="apex-wholesale__arrow" aria-hidden="true">{{- 'apex-icon-arrow.svg' | inline_asset_content -}}</span>
+                </span>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="apex-wholesale__step" data-step="2" hidden>
+            <p class="apex-wholesale__step-label">Section 2</p>
+            <legend class="apex-wholesale__step-title">Contact person</legend>
+            <p class="apex-wholesale__step-intro">Who should we talk to about your application?</p>
+            <div class="apex-wholesale__fields">
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-2-0">Full name <span aria-hidden="true">*</span></label>
+                <span class="apex-wholesale__input">
+                  <input id="ApexWholesale-2-0" class="apex-field__input" type="text" name="contact[name]" autocomplete="name" required>
+                  <span class="apex-wholesale__arrow" aria-hidden="true">{{- 'apex-icon-arrow.svg' | inline_asset_content -}}</span>
+                </span>
+              </div>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-2-1">Your role in the business <span aria-hidden="true">*</span></label>
+                <span class="apex-wholesale__input">
+                  <input id="ApexWholesale-2-1" class="apex-field__input" type="text" name="contact[Position]" placeholder="e.g. Owner, Store manager" required>
+                  <span class="apex-wholesale__arrow" aria-hidden="true">{{- 'apex-icon-arrow.svg' | inline_asset_content -}}</span>
+                </span>
+              </div>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-2-2">Email <span aria-hidden="true">*</span></label>
+                <span class="apex-wholesale__input">
+                  <input id="ApexWholesale-2-2" class="apex-field__input" type="email" name="contact[email]" autocomplete="email" required>
+                  <span class="apex-wholesale__arrow" aria-hidden="true">{{- 'apex-icon-arrow.svg' | inline_asset_content -}}</span>
+                </span>
+              </div>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-2-3">Phone <span aria-hidden="true">*</span></label>
+                <span class="apex-wholesale__input">
+                  <input id="ApexWholesale-2-3" class="apex-field__input" type="tel" name="contact[phone]" autocomplete="tel" placeholder="04XX XXX XXX" required>
+                  <span class="apex-wholesale__arrow" aria-hidden="true">{{- 'apex-icon-arrow.svg' | inline_asset_content -}}</span>
+                </span>
+              </div>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-2-4">Best time to contact you</label>
+                <span class="apex-field__select">
+                  <select id="ApexWholesale-2-4" class="apex-field__input" name="contact[Best time to call]"><option value="">Select one</option><option value="Any time">Any time</option><option value="Morning">Morning</option><option value="Afternoon">Afternoon</option><option value="Email only">Email only</option></select>
+                </span>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="apex-wholesale__step" data-step="3" hidden>
+            <p class="apex-wholesale__step-label">Section 3</p>
+            <legend class="apex-wholesale__step-title">Store location</legend>
+            <p class="apex-wholesale__step-intro">Your physical retail store.</p>
+            <div class="apex-wholesale__fields">
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-3-0">Street address <span aria-hidden="true">*</span></label>
+                <span class="apex-wholesale__input">
+                  <input id="ApexWholesale-3-0" class="apex-field__input" type="text" name="contact[Street address]" autocomplete="street-address" required>
+                  <span class="apex-wholesale__arrow" aria-hidden="true">{{- 'apex-icon-arrow.svg' | inline_asset_content -}}</span>
+                </span>
+              </div>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-3-1">Suburb <span aria-hidden="true">*</span></label>
+                <span class="apex-wholesale__input">
+                  <input id="ApexWholesale-3-1" class="apex-field__input" type="text" name="contact[Suburb]" autocomplete="address-level2" required>
+                  <span class="apex-wholesale__arrow" aria-hidden="true">{{- 'apex-icon-arrow.svg' | inline_asset_content -}}</span>
+                </span>
+              </div>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-3-2">State <span aria-hidden="true">*</span></label>
+                <span class="apex-field__select">
+                  <select id="ApexWholesale-3-2" class="apex-field__input" name="contact[State]" required><option value="">Select one</option><option value="ACT">ACT</option><option value="NSW">NSW</option><option value="NT">NT</option><option value="QLD">QLD</option><option value="SA">SA</option><option value="TAS">TAS</option><option value="VIC">VIC</option><option value="WA">WA</option></select>
+                </span>
+              </div>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-3-3">Postcode <span aria-hidden="true">*</span></label>
+                <span class="apex-wholesale__input">
+                  <input id="ApexWholesale-3-3" class="apex-field__input" type="text" name="contact[Postcode]" autocomplete="postal-code" inputmode="numeric" required>
+                  <span class="apex-wholesale__arrow" aria-hidden="true">{{- 'apex-icon-arrow.svg' | inline_asset_content -}}</span>
+                </span>
+              </div>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-3-4">Store opening hours</label>
+                <span class="apex-wholesale__input">
+                  <input id="ApexWholesale-3-4" class="apex-field__input" type="text" name="contact[Opening hours]" placeholder="e.g. Mon to Sat, 9am to 5pm">
+                  <span class="apex-wholesale__arrow" aria-hidden="true">{{- 'apex-icon-arrow.svg' | inline_asset_content -}}</span>
+                </span>
+              </div>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-3-5">Number of store locations</label>
+                <span class="apex-field__select">
+                  <select id="ApexWholesale-3-5" class="apex-field__input" name="contact[Number of stores]"><option value="">Select one</option><option value="1">1</option><option value="2 to 3">2 to 3</option><option value="4 or more">4 or more</option></select>
+                </span>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="apex-wholesale__step" data-step="4" hidden>
+            <p class="apex-wholesale__step-label">Section 4</p>
+            <legend class="apex-wholesale__step-title">Your store</legend>
+            <p class="apex-wholesale__step-intro">Help us understand your customers.</p>
+            <div class="apex-wholesale__fields">
+              <fieldset class="apex-field apex-wholesale__group">
+                <legend class="apex-field__label">Which animals do your customers keep?</legend>
+                <div class="apex-wholesale__checks">
+                  <label class="apex-wholesale__check"><input type="checkbox" name="contact[Animals catered for: Reptiles]" value="Yes"> <span>Reptiles</span></label>
+                  <label class="apex-wholesale__check"><input type="checkbox" name="contact[Animals catered for: Amphibians]" value="Yes"> <span>Amphibians</span></label>
+                  <label class="apex-wholesale__check"><input type="checkbox" name="contact[Animals catered for: Invertebrates]" value="Yes"> <span>Invertebrates</span></label>
+                  <label class="apex-wholesale__check"><input type="checkbox" name="contact[Animals catered for: Birds]" value="Yes"> <span>Birds</span></label>
+                  <label class="apex-wholesale__check"><input type="checkbox" name="contact[Animals catered for: Small mammals]" value="Yes"> <span>Small mammals</span></label>
+                  <label class="apex-wholesale__check"><input type="checkbox" name="contact[Animals catered for: Fish]" value="Yes"> <span>Fish</span></label>
+                </div>
+              </fieldset>
+              <fieldset class="apex-field apex-wholesale__group" data-required-group>
+                <legend class="apex-field__label">Which Apex Feeds ranges would you like to stock? <span aria-hidden="true">*</span></legend>
+                <div class="apex-wholesale__checks">
+                  <label class="apex-wholesale__check"><input type="checkbox" name="contact[Products of interest: Live feeder insects]" value="Yes"> <span>Live feeder insects</span></label>
+                  <label class="apex-wholesale__check"><input type="checkbox" name="contact[Products of interest: Premium buffet foods]" value="Yes"> <span>Premium buffet foods</span></label>
+                  <label class="apex-wholesale__check"><input type="checkbox" name="contact[Products of interest: NutriCore Basics]" value="Yes"> <span>NutriCore Basics</span></label>
+                  <label class="apex-wholesale__check"><input type="checkbox" name="contact[Products of interest: Frozen buffet meals]" value="Yes"> <span>Frozen buffet meals</span></label>
+                  <label class="apex-wholesale__check"><input type="checkbox" name="contact[Products of interest: Freeze-dried insects]" value="Yes"> <span>Freeze-dried insects</span></label>
+                  <label class="apex-wholesale__check"><input type="checkbox" name="contact[Products of interest: Supplements]" value="Yes"> <span>Supplements</span></label>
+                  <label class="apex-wholesale__check"><input type="checkbox" name="contact[Products of interest: Insect hydration]" value="Yes"> <span>Insect hydration</span></label>
+                </div>
+              </fieldset>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-4-2">Who are your current suppliers for these products?</label>
+                <span class="apex-wholesale__input">
+                  <input id="ApexWholesale-4-2" class="apex-field__input" type="text" name="contact[Current suppliers]">
+                  <span class="apex-wholesale__arrow" aria-hidden="true">{{- 'apex-icon-arrow.svg' | inline_asset_content -}}</span>
+                </span>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="apex-wholesale__step" data-step="5" hidden>
+            <p class="apex-wholesale__step-label">Section 5</p>
+            <legend class="apex-wholesale__step-title">Ordering</legend>
+            <p class="apex-wholesale__step-intro">So we can plan supply for your store.</p>
+            <div class="apex-wholesale__fields">
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-5-0">How often would you expect to order? <span aria-hidden="true">*</span></label>
+                <span class="apex-field__select">
+                  <select id="ApexWholesale-5-0" class="apex-field__input" name="contact[Order frequency]" required><option value="">Select one</option><option value="Weekly">Weekly</option><option value="Fortnightly">Fortnightly</option><option value="Monthly">Monthly</option><option value="Not sure yet">Not sure yet</option></select>
+                </span>
+              </div>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-5-1">Estimated value per order</label>
+                <span class="apex-field__select">
+                  <select id="ApexWholesale-5-1" class="apex-field__input" name="contact[Estimated order value]"><option value="">Select one</option><option value="Under $250">Under $250</option><option value="$250 to $500">$250 to $500</option><option value="$500 to $1,000">$500 to $1,000</option><option value="Over $1,000">Over $1,000</option><option value="Not sure yet">Not sure yet</option></select>
+                </span>
+              </div>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-5-2">Delivery or pick-up <span aria-hidden="true">*</span></label>
+                <span class="apex-field__select">
+                  <select id="ApexWholesale-5-2" class="apex-field__input" name="contact[Delivery or pick-up]" required><option value="">Select one</option><option value="Delivery to my store">Delivery to my store</option><option value="Pick-up">Pick-up</option><option value="Either">Either</option></select>
+                </span>
+              </div>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-5-3">Delivery notes (loading dock, receiving hours)</label>
+                <textarea id="ApexWholesale-5-3" class="apex-field__input apex-wholesale__area" name="contact[Delivery notes]" rows="4"></textarea>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="apex-wholesale__step" data-step="6" hidden>
+            <p class="apex-wholesale__step-label">Section 6</p>
+            <legend class="apex-wholesale__step-title">Documents</legend>
+            {%- assign upload_url = section.settings.upload_url | strip | split: '?' | first -%}
+            {%- if upload_url != blank -%}
+              <p class="apex-wholesale__step-intro">Upload a PDF or photo for each item, up to 10 MB per file. Your documents are stored privately and only the Apex Feeds team can open them.</p>
+              <input type="hidden" name="contact[Application reference]" value="" data-upload-ref>
+              <div class="apex-wholesale__fields apex-wholesale__fields--uploads" data-upload-endpoint="{{ upload_url | escape }}">
+                {%- liquid
+                  assign upload_groups = 'Shopfront photo|Store interior photo|Licences and permits' | split: '|'
+                  assign upload_titles = 'A photo of your shopfront|A photo of your store interior|Copies of any licences, permits or registrations' | split: '|'
+                -%}
+                {%- for group in upload_groups -%}
+                  {%- assign required = true -%}
+                  {%- if forloop.last -%}{%- assign required = false -%}{%- endif -%}
+                  <div class="apex-upload" data-upload data-label="{{ group }}"{% if required %} data-required{% endif %}>
+                    <p class="apex-field__label" id="ApexUpload-{{ forloop.index }}-label">
+                      {{- upload_titles[forloop.index0] -}}
+                      {%- if required %} <span aria-hidden="true">*</span>{% else %} <span class="apex-upload__optional">(optional, add as many as you need)</span>{% endif -%}
+                    </p>
+                    <label class="apex-upload__drop" for="ApexUpload-{{ forloop.index }}">
+                      <input id="ApexUpload-{{ forloop.index }}" class="apex-upload__input" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,application/pdf,image/*"{% unless required %} multiple{% endunless %} aria-describedby="ApexUpload-{{ forloop.index }}-label" data-upload-input>
+                      <span class="apex-upload__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg></span>
+                      <span class="apex-upload__prompt"><strong>Choose a file</strong> or drag it here</span>
+                      <span class="apex-upload__hint">PDF, JPG, PNG or HEIC</span>
+                    </label>
+                    <ul class="apex-upload__list" data-upload-list aria-live="polite"></ul>
+                    <input type="hidden" name="contact[{{ group }}]" value="" data-upload-value>
+                  </div>
+                {%- endfor -%}
+                <p class="apex-upload__note">Please don&#x27;t upload personal ID, bank details or tax file numbers. We don&#x27;t need them for your application.</p>
+              </div>
+            {%- else -%}
+              <p class="apex-wholesale__step-intro">Share links to these (Google Drive, Dropbox or similar), or reply to our confirmation email with them attached.</p>
+            <div class="apex-wholesale__fields">
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-6-0">Link to a photo of your shopfront</label>
+                <span class="apex-wholesale__input">
+                  <input id="ApexWholesale-6-0" class="apex-field__input" type="url" name="contact[Shopfront photo]" placeholder="https://">
+                  <span class="apex-wholesale__arrow" aria-hidden="true">{{- 'apex-icon-arrow.svg' | inline_asset_content -}}</span>
+                </span>
+              </div>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-6-1">Link to a photo of your store interior</label>
+                <span class="apex-wholesale__input">
+                  <input id="ApexWholesale-6-1" class="apex-field__input" type="url" name="contact[Store interior photo]" placeholder="https://">
+                  <span class="apex-wholesale__arrow" aria-hidden="true">{{- 'apex-icon-arrow.svg' | inline_asset_content -}}</span>
+                </span>
+              </div>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-6-2">Link to copies of any licences, permits or registrations</label>
+                <span class="apex-wholesale__input">
+                  <input id="ApexWholesale-6-2" class="apex-field__input" type="url" name="contact[Licences and permits]" placeholder="https://">
+                  <span class="apex-wholesale__arrow" aria-hidden="true">{{- 'apex-icon-arrow.svg' | inline_asset_content -}}</span>
+                </span>
+              </div>
+            </div>
+            {%- endif -%}
+          </fieldset>
+          <fieldset class="apex-wholesale__step" data-step="7" hidden>
+            <p class="apex-wholesale__step-label">Section 7</p>
+            <legend class="apex-wholesale__step-title">Review and submit</legend>
+            <p class="apex-wholesale__step-intro">Almost done.</p>
+            <div class="apex-wholesale__fields">
+              <label class="apex-wholesale__check apex-wholesale__check--wide"><input type="checkbox" name="contact[Confirms brick-and-mortar]" value="Yes" required> <span>I confirm we operate an established brick-and-mortar retail store <span aria-hidden="true">*</span></span></label>
+              <label class="apex-wholesale__check apex-wholesale__check--wide"><input type="checkbox" name="contact[Confirms licences]" value="Yes" required> <span>I confirm we hold all licences, permits and registrations our business requires <span aria-hidden="true">*</span></span></label>
+              <label class="apex-wholesale__check apex-wholesale__check--wide"><input type="checkbox" name="contact[Understands approval]" value="Yes" required> <span>I understand that submitting an application does not guarantee approval <span aria-hidden="true">*</span></span></label>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-7-3">How did you hear about Apex Feeds?</label>
+                <span class="apex-field__select">
+                  <select id="ApexWholesale-7-3" class="apex-field__input" name="contact[Heard about us]"><option value="">Select one</option><option value="Search engine">Search engine</option><option value="Social media">Social media</option><option value="Another store">Another store</option><option value="A customer">A customer</option><option value="Trade show or event">Trade show or event</option><option value="Other">Other</option></select>
+                </span>
+              </div>
+              <div class="apex-field">
+                <label class="apex-field__label" for="ApexWholesale-7-4">Anything else you&#x27;d like us to know?</label>
+                <textarea id="ApexWholesale-7-4" class="apex-field__input apex-wholesale__area" name="contact[body]" rows="4"></textarea>
+              </div>
+            </div>
+          </fieldset>
+          <p class="apex-wholesale__step-error" role="alert" data-wholesale-error hidden></p>
+
+          <div class="apex-wholesale__nav">
+            <button type="button" class="apex-wholesale__back" data-wholesale-back hidden>
+              <span aria-hidden="true">{{- 'apex-icon-arrow.svg' | inline_asset_content -}}</span>
+              Return to previous section
+            </button>
+            <button type="button" class="apex-button apex-wholesale__next" data-wholesale-next>Continue to next section</button>
+            <button type="submit" class="apex-button apex-wholesale__submit" data-wholesale-submit hidden>
+              {{- section.settings.submit_label | default: 'Submit application' | escape -}}
+            </button>
+          </div>
+        {%- endif -%}
+      {%- endform -%}
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  const root = document.querySelector('[data-apex-wholesale]:not([data-ready])');
+  if (root) {
+    root.setAttribute('data-ready', '');
+    const form = root.querySelector('#ApexWholesaleForm');
+    const steps = [...root.querySelectorAll('[data-step]')];
+    const fill = root.querySelector('[data-wholesale-fill]');
+    const count = root.querySelector('[data-wholesale-count]');
+    const back = root.querySelector('[data-wholesale-back]');
+    const next = root.querySelector('[data-wholesale-next]');
+    const submit = root.querySelector('[data-wholesale-submit]');
+    const error = root.querySelector('[data-wholesale-error]');
+    let current = 0;
+
+    const done = root.querySelector('[data-wholesale-done]');
+    if (done) {
+      done.scrollIntoView({ block: 'center' });
+      done.focus({ preventScroll: true });
+    }
+
+    const show = (index, focus = true) => {
+      current = index;
+      steps.forEach((step, i) => (step.hidden = i !== index));
+      if (fill) fill.style.width = `${((index + 1) / steps.length) * 100}%`;
+      if (count) count.textContent = `Section ${index + 1} of ${steps.length}`;
+      if (back) back.hidden = index === 0;
+      if (next) next.hidden = index === steps.length - 1;
+      if (submit) submit.hidden = index !== steps.length - 1;
+      if (error) error.hidden = true;
+      if (focus) {
+        root.querySelector('.apex-wholesale__card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        steps[index].querySelector('input, select, textarea')?.focus({ preventScroll: true });
+      }
+    };
+
+    // Check the visible section before moving on
+    const valid = () => {
+      const step = steps[current];
+      for (const field of step.querySelectorAll('input, select, textarea')) {
+        if (!field.checkValidity()) {
+          field.reportValidity();
+          return false;
+        }
+      }
+      for (const box of step.querySelectorAll('[data-upload]')) {
+        const message = box.uploadProblem?.();
+        if (message) {
+          if (error) {
+            error.textContent = message;
+            error.hidden = false;
+          }
+          box.querySelector('[data-upload-input]')?.focus();
+          return false;
+        }
+      }
+      for (const group of step.querySelectorAll('[data-required-group]')) {
+        if (!group.querySelector('input:checked')) {
+          if (error) {
+            error.textContent = 'Please choose at least one option.';
+            error.hidden = false;
+          }
+          group.querySelector('input')?.focus();
+          return false;
+        }
+      }
+      return true;
+    };
+
+    next?.addEventListener('click', () => valid() && show(current + 1));
+    back?.addEventListener('click', () => show(current - 1));
+    form?.addEventListener('submit', (event) => {
+      if (!valid()) event.preventDefault();
+    });
+    // Enter in a text field moves to the next section instead of submitting early
+    form?.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && event.target.matches('input') && current < steps.length - 1) {
+        event.preventDefault();
+        if (valid()) show(current + 1);
+      }
+    });
+    if (steps.length) show(0, false);
+
+    // Document uploads go straight to the private upload service. The form only carries
+    // the private links (only the Apex Feeds team can open them) to the application email.
+    const uploads = root.querySelector('[data-upload-endpoint]');
+    if (uploads) {
+      const endpoint = uploads.dataset.uploadEndpoint;
+      const reference = Array.from(crypto.getRandomValues(new Uint8Array(10)), (b) => 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[b % 31]).join('');
+      const refInput = root.querySelector('[data-upload-ref]');
+      if (refInput) refInput.value = reference;
+      const MAX = 10 * 1024 * 1024;
+      const kb = (n) => (n > 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
+
+      uploads.querySelectorAll('[data-upload]').forEach((box) => {
+        const input = box.querySelector('[data-upload-input]');
+        const listEl = box.querySelector('[data-upload-list]');
+        const value = box.querySelector('[data-upload-value]');
+        const drop = box.querySelector('.apex-upload__drop');
+        const single = !input.multiple;
+        const items = [];
+
+        const sync = () => {
+          value.value = items.filter((i) => i.link).map((i) => `${i.name}: ${i.link}`).join('\n');
+          drop.hidden = single && items.some((i) => i.state !== 'error');
+        };
+
+        box.uploadProblem = () => {
+          if (items.some((i) => i.state === 'uploading')) return 'Please wait for your uploads to finish.';
+          if (box.hasAttribute('data-required') && !items.some((i) => i.link)) return `Please upload ${box.querySelector('.apex-field__label').firstChild.textContent.trim().replace(/^A /, 'a ')}.`;
+          return '';
+        };
+
+        const render = (item) => {
+          item.el.className = `apex-upload__item is-${item.state}`;
+          item.el.innerHTML = '';
+          const name = document.createElement('span');
+          name.className = 'apex-upload__name';
+          name.textContent = item.name;
+          const status = document.createElement('span');
+          status.className = 'apex-upload__status';
+          status.textContent = item.state === 'uploading' ? `Uploading ${item.progress}%` : item.state === 'done' ? `Uploaded, ${kb(item.size)}` : item.message;
+          const remove = document.createElement('button');
+          remove.type = 'button';
+          remove.className = 'apex-upload__remove';
+          remove.textContent = item.state === 'uploading' ? 'Cancel' : 'Remove';
+          remove.setAttribute('aria-label', `${remove.textContent} ${item.name}`);
+          remove.addEventListener('click', () => {
+            item.xhr?.abort();
+            items.splice(items.indexOf(item), 1);
+            item.el.remove();
+            sync();
+            input.focus();
+          });
+          const bar = document.createElement('span');
+          bar.className = 'apex-upload__bar';
+          bar.style.setProperty('--p', `${item.progress}%`);
+          item.el.append(name, status, remove, bar);
+        };
+
+        const send = (file) => {
+          const item = { name: file.name, size: file.size, state: 'uploading', progress: 0, el: document.createElement('li') };
+          items.push(item);
+          listEl.append(item.el);
+          const fail = (message) => {
+            item.state = 'error';
+            item.message = message;
+            render(item);
+            sync();
+          };
+          if (file.size > MAX) {
+            fail('Too big. Files must be 10 MB or smaller.');
+            return;
+          }
+          render(item);
+          sync();
+          const data = new FormData();
+          data.append('application', reference);
+          data.append('label', box.dataset.label);
+          data.append('file', file);
+          const xhr = new XMLHttpRequest();
+          item.xhr = xhr;
+          xhr.open('POST', endpoint);
+          xhr.responseType = 'json';
+          xhr.upload.addEventListener('progress', (e) => {
+            if (!e.lengthComputable) return;
+            item.progress = Math.min(99, Math.round((e.loaded / e.total) * 100));
+            item.el.querySelector('.apex-upload__status').textContent = `Uploading ${item.progress}%`;
+            item.el.querySelector('.apex-upload__bar').style.setProperty('--p', `${item.progress}%`);
+          });
+          xhr.addEventListener('load', () => {
+            const body = xhr.response || {};
+            if (xhr.status === 200 && body.ok) {
+              item.state = 'done';
+              item.progress = 100;
+              item.link = body.link;
+              render(item);
+              sync();
+              if (error && !error.hidden && !steps[current].querySelector('[data-upload]')?.uploadProblem?.()) error.hidden = true;
+            } else {
+              fail(body.error || 'Upload failed. Please try again.');
+            }
+          });
+          xhr.addEventListener('error', () => fail('Upload failed. Check your connection and try again.'));
+          xhr.send(data);
+        };
+
+        const take = (files) => {
+          const chosen = [...files];
+          if (!chosen.length) return;
+          if (single) {
+            items.splice(0).forEach((i) => {
+              i.xhr?.abort();
+              i.el.remove();
+            });
+            chosen.length = 1;
+          }
+          chosen.forEach(send);
+          input.value = '';
+        };
+
+        input.addEventListener('change', () => take(input.files));
+        ['dragenter', 'dragover'].forEach((type) =>
+          drop.addEventListener(type, (e) => {
+            e.preventDefault();
+            drop.classList.add('is-over');
+          })
+        );
+        ['dragleave', 'drop'].forEach((type) => drop.addEventListener(type, () => drop.classList.remove('is-over')));
+        drop.addEventListener('drop', (e) => {
+          e.preventDefault();
+          take(e.dataTransfer?.files || []);
+        });
+      });
+    }
+  }
+</script>
+
+{% stylesheet %}
+  .apex-wholesale {
+    padding-block: 64px 160px;
+    color: var(--apex-burrow);
+  }
+
+  .apex-wholesale__top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 64px;
+    align-items: start;
+  }
+
+  .apex-wholesale__eyebrow {
+    margin: 0;
+  }
+
+  .apex-wholesale__title {
+    margin: 24px 0 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: clamp(4rem, 7vw, 6.25rem);
+    line-height: 0.85;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-wholesale__text {
+    max-width: 560px;
+    margin-block-start: 24px;
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-wholesale__text--wide {
+    max-width: 900px;
+  }
+
+  .apex-wholesale__text > * {
+    margin: 0 0 16px;
+  }
+
+  .apex-wholesale__text > :last-child {
+    margin-block-end: 0;
+  }
+
+  .apex-wholesale__text ul {
+    padding-inline-start: 20px;
+  }
+
+  .apex-wholesale__start,
+  .apex-wholesale__next,
+  .apex-wholesale__submit {
+    background-color: var(--apex-dried-moss);
+    border-color: var(--apex-dried-moss);
+    color: var(--apex-sandstone);
+  }
+
+  .apex-wholesale__start {
+    margin-block-start: 40px;
+  }
+
+  /* Important information panel */
+  .apex-wholesale__info {
+    padding: 40px;
+    border-radius: var(--apex-radius-xl);
+    background: linear-gradient(180deg, var(--apex-stone-100-alt) 0%, #c9c8b6 100%);
+    box-shadow: 0 2px 6px rgb(51 56 50 / 0.08), 0 16px 64px rgb(51 56 50 / 0.18);
+  }
+
+  .apex-wholesale__info-title,
+  .apex-wholesale__h2 {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 3rem;
+    line-height: 0.96;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-wholesale__info-sub {
+    margin: 12px 0 16px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .apex-wholesale__acc {
+    border-block-start: 1px solid rgb(51 56 50 / 0.2);
+  }
+
+  .apex-wholesale__acc-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-block: 20px;
+    list-style: none;
+    font-size: 1.125rem;
+    font-weight: 500;
+    line-height: 1.5rem;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .apex-wholesale__acc-head::-webkit-details-marker {
+    display: none;
+  }
+
+  .apex-wholesale__acc-head > span:first-child {
+    transform-origin: left center;
+    transition: scale 0.2s ease;
+  }
+
+  .apex-wholesale__acc-head:hover > span:first-child {
+    scale: 1.06;
+  }
+
+  .apex-wholesale__acc-icon {
+    position: relative;
+    flex: none;
+    width: 24px;
+    height: 24px;
+  }
+
+  .apex-wholesale__acc-icon::before,
+  .apex-wholesale__acc-icon::after {
+    content: '';
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: 14px;
+    height: 1.5px;
+    background: currentcolor;
+    translate: -50% -50%;
+    transition: rotate 0.2s ease;
+  }
+
+  .apex-wholesale__acc-icon::after {
+    rotate: 90deg;
+  }
+
+  .apex-wholesale__acc[open] .apex-wholesale__acc-icon::after {
+    rotate: 0deg;
+  }
+
+  .apex-wholesale__acc-body {
+    padding-block-end: 20px;
+    font-size: 0.875rem;
+    line-height: 1.375rem;
+  }
+
+  .apex-wholesale__acc-body > * {
+    margin: 0 0 12px;
+  }
+
+  .apex-wholesale__acc-body ul {
+    padding-inline-start: 20px;
+  }
+
+  /* Start your application */
+  .apex-wholesale__start-block {
+    margin-block-start: 120px;
+    scroll-margin-top: 24px;
+  }
+
+  /* The form card */
+  .apex-wholesale__card {
+    max-width: 1000px;
+    margin-block-start: 48px;
+    padding: 48px;
+    border-radius: var(--apex-radius-xl);
+    background: var(--apex-stone-100-alt);
+    box-shadow: 0 2px 6px rgb(51 56 50 / 0.08), 0 16px 64px rgb(51 56 50 / 0.22);
+    scroll-margin-top: 24px;
+  }
+
+  .apex-wholesale__track {
+    height: 14px;
+    overflow: hidden;
+    border-radius: var(--apex-radius-pill);
+    background: rgb(51 56 50 / 0.1);
+  }
+
+  .apex-wholesale__fill {
+    display: block;
+    width: 14%;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--apex-dried-moss);
+    transition: width 0.3s ease;
+  }
+
+  .apex-wholesale__progress-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-block-start: 6px;
+    font-size: 0.625rem;
+    line-height: 0.875rem;
+  }
+
+  .apex-wholesale__step {
+    min-width: 0;
+    margin: 24px 0 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .apex-wholesale__step[hidden] {
+    display: none;
+  }
+
+  .apex-wholesale__step-label {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .apex-wholesale__step-title {
+    float: left;
+    width: 100%;
+    margin: 8px 0 0;
+    padding: 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 3rem;
+    line-height: 0.96;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-wholesale__step-title + * {
+    clear: both;
+  }
+
+  .apex-wholesale__step-intro {
+    margin: 12px 0 0;
+    padding-block-start: 12px;
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-wholesale__fields {
+    display: grid;
+    gap: 20px;
+    margin-block-start: 32px;
+  }
+
+  .apex-wholesale__input {
+    position: relative;
+    display: block;
+  }
+
+  .apex-wholesale__input .apex-field__input {
+    padding-inline-end: 44px;
+  }
+
+  .apex-wholesale__arrow {
+    position: absolute;
+    inset-inline-end: 14px;
+    top: 50%;
+    display: flex;
+    translate: 0 -50%;
+    pointer-events: none;
+  }
+
+  .apex-wholesale__arrow svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .apex-wholesale__area {
+    min-height: 120px;
+    resize: vertical;
+  }
+
+  .apex-wholesale__group {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .apex-wholesale__checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-block-start: 4px;
+  }
+
+  .apex-wholesale__check {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border: 1px solid var(--apex-dried-moss);
+    border-radius: var(--apex-radius-pill);
+    background: var(--apex-stone-100);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+    cursor: pointer;
+  }
+
+  .apex-wholesale__check:has(input:checked) {
+    font-weight: 700;
+    border-color: var(--apex-burrow);
+  }
+
+  .apex-wholesale__check input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--apex-dried-moss);
+  }
+
+  .apex-wholesale__check--wide {
+    align-items: flex-start;
+    border-radius: 16px;
+    font-weight: 400;
+  }
+
+  .apex-wholesale__check--wide input {
+    flex: none;
+    margin-block-start: 1px;
+  }
+
+  .apex-wholesale__step-error,
+  .apex-wholesale__errors {
+    margin: 16px 0 0;
+    font-size: 0.875rem;
+    color: #a3361f;
+  }
+
+  .apex-wholesale__nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-block-start: 40px;
+  }
+
+  .apex-wholesale__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-inline-end: auto;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.8125rem;
+    color: var(--apex-dried-moss);
+    cursor: pointer;
+    transform-origin: left center;
+    transition: scale 0.2s ease;
+  }
+
+  .apex-wholesale__back:is(:hover, :focus-visible) {
+    scale: 1.06;
+  }
+
+  .apex-wholesale__back svg {
+    width: 16px;
+    height: 16px;
+    rotate: 180deg;
+  }
+
+  .apex-wholesale__back[hidden],
+  .apex-wholesale__next[hidden],
+  .apex-wholesale__submit[hidden] {
+    display: none;
+  }
+
+  .apex-wholesale__done:focus {
+    outline: none;
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-wholesale__top {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 40px;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-wholesale {
+      padding-block: 32px 80px;
+    }
+
+    .apex-wholesale__title {
+      margin-block-start: 16px;
+      font-size: 4rem;
+    }
+
+    .apex-wholesale__info {
+      padding: 28px 24px;
+      border-radius: 24px;
+    }
+
+    .apex-wholesale__info-title,
+    .apex-wholesale__h2,
+    .apex-wholesale__step-title {
+      font-size: 2.5rem;
+    }
+
+    .apex-wholesale__start-block {
+      margin-block-start: 72px;
+    }
+
+    .apex-wholesale__card {
+      margin-block-start: 32px;
+      padding: 28px 20px;
+      border-radius: 24px;
+    }
+
+    .apex-wholesale__nav {
+      flex-direction: column-reverse;
+      align-items: stretch;
+    }
+
+    .apex-wholesale__back {
+      margin-inline-end: 0;
+      justify-content: center;
+    }
+  }
+  .apex-wholesale__fields--uploads {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .apex-upload__optional {
+    font-weight: 400;
+    opacity: 0.7;
+  }
+
+  .apex-upload__drop {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-block-start: 8px;
+    padding: 24px 16px;
+    border: 1.5px dashed rgb(51 56 50 / 0.35);
+    border-radius: 16px;
+    background: rgb(255 255 255 / 0.55);
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+  }
+
+  .apex-upload__drop[hidden] {
+    display: none;
+  }
+
+  .apex-upload__drop:hover,
+  .apex-upload__drop.is-over {
+    border-color: var(--apex-burrow);
+    background: rgb(255 255 255 / 0.85);
+  }
+
+  .apex-upload__drop:has(.apex-upload__input:focus-visible) {
+    outline: 2px solid var(--apex-burrow);
+    outline-offset: 2px;
+  }
+
+  .apex-upload__input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+  }
+
+  .apex-upload__icon {
+    display: inline-flex;
+    margin-block-end: 4px;
+  }
+
+  .apex-upload__prompt {
+    font-size: 0.9375rem;
+  }
+
+  .apex-upload__prompt strong {
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .apex-upload__hint {
+    font-size: 0.8125rem;
+    opacity: 0.7;
+  }
+
+  .apex-upload__list {
+    display: grid;
+    gap: 8px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .apex-upload__list:empty {
+    display: none;
+  }
+
+  .apex-upload__item {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2px 12px;
+    padding: 12px 16px;
+    border: 1px solid rgb(51 56 50 / 0.2);
+    border-radius: 12px;
+    background: rgb(255 255 255 / 0.85);
+    overflow: hidden;
+  }
+
+  .apex-upload__name {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .apex-upload__status {
+    grid-column: 1;
+    font-size: 0.8125rem;
+    opacity: 0.75;
+  }
+
+  .apex-upload__item.is-error {
+    border-color: #b3261e;
+  }
+
+  .apex-upload__item.is-error .apex-upload__status {
+    color: #b3261e;
+    opacity: 1;
+  }
+
+  .apex-upload__remove {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    padding: 4px 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-size: 0.875rem;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+
+  .apex-upload__remove:hover {
+    transform: scale(1.06);
+  }
+
+  .apex-upload__bar {
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--apex-burrow) var(--p, 0%), transparent var(--p, 0%));
+    opacity: 0.6;
+  }
+
+  .apex-upload__item.is-done .apex-upload__bar,
+  .apex-upload__item.is-error .apex-upload__bar {
+    display: none;
+  }
+
+  .apex-upload__note {
+    margin: 0;
+    font-size: 0.8125rem;
+    opacity: 0.75;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX wholesale form",
+  "tag": "section",
+  "class": "apex-wholesale-section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Become a verified Apex Feeds wholesaler" },
+    { "type": "text", "id": "title", "label": "Title", "info": "Leave blank to use the page title.", "default": "Wholesale application" },
+    {
+      "type": "richtext",
+      "id": "intro",
+      "label": "Intro",
+      "default": "<p>Thank you for your interest in becoming an Apex Feeds wholesale partner. At Apex Feeds, we are committed to supplying premium feeder insects, frozen, freeze-dried and dehydrated meal foods, reptile nutrition products, and pet care essentials to independent pet stores, and industry professionals throughout Australia.</p><p>Our wholesale program is designed to provide retailers with competitive margins, reliable supply, quality products, and ongoing support to help grow their business and deliver value to their customers.</p><p>Whether you are looking to stock our live feeder insects, our premium reptile buffet foods, NutriCore Basics Range, Frozen Buffet Meals, Freeze-Dried Insect Range, Supplements, or Insect Hydration product range, Apex Feeds aims to provide a dependable wholesale solution backed by exceptional service.</p>"
+    },
+    { "type": "text", "id": "start_label", "label": "Button label", "default": "Start the application form" },
+    { "type": "header", "content": "Important information panel" },
+    { "type": "text", "id": "info_title", "label": "Title", "default": "Important information" },
+    { "type": "text", "id": "info_subtitle", "label": "Subtitle", "default": "Please read carefully before submitting your wholesale application" },
+    { "type": "text", "id": "requirements_title", "label": "First heading", "default": "Wholesale account requirements" },
+    {
+      "type": "richtext",
+      "id": "requirements_text",
+      "label": "First text",
+      "default": "<p>To maintain the integrity of our retail network and support our existing wholesale partners, applicants must meet the following minimum requirements:</p><ul><li>Operate an established brick-and-mortar retail business.</li><li>Hold all required licences, permits, and registrations relevant to their business activities.</li><li>Maintain a professional retail presence suitable for the products supplied by Apex Feeds.</li></ul><p>Please note that wholesale accounts will not be approved for:</p><ul><li>Hobby breeders or hobby businesses.</li><li>Home-based resellers.</li><li>Businesses operating solely through social media platforms.</li><li>Online-only businesses without an established physical retail location.</li></ul>"
+    },
+    { "type": "text", "id": "approval_title", "label": "Second heading", "default": "Account approval" },
+    {
+      "type": "richtext",
+      "id": "approval_text",
+      "label": "Second text",
+      "default": "<p>All wholesale applications are subject to review and approval by Apex Feeds. Submission of a wholesale application does not guarantee approval. Apex Feeds reserves the right to approve, decline, suspend, or terminate any wholesale account at its sole discretion and without providing a reason.</p><p>Our goal is to build long-term relationships with reputable businesses that align with the values, quality standards, and professional reputation of the Apex Feeds brand.</p><p>Apply for a wholesale account if your business meets the above requirements and you are interested in becoming an Apex Feeds stockist. We invite you to contact our team to discuss your requirements and begin the application process.</p>"
+    },
+    { "type": "header", "content": "Application form" },
+    { "type": "text", "id": "form_title", "label": "Title", "default": "Start your application" },
+    {
+      "type": "richtext",
+      "id": "form_intro",
+      "label": "Intro",
+      "default": "<p>Apex Feeds wholesale accounts are open to established brick-and-mortar retailers. Complete the form below and our team will review your application within 7 business days.</p><p><strong>Before you start, please have these ready:</strong></p><ul><li>Your ABN</li><li>A photo of your shopfront and a photo of your store interior</li><li>Copies of any licences, permits or registrations relevant to your business</li></ul>"
+    },
+    {
+      "type": "text",
+      "id": "upload_url",
+      "label": "Document upload service address",
+      "info": "The address of the private upload service, ending in /upload. Leave blank to ask for links instead of uploads."
+    },
+    { "type": "text", "id": "submit_label", "label": "Submit button label", "default": "Submit application" },
+    { "type": "text", "id": "success_title", "label": "Thank you title", "default": "Thanks, we've got it" },
+    {
+      "type": "richtext",
+      "id": "success_text",
+      "label": "Thank you text",
+      "default": "<p>Our team will review your application and get back to you within 7 business days.</p>"
+    }
+  ],
+  "presets": [{ "name": "APEX wholesale form" }]
+}
+{% endschema %}
