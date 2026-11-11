@@ -139,6 +139,8 @@
       <p>{{ empty_text }}</p>
       {%- if active_count > 0 -%}
         <a class="apex-button apex-button--outline-moss" href="{{ clear_url }}">Clear filters</a>
+      {%- elsif request.page_type == 'search' -%}
+        <a class="apex-button apex-button--outline-moss" href="{{ routes.all_products_collection_url }}">Shop all products</a>
       {%- endif -%}
     </div>
   {%- endif -%}
