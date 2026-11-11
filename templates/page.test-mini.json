@@ -1,0 +1,6 @@
+{
+  "sections": {
+    "cta": { "type": "apex-cta", "settings": {} }
+  },
+  "order": ["cta"]
+}
