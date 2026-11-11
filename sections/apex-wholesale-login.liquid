@@ -119,11 +119,17 @@
     margin-block-end: 0;
   }
 
-  .apex-wlogin__apply,
   .apex-wlogin__go {
     background-color: var(--apex-olive);
     border-color: var(--apex-olive);
     color: var(--apex-sandstone);
+  }
+
+  /* Secondary: the sign in is the main action on this page */
+  .apex-wlogin__apply {
+    background-color: transparent;
+    border: 1.5px solid var(--apex-olive);
+    color: var(--apex-olive);
   }
 
   .apex-wlogin__apply {
@@ -185,7 +191,7 @@
 
   .apex-wlogin__field {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     margin-block-start: 6px;
     border: 1px solid var(--apex-dried-moss);
     background: transparent;
@@ -217,19 +223,33 @@
     border-color: var(--apex-burrow);
   }
 
+  /* Amber square behind the arrow so the eye lands on signing in */
   .apex-wlogin__submit {
     display: inline-flex;
-    margin-inline-end: 14px;
-    padding: 4px;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 48px;
+    margin: -1px -1px -1px 0;
+    padding: 0;
     border: 0;
-    background: none;
+    background: var(--apex-amber);
     color: var(--apex-burrow);
     cursor: pointer;
+  }
+
+  .apex-wlogin__submit svg {
     transition: transform 0.2s ease;
   }
 
-  .apex-wlogin__submit:hover {
+  .apex-wlogin__submit:hover svg,
+  .apex-wlogin__submit:focus-visible svg {
     transform: scale(1.06);
+  }
+
+  .apex-wlogin__submit:focus-visible {
+    outline: 2px solid var(--apex-burrow);
+    outline-offset: 2px;
   }
 
   .apex-wlogin__submit svg {
