@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
     "hero": {
@@ -79,9 +88,10 @@
         "title": "Naturals Range",
         "title_size": "section",
         "text": "<p>Apex Feeds Naturals Range is where we truly stand apart. We have developed a growing range of complete and supplementary reptile foods using carefully selected ingredients including whole prey, quality meats, feeder insects, vegetables, fruits, vitamins, minerals and natural binders.</p><p>Rather than relying solely on inexpensive fillers, our formulations focus on genuine food ingredients that reptile keepers can recognise and trust.</p>",
+        "image": "shopify://shop_images/Premium-grou-mockup_54c5dd86-9df0-4cfb-9d73-52b5b146a7d7.png",
         "image_label": "Naturals Range product shot",
         "image_position": "right",
-        "image_height": 460,
+        "image_height": 520,
         "padding_top": 0,
         "padding_bottom": 96
       }
@@ -155,7 +165,9 @@
         "title": "Feed with confidence",
         "text": "<p>Apex Feeds is continually expanding its product range, breeding programs and nutritional research. Whether you are caring for a single dragon, breeding Blue Tongue Skinks, maintaining a collection of monitors, or operating a pet store, we are committed to helping you feed with confidence.</p>",
         "button_label": "Shop all products",
+        "button_link": "",
         "button_2_label": "Become a stockist",
+        "button_2_link": "",
         "padding_bottom": 160
       }
     }
