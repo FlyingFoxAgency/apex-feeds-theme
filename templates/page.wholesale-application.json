@@ -2,7 +2,9 @@
   "sections": {
     "main": {
       "type": "apex-wholesale-application",
-      "settings": {}
+      "settings": {
+        "upload_url": "https://apex-wholesale-docs.apexfeeds.workers.dev/upload"
+      }
     }
   },
   "order": ["main"]
