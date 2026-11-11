@@ -44,7 +44,7 @@
       {%- endif -%}
       <h1 class="apex-policy__title">{{ page.title | default: 'Policy' | escape }}</h1>
       {%- capture updated -%}
-        {%- if section.settings.show_date and page.published_at -%}
+        {%- if section.settings.show_date and page.published_at and page.content != blank -%}
           Last updated: {{ page.published_at | date: '%-d %B %Y' }}.
         {%- endif %} {{ section.settings.intro | escape -}}
       {%- endcapture -%}
@@ -440,7 +440,7 @@
       "type": "checkbox",
       "id": "show_date",
       "label": "Show \"Last updated\" date",
-      "info": "Uses the page's published date.",
+      "info": "Uses the page's published date. Hidden when the text comes from Settings > Policies, which has its own date.",
       "default": true
     },
     {
