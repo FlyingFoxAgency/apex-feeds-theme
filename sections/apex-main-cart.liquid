@@ -59,8 +59,18 @@
                 </a>
 
                 <div class="apex-cart__info">
-                  {%- if item.product.type != blank -%}
-                    <p class="apex-cart__category">{{ item.product.type | escape }}</p>
+                  {%- liquid
+                    # Category: the Shop category metafield, else the product type
+                    assign category = item.product.metafields.custom.shop_category.value | default: item.product.metafields.custom.shop_nav_category.value
+                    if category.first != blank
+                      assign category = category.first
+                    endif
+                    if category == blank
+                      assign category = item.product.type
+                    endif
+                  -%}
+                  {%- if category != blank -%}
+                    <p class="apex-cart__category">{{ category | escape }}</p>
                   {%- endif -%}
                   <a class="apex-cart__name" href="{{ item.url }}">{{ item.product.title | escape }}</a>
                   {%- unless item.product.has_only_default_variant -%}
