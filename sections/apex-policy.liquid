@@ -198,10 +198,11 @@
 </script>
 
 {% stylesheet %}
-  /* Back to top: floats bottom centre once the page has scrolled two screens */
+  /* Back to top: floats bottom centre once the page has scrolled two screens. Near the end of the
+     page it rides up with the help button (--apex-help-lift) to stay 30px above the footer. */
   .apex-policy__top {
     position: fixed;
-    inset-block-end: 40px;
+    inset-block-end: max(40px, var(--apex-help-lift, 0px));
     inset-inline-start: 50%;
     z-index: 60;
     display: inline-flex;
@@ -253,7 +254,7 @@
 
   @media screen and (max-width: 749px) {
     .apex-policy__top {
-      inset-block-end: 24px;
+      inset-block-end: max(24px, var(--apex-help-lift, 0px));
     }
   }
 
