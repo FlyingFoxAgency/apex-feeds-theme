@@ -342,11 +342,17 @@
     margin: 0;
   }
 
-  .apex-cart__empty-button,
-  .apex-cart__checkout {
+  .apex-cart__empty-button {
     background-color: var(--apex-dried-moss);
     border-color: var(--apex-dried-moss);
     color: var(--apex-sandstone);
+  }
+
+  /* Checkout: amber with burrow text, like Add to cart */
+  .apex-cart__checkout {
+    background-color: var(--apex-amber);
+    border-color: var(--apex-amber);
+    color: var(--apex-burrow);
   }
 
   .apex-cart__layout {
@@ -579,7 +585,7 @@
     padding: 40px;
     border-radius: var(--apex-radius-xl);
     background: var(--apex-stone-100-alt);
-    box-shadow: 0 0 112px rgb(0 0 0 / 0.12);
+    box-shadow: 0 2px 6px rgb(51 56 50 / 0.08), 0 16px 64px rgb(51 56 50 / 0.22);
   }
 
   .apex-cart__summary-title {
@@ -831,7 +837,7 @@
       gap: 20px;
       padding: 28px 20px;
       border-radius: 24px;
-      box-shadow: 0 0 64px rgb(0 0 0 / 0.1);
+      box-shadow: 0 2px 6px rgb(51 56 50 / 0.08), 0 12px 40px rgb(51 56 50 / 0.2);
     }
 
     .apex-cart__summary-title {
