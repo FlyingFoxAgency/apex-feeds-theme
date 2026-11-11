@@ -165,7 +165,7 @@
       }
     };
 
-    // Back to top: shows once the page has scrolled two screens (same as the policy pages)
+    // Back to top (same button as the policy pages)
     const topButton = root.querySelector('[data-back-to-top]');
     let startTop = null;
     if (topButton) document.body.appendChild(topButton);
@@ -173,7 +173,10 @@
       if (!topButton) return;
       const top = root.getBoundingClientRect().top;
       if (startTop === null || top > startTop) startTop = top;
-      const show = startTop - top > window.innerHeight * 2;
+      // Phones: after two full screens. Larger screens: after half a screen, so it shows on any page
+      // that runs below the fold (a page that fits the screen can't scroll, so it never shows)
+      const screens = window.matchMedia('(max-width: 749px)').matches ? 2 : 0.5;
+      const show = startTop - top > window.innerHeight * screens;
       if (show) topButton.hidden = false;
       topButton.classList.toggle('is-visible', show);
     };
@@ -579,7 +582,7 @@
       "type": "checkbox",
       "id": "show_back_to_top",
       "label": "Show Back to top button",
-      "info": "Appears after two screens of scrolling.",
+      "info": "Appears after half a screen of scrolling (two screens on phones). Hidden when the page fits on screen.",
       "default": true
     },
     {
