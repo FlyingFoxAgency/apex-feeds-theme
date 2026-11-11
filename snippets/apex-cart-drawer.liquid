@@ -1,0 +1,454 @@
+{% doc %}
+  APEX cart drawer content (Figma "APEX Cart Drawer Open"), rendered inside Horizon's cart drawer
+  shell (snippets/cart-drawer.liquid) so Horizon still opens it after Add to cart and re-renders it
+  when the cart changes.
+  - Header: "Your cart (N)" in Dharma and a round close button.
+  - Free shipping progress bar (Theme settings > APEX Feeds > Cart drawer).
+  - Line items: image, category, title, options, quantity pill, line price, Remove.
+  - Footer: subtotal, a note, amber Checkout and an outlined View cart button.
+  Quantity and Remove update the cart in place (/cart/change.js) and re-render the drawer.
+
+  @example
+  {% render 'apex-cart-drawer' %}
+{% enddoc %}
+{%- liquid
+  assign threshold_cents = settings.apex_free_shipping_threshold | times: 100
+  assign remaining = threshold_cents | minus: cart.total_price
+  assign progress = 0
+  if threshold_cents > 0
+    assign progress = cart.total_price | times: 100 | divided_by: threshold_cents
+    if progress > 100
+      assign progress = 100
+    endif
+  endif
+-%}
+<div class="apex-drawer" data-apex-drawer>
+  <div class="apex-drawer__header">
+    <h2 class="apex-drawer__title" id="cart-drawer-heading">
+      Your cart{% if cart.item_count > 0 %} ({{ cart.item_count }}){% endif %}
+    </h2>
+    <button
+      type="button"
+      class="apex-drawer__close"
+      on:click="#cart-drawer/close"
+      aria-label="{{ 'actions.close' | t }}"
+    >
+      {{- 'apex-icon-close.svg' | inline_asset_content -}}
+    </button>
+  </div>
+
+  {%- if cart.item_count == 0 -%}
+    <div class="apex-drawer__empty">
+      <p>Your cart is empty.</p>
+      <a class="apex-button apex-drawer__shop" href="{{ routes.all_products_collection_url }}">Shop all products</a>
+    </div>
+  {%- else -%}
+    {%- if threshold_cents > 0 -%}
+      <div class="apex-drawer__shipping">
+        <p class="apex-drawer__shipping-text">
+          {%- if remaining > 0 -%}
+            You’re {{ remaining | money }} away from free shipping
+          {%- else -%}
+            You’ve unlocked free shipping
+          {%- endif -%}
+        </p>
+        <div
+          class="apex-drawer__track"
+          role="progressbar"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="{{ progress }}"
+          aria-label="Progress to free shipping"
+        >
+          <span class="apex-drawer__fill" style="width: {{ progress }}%;"></span>
+        </div>
+      </div>
+    {%- endif -%}
+
+    <ul class="apex-drawer__list" role="list">
+      {%- for item in cart.items -%}
+        {%- liquid
+          assign category = item.product.metafields.custom.shop_category.value | default: item.product.metafields.custom.shop_nav_category.value
+          if category.first != blank
+            assign category = category.first
+          endif
+          if category == blank
+            assign category = item.product.type
+          endif
+        -%}
+        <li class="apex-drawer__line" data-line="{{ forloop.index }}">
+          <a class="apex-drawer__image" href="{{ item.url }}" tabindex="-1" aria-hidden="true">
+            {%- if item.image -%}
+              {{ item.image | image_url: width: 192 | image_tag: loading: 'lazy', alt: '', widths: '96, 192' }}
+            {%- endif -%}
+          </a>
+          <div class="apex-drawer__info">
+            {%- if category != blank -%}
+              <p class="apex-drawer__category">{{ category | escape }}</p>
+            {%- endif -%}
+            <a class="apex-drawer__name" href="{{ item.url }}">{{ item.product.title | escape }}</a>
+            {%- unless item.product.has_only_default_variant -%}
+              {%- for option in item.options_with_values -%}
+                <p class="apex-drawer__meta">{{ option.name | escape }}: {{ option.value | escape }}</p>
+              {%- endfor -%}
+            {%- endunless -%}
+            {%- if item.selling_plan_allocation -%}
+              <p class="apex-drawer__meta">{{ item.selling_plan_allocation.selling_plan.name | escape }}</p>
+            {%- endif -%}
+            <div class="apex-drawer__row">
+              <div class="apex-drawer__qty">
+                <button type="button" class="apex-drawer__qty-btn" data-drawer-step="-1" aria-label="Decrease quantity of {{ item.product.title | escape }}">−</button>
+                <span class="apex-drawer__qty-value" aria-live="polite">{{ item.quantity }}</span>
+                <button type="button" class="apex-drawer__qty-btn" data-drawer-step="1" aria-label="Increase quantity of {{ item.product.title | escape }}">+</button>
+              </div>
+              <a class="apex-drawer__remove" href="{{ item.url_to_remove }}" data-drawer-remove aria-label="Remove {{ item.product.title | escape }}">Remove</a>
+              <p class="apex-drawer__price">
+                {%- if item.original_line_price > item.final_line_price -%}
+                  <s>{{ item.original_line_price | money }}</s>
+                {%- endif -%}
+                {{ item.final_line_price | money }}
+              </p>
+            </div>
+          </div>
+        </li>
+      {%- endfor -%}
+    </ul>
+
+    <p class="apex-drawer__error" role="alert" data-drawer-error hidden></p>
+
+    <div class="apex-drawer__footer">
+      <div class="apex-drawer__subtotal">
+        <span>Subtotal</span>
+        <span>{{ cart.total_price | money_with_currency }}</span>
+      </div>
+      {%- if settings.apex_cart_drawer_note != blank -%}
+        <p class="apex-drawer__note">{{ settings.apex_cart_drawer_note | escape }}</p>
+      {%- endif -%}
+      <form action="{{ routes.cart_url }}" method="post" class="apex-drawer__actions">
+        <button type="submit" name="checkout" class="apex-button apex-drawer__checkout">Checkout</button>
+        <a class="apex-button apex-drawer__view" href="{{ routes.cart_url }}">View cart</a>
+      </form>
+    </div>
+  {%- endif -%}
+</div>
+
+{% stylesheet %}
+  /* The cart drawer: 520px wide, stone panel, floats over the page (no page squeeze) */
+  :root {
+    --theme-drawer-width: 520px;
+  }
+
+  body:has(#cart-drawer dialog[open]) .page-wrapper--drawer-open {
+    margin-inline-end: 0;
+  }
+
+  #cart-drawer .theme-drawer__dialog {
+    border: 0;
+    border-radius: 40px 0 0 40px;
+    background: var(--apex-stone-100-alt);
+    box-shadow: -16px 0 64px rgb(51 56 50 / 0.22);
+    color: var(--apex-burrow);
+  }
+
+  .apex-drawer {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .apex-drawer__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 48px 40px 0;
+  }
+
+  .apex-drawer__title {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 3rem;
+    line-height: 0.96;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-drawer__close {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border: 1.5px solid var(--apex-burrow);
+    border-radius: 50%;
+    background: none;
+    color: var(--apex-burrow);
+    cursor: pointer;
+    transition: scale 0.2s ease;
+  }
+
+  .apex-drawer__close:is(:hover, :focus-visible) {
+    scale: 1.06;
+  }
+
+  .apex-drawer__close svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .apex-drawer__shipping {
+    padding: 24px 40px 0;
+  }
+
+  .apex-drawer__shipping-text {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+  }
+
+  .apex-drawer__track {
+    height: 8px;
+    margin-block-start: 8px;
+    overflow: hidden;
+    border-radius: var(--apex-radius-pill);
+    background: rgb(51 56 50 / 0.12);
+  }
+
+  .apex-drawer__fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--apex-amber);
+    transition: width 0.3s ease;
+  }
+
+  .apex-drawer__list {
+    flex: 1;
+    min-height: 0;
+    margin: 24px 0 0;
+    padding: 0 40px;
+    overflow-y: auto;
+    list-style: none;
+  }
+
+  .apex-drawer__line {
+    display: grid;
+    grid-template-columns: 80px minmax(0, 1fr);
+    gap: 24px;
+    padding-block: 24px;
+    border-block-end: 1px solid #d9d9d9;
+  }
+
+  .apex-drawer__line:first-child {
+    padding-block-start: 8px;
+  }
+
+  .apex-drawer[aria-busy='true'] .apex-drawer__list {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .apex-drawer__image {
+    display: block;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 12px;
+    background: var(--apex-stone-100);
+  }
+
+  .apex-drawer__image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .apex-drawer__category {
+    margin: 0;
+    font-size: 0.625rem;
+    line-height: 0.875rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-drawer__name {
+    display: block;
+    margin-block-start: 8px;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    line-height: 1.25rem;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--apex-burrow);
+  }
+
+  .apex-drawer__meta {
+    margin: 8px 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-drawer__row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-block-start: 12px;
+  }
+
+  .apex-drawer__qty {
+    display: inline-flex;
+    align-items: center;
+    height: 42px;
+    padding-inline: 4px;
+    border: 1px solid var(--apex-dried-moss);
+    border-radius: var(--apex-radius-pill);
+  }
+
+  .apex-drawer__qty-btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 1rem;
+    color: var(--apex-burrow);
+    cursor: pointer;
+    transition: scale 0.2s ease;
+  }
+
+  .apex-drawer__qty-btn:is(:hover, :focus-visible) {
+    scale: 1.2;
+  }
+
+  .apex-drawer__qty-value {
+    min-width: 20px;
+    font-size: 0.8125rem;
+    text-align: center;
+  }
+
+  .apex-drawer__remove {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--apex-dried-moss);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .apex-drawer__price {
+    margin: 0 0 0 auto;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+    text-align: end;
+  }
+
+  .apex-drawer__price s {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-drawer__error {
+    margin: 12px 40px 0;
+    font-size: 0.8125rem;
+    color: #a3361f;
+  }
+
+  .apex-drawer__footer {
+    padding: 24px 40px 40px;
+  }
+
+  .apex-drawer__subtotal {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 2rem;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .apex-drawer__note {
+    margin: 12px 0 0;
+    font-size: 0.75rem;
+    line-height: 1.125rem;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-drawer__actions {
+    display: grid;
+    gap: 12px;
+    margin-block-start: 24px;
+  }
+
+  .apex-drawer__checkout {
+    width: 100%;
+    background-color: var(--apex-amber);
+    border-color: var(--apex-amber);
+    color: var(--apex-burrow);
+  }
+
+  .apex-drawer__view {
+    width: 100%;
+    background-color: transparent;
+    border-color: var(--apex-burrow);
+    color: var(--apex-burrow);
+  }
+
+  .apex-drawer__empty {
+    display: grid;
+    justify-items: start;
+    gap: 16px;
+    padding: 32px 40px;
+  }
+
+  .apex-drawer__empty p {
+    margin: 0;
+  }
+
+  .apex-drawer__shop {
+    background-color: var(--apex-dried-moss);
+    border-color: var(--apex-dried-moss);
+    color: var(--apex-sandstone);
+  }
+
+  @media screen and (max-width: 749px) {
+    #cart-drawer .theme-drawer__dialog {
+      border-radius: 0;
+    }
+
+    .apex-drawer__header {
+      padding: 24px 20px 0;
+    }
+
+    .apex-drawer__title {
+      font-size: 2.5rem;
+    }
+
+    .apex-drawer__shipping,
+    .apex-drawer__list,
+    .apex-drawer__footer {
+      padding-inline: 20px;
+    }
+
+    .apex-drawer__footer {
+      padding-block-end: 24px;
+    }
+
+    .apex-drawer__line {
+      grid-template-columns: 64px minmax(0, 1fr);
+      gap: 16px;
+    }
+  }
+{% endstylesheet %}

@@ -21,6 +21,11 @@
     src="{{ 'cart-drawer.js' | asset_url }}"
     fetchpriority="low"
   ></script>
+  <script
+    type="module"
+    src="{{ 'apex-cart-drawer.js' | asset_url }}"
+    fetchpriority="low"
+  ></script>
 
   {% capture empty_cart_drawer_content %}
     <div
@@ -63,63 +68,8 @@
           class="cart-drawer__inner{% if cart.empty? %} cart-drawer--empty{% endif %}"
           data-hydration-key="cart-drawer-inner"
         >
-          {%- if cart.empty? -%}
-            <div class="theme-drawer__header">
-              <button
-                on:click="#cart-drawer/close"
-                class="theme-drawer__close-button cart-drawer__close-button--empty"
-                type="button"
-                aria-label="{{ 'actions.close' | t }}"
-              >
-                <span class="svg-wrapper">
-                  {{- 'icon-close.svg' | inline_asset_content -}}
-                </span>
-              </button>
-            </div>
-          {%- else -%}
-            {% capture cart_badge_html %}
-              <span
-                class="theme-drawer__badge{% if cart.item_count == 0 %} visually-hidden{% endif %}"
-                aria-hidden="true"
-                {% if cart.item_count <= 99 %}
-                  data-maintain-ratio
-                {% endif %}
-              >
-                {{- cart.item_count -}}
-              </span>
-              {% if cart.item_count > 0 %}
-                <span class="visually-hidden">
-                  {{ 'accessibility.cart_count' | t }}: {{ cart.item_count }}
-                </span>
-              {% endif %}
-            {% endcapture %}
-            {% assign cart_drawer_title = 'content.cart_title' | t %}
-            {% render 'theme-drawer-header',
-              title: cart_drawer_title,
-              drawer_id: 'cart-drawer',
-              heading_id: 'cart-drawer-heading',
-              title_append: cart_badge_html
-            %}
-          {%- endif -%}
-
-          {% capture cart_items_children %}
-            {%- if cart.empty? -%}
-              {{ empty_cart_drawer_content }}
-            {%- else -%}
-              <scroll-hint
-                class="cart-drawer__content"
-                aria-label="{{ 'accessibility.cart' | t }}"
-              >
-                <scroll-hint class="cart-drawer__items">
-                  {% render 'cart-products', context: 'drawer' %}
-                </scroll-hint>
-
-                <div class="cart-drawer__summary">
-                  {% render 'cart-summary', section_id: 'cart-drawer-section' %}
-                </div>
-              </scroll-hint>
-            {%- endif -%}
-          {% endcapture %}
+          {%- comment -%} APEX: our own drawer layout (snippets/apex-cart-drawer.liquid) {%- endcomment -%}
+          {% capture cart_items_children %}{% render 'apex-cart-drawer' %}{% endcapture %}
           {% render 'cart-items-component',
             children: cart_items_children,
             is_drawer: true,

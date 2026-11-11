@@ -2175,7 +2175,24 @@
       { "type": "url", "id": "apex_social_facebook", "label": "Facebook" },
       { "type": "url", "id": "apex_social_instagram", "label": "Instagram" },
       { "type": "url", "id": "apex_social_youtube", "label": "YouTube" },
-      { "type": "url", "id": "apex_social_tiktok", "label": "TikTok" }
+      { "type": "url", "id": "apex_social_tiktok", "label": "TikTok" },
+      {
+        "type": "header",
+        "content": "Cart drawer"
+      },
+      {
+        "type": "number",
+        "id": "apex_free_shipping_threshold",
+        "label": "Free shipping from ($)",
+        "info": "Shows the free shipping progress bar in the cart drawer. Set 0 to hide it. The cart page has its own setting.",
+        "default": 150
+      },
+      {
+        "type": "text",
+        "id": "apex_cart_drawer_note",
+        "label": "Note under the subtotal",
+        "default": "Taxes included. Shipping calculated at checkout. Live and frozen orders dispatch Mondays and Tuesdays."
+      }
     ]
   }
 ]
