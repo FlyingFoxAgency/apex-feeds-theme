@@ -155,9 +155,7 @@
         "title": "Feed with confidence",
         "text": "<p>Apex Feeds is continually expanding its product range, breeding programs and nutritional research. Whether you are caring for a single dragon, breeding Blue Tongue Skinks, maintaining a collection of monitors, or operating a pet store, we are committed to helping you feed with confidence.</p>",
         "button_label": "Shop all products",
-        "button_link": "shopify://collections/all",
         "button_2_label": "Become a stockist",
-        "button_2_link": "/pages/stockists",
         "padding_bottom": 160
       }
     }

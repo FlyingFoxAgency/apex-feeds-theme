@@ -21,7 +21,7 @@
           </a>
         {%- endif -%}
         {%- if section.settings.button_2_label != blank -%}
-          <a class="apex-button apex-cta__button apex-cta__button--outline" href="{{ section.settings.button_2_link | default: routes.root_url }}">
+          <a class="apex-button apex-cta__button apex-cta__button--outline" href="{{ section.settings.button_2_link | default: '/pages/stockists' }}">
             {{- section.settings.button_2_label | escape -}}
           </a>
         {%- endif -%}
@@ -156,7 +156,8 @@
     {
       "type": "url",
       "id": "button_2_link",
-      "label": "Button 2 link"
+      "label": "Button 2 link",
+      "info": "Empty: /pages/stockists"
     },
     {
       "type": "range",
