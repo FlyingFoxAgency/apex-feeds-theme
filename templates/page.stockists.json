@@ -67,9 +67,23 @@
             "website": "",
             "map_query": ""
           }
+        },
+        "stockist_narellan": {
+          "type": "stockist",
+          "settings": {
+            "name": "Narellan Town Centre (test)",
+            "address": "326 Camden Valley Way",
+            "suburb": "Narellan",
+            "state": "NSW",
+            "postcode": "2567",
+            "phone": "",
+            "website": "",
+            "map_query": "Narellan Town Centre, 326 Camden Valley Way, Narellan NSW 2567"
+          }
         }
       },
       "block_order": [
+        "stockist_narellan",
         "stockist_1",
         "stockist_2",
         "stockist_3",
