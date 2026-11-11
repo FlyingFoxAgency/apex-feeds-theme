@@ -1,0 +1,822 @@
+{% comment %}
+  APEX Stockists page (Figma "APEX Stockists Page").
+  - Eyebrow, the page title in big Dharma and an intro line.
+  - Store finder: search by postcode, suburb or store name, plus a State menu. Each Stockist block is
+    one store card (name, address, phone, Get directions, Visit website).
+  - Map: a Google map (no app or key needed). It shows Australia, or the stockist you pick, or the
+    only one left after a search.
+  - "Want to stock Apex Feeds?" panel at the end, linking to the wholesale application.
+{% endcomment %}
+{%- liquid
+  assign stockists = section.blocks | where: 'type', 'stockist'
+  assign map_default = section.settings.map_default | default: 'Australia'
+-%}
+<div class="apex-stockists" data-apex-stockists>
+  <div class="apex-container">
+    <div class="apex-stockists__intro">
+      {%- if section.settings.eyebrow != blank -%}
+        <p class="apex-eyebrow apex-stockists__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+      {%- endif -%}
+      <h1 class="apex-stockists__title">
+        {{- section.settings.title | default: page.title | default: 'Stockists' | escape -}}
+      </h1>
+      {%- if section.settings.intro != blank -%}
+        <div class="apex-stockists__lead">{{ section.settings.intro }}</div>
+      {%- endif -%}
+    </div>
+
+    {%- if stockists.size > 0 -%}
+      <form class="apex-stockists__search" role="search" data-stockist-form>
+        <label class="apex-stockists__field apex-stockists__field--query">
+          <span class="apex-stockists__label">{{ section.settings.query_label | escape }}</span>
+          <span class="apex-stockists__input">
+            <span class="apex-stockists__icon" aria-hidden="true">{{- 'apex-icon-search.svg' | inline_asset_content -}}</span>
+            <input
+              type="search"
+              name="q"
+              placeholder="{{ section.settings.query_placeholder | escape }}"
+              autocomplete="postal-code"
+              data-stockist-query
+            >
+          </span>
+        </label>
+        <label class="apex-stockists__field apex-stockists__field--state">
+          <span class="apex-stockists__label">State</span>
+          <span class="apex-stockists__select">
+            <select name="state" data-stockist-state>
+              <option value="">All states</option>
+              {%- assign states = 'ACT,NSW,NT,QLD,SA,TAS,VIC,WA' | split: ',' -%}
+              {%- for state in states -%}
+                <option value="{{ state }}">{{ state }}</option>
+              {%- endfor -%}
+            </select>
+            <span class="apex-stockists__caret" aria-hidden="true"></span>
+          </span>
+        </label>
+        <button type="submit" class="apex-button apex-stockists__button">
+          {{- section.settings.button_label | default: 'Find stockists' | escape -}}
+        </button>
+      </form>
+
+      <div class="apex-stockists__results">
+        <div class="apex-stockists__list-wrap">
+          <p class="apex-stockists__count" role="status" data-stockist-count>
+            {{ stockists.size }} {% if stockists.size == 1 %}stockist{% else %}stockists{% endif %} found
+          </p>
+          <ul class="apex-stockists__list" role="list" data-stockist-list>
+            {%- for block in stockists -%}
+              {%- liquid
+                assign s = block.settings
+                assign place = s.suburb
+                if s.state != blank
+                  assign place = place | append: ' ' | append: s.state
+                endif
+                if s.postcode != blank
+                  assign place = place | append: ' ' | append: s.postcode
+                endif
+                assign place = place | strip
+                assign full_address = s.address | strip
+                if full_address != blank and place != blank
+                  assign full_address = full_address | append: ', ' | append: place
+                elsif place != blank
+                  assign full_address = place
+                endif
+                assign map_query = s.name | append: ', ' | append: full_address
+                if s.map_query != blank
+                  assign map_query = s.map_query
+                endif
+                assign search_text = s.name | append: ' ' | append: full_address | downcase
+              -%}
+              <li
+                class="apex-stockists__card"
+                data-stockist
+                data-state="{{ s.state | escape }}"
+                data-search="{{ search_text | escape }}"
+                data-map="{{ map_query | escape }}"
+                {{ block.shopify_attributes }}
+              >
+                <h2 class="apex-stockists__name">
+                  <button type="button" class="apex-stockists__show" data-stockist-show>
+                    {{- s.name | escape -}}
+                    <span class="visually-hidden">, show on map</span>
+                  </button>
+                </h2>
+                {%- if full_address != blank -%}
+                  <p class="apex-stockists__address">{{ full_address | escape }}</p>
+                {%- endif -%}
+                {%- if s.phone != blank -%}
+                  <p class="apex-stockists__phone">
+                    <a href="tel:{{ s.phone | remove: ' ' | remove: '(' | remove: ')' | escape }}">{{ s.phone | escape }}</a>
+                  </p>
+                {%- endif -%}
+                <p class="apex-stockists__links">
+                  <a
+                    class="apex-stockists__link"
+                    href="https://www.google.com/maps/dir/?api=1&destination={{ map_query | url_encode }}"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    Get directions
+                  </a>
+                  {%- if s.website != blank -%}
+                    <a class="apex-stockists__link" href="{{ s.website }}" target="_blank" rel="noopener">Visit website</a>
+                  {%- endif -%}
+                </p>
+              </li>
+            {%- endfor -%}
+          </ul>
+          <div class="apex-stockists__none" hidden data-stockist-none>
+            {{- section.settings.no_results_text -}}
+          </div>
+        </div>
+
+        {%- if section.settings.show_map -%}
+          <div class="apex-stockists__map">
+            <div
+              class="apex-stockists__map-frame"
+              data-stockist-map
+              data-default="{{ map_default | escape }}"
+              data-zoom="{{ section.settings.map_zoom }}"
+            ></div>
+          </div>
+        {%- endif -%}
+      </div>
+    {%- else -%}
+      <div class="apex-stockists__empty">
+        {{- section.settings.empty_text -}}
+        <a class="apex-button apex-stockists__button" href="{{ routes.all_products_collection_url }}">Shop all products</a>
+      </div>
+    {%- endif -%}
+
+    {%- if section.settings.cta_title != blank -%}
+      <div class="apex-stockists__cta">
+        <div>
+          {%- if section.settings.cta_eyebrow != blank -%}
+            <p class="apex-eyebrow apex-stockists__cta-eyebrow">{{ section.settings.cta_eyebrow | escape }}</p>
+          {%- endif -%}
+          <h2 class="apex-stockists__cta-title">{{ section.settings.cta_title | escape }}</h2>
+          {%- if section.settings.cta_text != blank -%}
+            <p class="apex-stockists__cta-text">{{ section.settings.cta_text | escape }}</p>
+          {%- endif -%}
+        </div>
+        {%- if section.settings.cta_button_label != blank -%}
+          <a class="apex-button apex-stockists__cta-button" href="{{ section.settings.cta_button_link | default: '/pages/wholesale-application' }}">
+            {{- section.settings.cta_button_label | escape -}}
+          </a>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+<script type="module">
+  const root = document.querySelector('[data-apex-stockists]:not([data-ready])');
+  if (root) {
+    root.setAttribute('data-ready', '');
+    const form = root.querySelector('[data-stockist-form]');
+    const query = root.querySelector('[data-stockist-query]');
+    const state = root.querySelector('[data-stockist-state]');
+    const cards = [...root.querySelectorAll('[data-stockist]')];
+    const count = root.querySelector('[data-stockist-count]');
+    const none = root.querySelector('[data-stockist-none]');
+    const map = root.querySelector('[data-stockist-map]');
+
+    // The map frame is added here rather than in the page HTML, which the storefront strips
+    let frame = null;
+    const showOnMap = (place, zoom) => {
+      if (!map) return;
+      if (!frame) {
+        frame = document.createElement('iframe');
+        frame.title = 'Map of Apex Feeds stockists';
+        frame.loading = 'lazy';
+        frame.referrerPolicy = 'no-referrer-when-downgrade';
+        map.appendChild(frame);
+      }
+      const src = `https://maps.google.com/maps?q=${encodeURIComponent(place)}&z=${zoom}&output=embed`;
+      if (frame.src !== src) frame.src = src;
+    };
+    const select = (card) => {
+      for (const c of cards) c.classList.toggle('is-selected', c === card);
+      if (card) showOnMap(card.dataset.map, 15);
+      else showOnMap(map?.dataset.default || 'Australia', map?.dataset.zoom || 4);
+    };
+
+    const filter = () => {
+      const words = (query?.value || '').toLowerCase().trim().split(/\s+/).filter(Boolean);
+      const chosen = state?.value || '';
+      const shown = cards.filter((card) => {
+        const match =
+          (!chosen || card.dataset.state === chosen) &&
+          words.every((w) => card.dataset.search.includes(w));
+        card.hidden = !match;
+        return match;
+      });
+      if (count) count.textContent = `${shown.length} ${shown.length === 1 ? 'stockist' : 'stockists'} found`;
+      if (none) none.hidden = shown.length > 0;
+      if (shown.length === 1) {
+        select(shown[0]);
+      } else {
+        select(null);
+        // A state picked: zoom the map to that state
+        if (chosen && shown.length) showOnMap(`${chosen}, Australia`, 6);
+      }
+    };
+
+    form?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      filter();
+    });
+    state?.addEventListener('change', filter);
+    let timer;
+    query?.addEventListener('input', () => {
+      clearTimeout(timer);
+      timer = setTimeout(filter, 250);
+    });
+    root.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-stockist-show]');
+      if (button) select(button.closest('[data-stockist]'));
+    });
+    select(null);
+  }
+</script>
+
+{% stylesheet %}
+  .apex-stockists {
+    padding-block: 64px 160px;
+    color: var(--apex-burrow);
+  }
+
+  .apex-stockists__intro {
+    max-width: 640px;
+  }
+
+  .apex-stockists__eyebrow {
+    margin: 0;
+  }
+
+  /* Figma: Dharma 128/102 */
+  .apex-stockists__title {
+    margin: 24px 0 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: clamp(4rem, 8.9vw, 8rem);
+    line-height: 0.8;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-stockists__lead {
+    margin-block-start: 24px;
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-stockists__lead > * {
+    margin: 0;
+  }
+
+  /* Store finder */
+  .apex-stockists__search {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 16px;
+    margin-block-start: 96px;
+  }
+
+  .apex-stockists__field {
+    display: grid;
+    gap: 8px;
+  }
+
+  .apex-stockists__field--query {
+    flex: 0 1 480px;
+    min-width: 0;
+  }
+
+  .apex-stockists__field--state {
+    flex: 0 1 240px;
+  }
+
+  .apex-stockists__label {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-stockists__input,
+  .apex-stockists__select {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 50px;
+    padding-inline: 16px;
+    border: 1px solid var(--apex-dried-moss);
+    border-radius: var(--apex-radius-sm);
+    background: var(--apex-stone-100);
+  }
+
+  .apex-stockists__input:focus-within,
+  .apex-stockists__select:focus-within {
+    outline: 2px solid var(--apex-burrow);
+    outline-offset: 2px;
+  }
+
+  .apex-stockists__icon {
+    display: flex;
+    flex: none;
+  }
+
+  .apex-stockists__icon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .apex-stockists .apex-stockists__input input,
+  .apex-stockists .apex-stockists__select select {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    outline: none;
+    font: inherit;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: var(--apex-burrow);
+    appearance: none;
+  }
+
+  .apex-stockists .apex-stockists__select select {
+    padding-inline-end: 32px;
+    cursor: pointer;
+  }
+
+  .apex-stockists__input input::placeholder {
+    color: var(--apex-dried-moss);
+    opacity: 1;
+  }
+
+  /* Down arrow on the State menu */
+  .apex-stockists__caret {
+    position: absolute;
+    inset-inline-end: 18px;
+    inset-block-start: 50%;
+    width: 8px;
+    height: 8px;
+    border-inline-end: 1.5px solid currentcolor;
+    border-block-end: 1.5px solid currentcolor;
+    translate: 0 -70%;
+    rotate: 45deg;
+    pointer-events: none;
+  }
+
+  .apex-stockists__button {
+    flex: none;
+    background-color: var(--apex-dried-moss);
+    border-color: var(--apex-dried-moss);
+    color: var(--apex-sandstone);
+  }
+
+  /* Results: cards on the left, map on the right */
+  .apex-stockists__results {
+    display: grid;
+    grid-template-columns: minmax(0, 480px) minmax(0, 1fr);
+    gap: 48px;
+    align-items: start;
+    margin-block-start: 32px;
+  }
+
+  .apex-stockists__count {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.5rem;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-stockists__list {
+    display: grid;
+    gap: 16px;
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .apex-stockists__card {
+    padding: 24px;
+    border: 2px solid transparent;
+    border-radius: 24px;
+    background: var(--apex-stone-100-alt);
+    transition: border-color 0.2s ease;
+  }
+
+  .apex-stockists__card[hidden] {
+    display: none;
+  }
+
+  .apex-stockists__card.is-selected {
+    border-color: var(--apex-dried-moss);
+  }
+
+  .apex-stockists .apex-stockists__name {
+    margin: 0;
+    font-family: var(--font-body--family);
+    font-size: 1rem;
+    line-height: 1.25rem;
+  }
+
+  .apex-stockists__show {
+    padding: 0;
+    border: 0;
+    background: none;
+    font-family: var(--font-body--family);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    line-height: 1.25rem;
+    letter-spacing: 0.5px;
+    text-align: start;
+    text-transform: uppercase;
+    color: var(--apex-dried-moss);
+    cursor: pointer;
+    transform-origin: left center;
+    transition: scale 0.2s ease;
+  }
+
+  .apex-stockists__show:is(:hover, :focus-visible) {
+    scale: 1.06;
+  }
+
+  .apex-stockists__address,
+  .apex-stockists__phone {
+    margin: 8px 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+  }
+
+  .apex-stockists__phone a {
+    color: var(--apex-dried-moss);
+    text-decoration: none;
+  }
+
+  .apex-stockists__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    margin: 16px 0 0;
+  }
+
+  .apex-stockists__link {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--apex-dried-moss);
+    transform-origin: left center;
+    transition: scale 0.2s ease;
+  }
+
+  .apex-stockists__link:is(:hover, :focus-visible) {
+    scale: 1.06;
+  }
+
+  .apex-stockists__none,
+  .apex-stockists__empty {
+    margin-block-start: 16px;
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-stockists__none > *,
+  .apex-stockists__empty > * {
+    margin: 0 0 16px;
+  }
+
+  .apex-stockists__empty {
+    max-width: 640px;
+    margin-block-start: 64px;
+  }
+
+  .apex-stockists__map {
+    position: sticky;
+    top: 24px;
+    height: min(884px, calc(100vh - 48px));
+    min-height: 480px;
+    overflow: hidden;
+    border-radius: var(--apex-radius-xl);
+    background: var(--apex-stone-100-alt);
+  }
+
+  .apex-stockists__map-frame,
+  .apex-stockists__map iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  /* Want to stock Apex Feeds? */
+  .apex-stockists__cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    margin-block-start: 96px;
+    padding: 64px;
+    border-radius: var(--apex-radius-xl);
+    background: var(--apex-burrow);
+    color: var(--apex-sandstone);
+  }
+
+  .apex-stockists__cta-eyebrow {
+    margin: 0 0 16px;
+    color: var(--apex-sandstone);
+  }
+
+  .apex-stockists__cta-title {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 4rem;
+    line-height: 0.95;
+    text-transform: uppercase;
+    color: var(--apex-sandstone);
+  }
+
+  .apex-stockists__cta-text {
+    max-width: 520px;
+    margin: 16px 0 0;
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-stockists__cta-button {
+    flex: none;
+    background-color: var(--apex-dried-moss);
+    border-color: var(--apex-dried-moss);
+    color: var(--apex-sandstone);
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-stockists__results {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 24px;
+    }
+
+    .apex-stockists__map {
+      position: relative;
+      top: 0;
+      order: -1;
+      height: 360px;
+      min-height: 0;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-stockists {
+      padding-block: 32px 80px;
+    }
+
+    .apex-stockists__title {
+      margin-block-start: 16px;
+      font-size: 4.5rem;
+    }
+
+    .apex-stockists__lead {
+      margin-block-start: 16px;
+    }
+
+    .apex-stockists__search {
+      margin-block-start: 40px;
+    }
+
+    .apex-stockists__field--query,
+    .apex-stockists__field--state {
+      flex: 1 1 100%;
+    }
+
+    .apex-stockists__button {
+      flex: 1 1 100%;
+    }
+
+    .apex-stockists__map {
+      height: 300px;
+      border-radius: 24px;
+    }
+
+    .apex-stockists__cta {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 24px;
+      margin-block-start: 56px;
+      padding: 32px 24px;
+      border-radius: 24px;
+    }
+
+    .apex-stockists__cta-title {
+      font-size: 2.5rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .apex-stockists__show,
+    .apex-stockists__link,
+    .apex-stockists__card {
+      transition: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX stockists",
+  "tag": "section",
+  "class": "apex-stockists-section",
+  "max_blocks": 50,
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Find Apex Feeds near you"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "info": "Leave blank to use the page title.",
+      "default": "Stockists"
+    },
+    {
+      "type": "richtext",
+      "id": "intro",
+      "label": "Intro",
+      "default": "<p>Apex Feeds products are available from selected pet stores across Australia. Search by postcode or suburb to find your nearest stockist, or shop online for delivery Australia-wide.</p>"
+    },
+    {
+      "type": "header",
+      "content": "Store finder"
+    },
+    {
+      "type": "text",
+      "id": "query_label",
+      "label": "Search label",
+      "default": "Postcode or suburb"
+    },
+    {
+      "type": "text",
+      "id": "query_placeholder",
+      "label": "Search placeholder",
+      "default": "e.g. 2000 or Parramatta"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label",
+      "default": "Find stockists"
+    },
+    {
+      "type": "richtext",
+      "id": "no_results_text",
+      "label": "Text when nothing matches",
+      "default": "<p>No stockists match that search yet. Try another postcode or state, or shop online for delivery Australia-wide.</p>"
+    },
+    {
+      "type": "richtext",
+      "id": "empty_text",
+      "label": "Text when there are no stockists",
+      "default": "<p>We're signing our first stockists now. In the meantime, you can shop online for delivery Australia-wide.</p>"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_map",
+      "label": "Show map",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "map_default",
+      "label": "Map starting place",
+      "default": "Australia"
+    },
+    {
+      "type": "range",
+      "id": "map_zoom",
+      "label": "Map starting zoom",
+      "min": 3,
+      "max": 12,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "header",
+      "content": "Want to stock Apex Feeds? panel"
+    },
+    {
+      "type": "text",
+      "id": "cta_eyebrow",
+      "label": "Eyebrow",
+      "default": "For retailers"
+    },
+    {
+      "type": "text",
+      "id": "cta_title",
+      "label": "Title",
+      "info": "Leave blank to hide the panel.",
+      "default": "Want to stock Apex Feeds?"
+    },
+    {
+      "type": "text",
+      "id": "cta_text",
+      "label": "Text",
+      "default": "Join our wholesale program for competitive margins, reliable supply and ongoing support."
+    },
+    {
+      "type": "text",
+      "id": "cta_button_label",
+      "label": "Button label",
+      "default": "Apply for wholesale"
+    },
+    {
+      "type": "url",
+      "id": "cta_button_link",
+      "label": "Button link",
+      "info": "Leave blank to link to /pages/wholesale-application."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "stockist",
+      "name": "Stockist",
+      "settings": [
+        {
+          "type": "text",
+          "id": "name",
+          "label": "Store name",
+          "default": "Stockist name"
+        },
+        {
+          "type": "text",
+          "id": "address",
+          "label": "Street address",
+          "default": "1 Example Street"
+        },
+        {
+          "type": "text",
+          "id": "suburb",
+          "label": "Suburb",
+          "default": "Suburb"
+        },
+        {
+          "type": "select",
+          "id": "state",
+          "label": "State",
+          "options": [
+            { "value": "ACT", "label": "ACT" },
+            { "value": "NSW", "label": "NSW" },
+            { "value": "NT", "label": "NT" },
+            { "value": "QLD", "label": "QLD" },
+            { "value": "SA", "label": "SA" },
+            { "value": "TAS", "label": "TAS" },
+            { "value": "VIC", "label": "VIC" },
+            { "value": "WA", "label": "WA" }
+          ],
+          "default": "NSW"
+        },
+        {
+          "type": "text",
+          "id": "postcode",
+          "label": "Postcode",
+          "default": "2000"
+        },
+        {
+          "type": "text",
+          "id": "phone",
+          "label": "Phone"
+        },
+        {
+          "type": "url",
+          "id": "website",
+          "label": "Website"
+        },
+        {
+          "type": "text",
+          "id": "map_query",
+          "label": "Map search (optional)",
+          "info": "What to look up on the map and for directions if the address alone finds the wrong place, e.g. the store's Google Maps name."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX stockists"
+    }
+  ]
+}
+{% endschema %}
