@@ -94,3 +94,52 @@ document.addEventListener('submit', async (event) => {
     button?.removeAttribute('aria-busy');
   }
 });
+
+// Phones: swipe the drawer to the right to close it
+let swipe = null;
+document.addEventListener(
+  'touchstart',
+  (event) => {
+    const panel = /** @type {HTMLElement | null} */ (
+      /** @type {HTMLElement} */ (event.target).closest?.('#cart-drawer .theme-drawer__dialog')
+    );
+    if (!panel || event.touches.length !== 1) return;
+    swipe = { panel, x: event.touches[0].clientX, y: event.touches[0].clientY, dx: 0, active: false };
+  },
+  { passive: true }
+);
+document.addEventListener(
+  'touchmove',
+  (event) => {
+    if (!swipe) return;
+    const dx = event.touches[0].clientX - swipe.x;
+    const dy = event.touches[0].clientY - swipe.y;
+    // Only a mostly sideways drag to the right counts (vertical scrolling stays normal)
+    if (!swipe.active && (Math.abs(dy) > Math.abs(dx) || dx < 10)) {
+      if (Math.abs(dy) > 10) swipe = null;
+      return;
+    }
+    swipe.active = true;
+    swipe.dx = Math.max(0, dx);
+    swipe.panel.style.transition = 'none';
+    swipe.panel.style.translate = `${swipe.dx}px 0`;
+  },
+  { passive: true }
+);
+document.addEventListener('touchend', () => {
+  if (!swipe) return;
+  const { panel, dx, active } = swipe;
+  swipe = null;
+  if (!active) return;
+  panel.style.transition = 'translate 0.2s ease';
+  if (dx > panel.offsetWidth * 0.25) {
+    panel.style.translate = '100% 0';
+    setTimeout(() => {
+      /** @type {any} */ (drawer())?.close?.();
+      panel.style.transition = '';
+      panel.style.translate = '';
+    }, 200);
+  } else {
+    panel.style.translate = '';
+  }
+});

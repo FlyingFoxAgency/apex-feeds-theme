@@ -423,8 +423,14 @@
   }
 
   @media screen and (max-width: 749px) {
+    /* Phones: 90% wide so the page shows at the left; tap it or swipe right to close */
     #cart-drawer .theme-drawer__dialog {
-      border-radius: 0;
+      width: 90vw;
+      border-radius: 24px 0 0 24px;
+    }
+
+    #cart-drawer .theme-drawer__dialog::backdrop {
+      background: rgb(51 56 50 / 0.45);
     }
 
     .apex-drawer__header {
