@@ -1,0 +1,53 @@
+{
+  "sections": {
+    "main": {
+      "type": "apex-policy",
+      "blocks": {
+        "link_1": {
+          "type": "link",
+          "settings": {
+            "label": "Shipping terms",
+            "link": "/pages/shipping-returns#shipping-terms-and-conditions"
+          }
+        },
+        "link_2": {
+          "type": "link",
+          "settings": {
+            "label": "Refunds & returns",
+            "link": "/pages/shipping-returns#refunds-returns-policy"
+          }
+        },
+        "link_3": {
+          "type": "link",
+          "settings": {
+            "label": "Privacy policy",
+            "link": "/pages/privacy-policy"
+          }
+        },
+        "link_4": {
+          "type": "link",
+          "settings": {
+            "label": "Terms & conditions",
+            "link": "/pages/terms-conditions"
+          }
+        }
+      },
+      "block_order": [
+        "link_1",
+        "link_2",
+        "link_3",
+        "link_4"
+      ],
+      "settings": {
+        "eyebrow": "Policies",
+        "show_date": true,
+        "intro": "Please read these terms before placing your order.",
+        "show_progress": true,
+        "nav_title": "Policies"
+      }
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

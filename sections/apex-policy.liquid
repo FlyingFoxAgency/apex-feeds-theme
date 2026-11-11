@@ -1,0 +1,496 @@
+{% comment %}
+  APEX policy page (Figma "APEX Policy Page - Shipping & Returns"), one layout for every policy:
+  - Eyebrow, the page title in big Dharma, and a "Last updated" line.
+  - Left: a stone "Policies" card of links (one block per link). The link for this page, or for the
+    part of the page on screen (links ending in #heading), shows in amber.
+  - Right: the policy text in a rounded stone panel. Heading 2 = Dharma section title, Heading 3 =
+    DM Sans sub-heading. Each heading gets an id from its text (e.g. "Refunds & returns policy" =
+    #refunds-returns-policy) so links can jump to it.
+  - Text: the page's own content. If that is empty, the matching store policy from Settings >
+    Policies is used (privacy, terms, refund, shipping, picked by the page handle).
+  - A reading bar under the header shows the current heading and how much has been read.
+{% endcomment %}
+{%- liquid
+  assign body = page.content
+  if body == blank
+    if page.handle contains 'privacy'
+      assign body = shop.privacy_policy.body
+    elsif page.handle contains 'terms'
+      assign body = shop.terms_of_service.body
+    elsif page.handle contains 'refund'
+      assign body = shop.refund_policy.body
+    elsif page.handle contains 'shipping'
+      assign body = shop.shipping_policy.body
+    endif
+  endif
+-%}
+<div class="apex-policy" data-apex-policy>
+  {%- if section.settings.show_progress -%}
+    <div class="apex-policy__progress" aria-hidden="true">
+      <div class="apex-container">
+        <div class="apex-policy__track"><span class="apex-policy__fill" data-progress-fill></span></div>
+        <div class="apex-policy__progress-meta">
+          <span data-progress-label></span>
+          <span><span data-progress-pct>0</span>% read</span>
+        </div>
+      </div>
+    </div>
+  {%- endif -%}
+
+  <div class="apex-container">
+    <div class="apex-policy__intro">
+      {%- if section.settings.eyebrow != blank -%}
+        <p class="apex-eyebrow apex-policy__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+      {%- endif -%}
+      <h1 class="apex-policy__title">{{ page.title | default: 'Policy' | escape }}</h1>
+      {%- capture updated -%}
+        {%- if section.settings.show_date and page.published_at -%}
+          Last updated: {{ page.published_at | date: '%-d %B %Y' }}.
+        {%- endif %} {{ section.settings.intro | escape -}}
+      {%- endcapture -%}
+      {%- if updated != blank -%}
+        <p class="apex-policy__lead">{{ updated | strip }}</p>
+      {%- endif -%}
+    </div>
+
+    <div class="apex-policy__grid">
+      {%- if section.blocks.size > 0 -%}
+        <nav class="apex-policy__nav" aria-label="{{ section.settings.nav_title | default: 'Policies' | escape }}">
+          {%- if section.settings.nav_title != blank -%}
+            <p class="apex-policy__nav-title">{{ section.settings.nav_title | escape }}</p>
+          {%- endif -%}
+          <ul class="apex-policy__links" role="list">
+            {%- for block in section.blocks -%}
+              {%- liquid
+                assign link_url = block.settings.link | default: '#'
+                assign link_path = link_url | split: '#' | first
+                assign link_hash = ''
+                if link_url contains '#'
+                  assign link_hash = link_url | split: '#' | last
+                endif
+                assign is_here = false
+                if link_path == page.url or link_path == ''
+                  assign is_here = true
+                endif
+              -%}
+              <li {{ block.shopify_attributes }}>
+                <a
+                  class="apex-policy__link{% if is_here and link_hash == '' %} is-active{% endif %}"
+                  href="{{ link_url }}"
+                  {% if is_here and link_hash != '' %}data-hash="{{ link_hash | escape }}"{% endif %}
+                  {% if is_here and link_hash == '' %}aria-current="page"{% endif %}
+                >
+                  {{- block.settings.label | escape -}}
+                </a>
+              </li>
+            {%- endfor -%}
+          </ul>
+        </nav>
+      {%- endif -%}
+
+      <div class="apex-policy__panel">
+        {%- if body != blank -%}
+          <div class="apex-policy__body rte" data-policy-body>{{ body }}</div>
+        {%- else -%}
+          <p class="apex-policy__empty">
+            {{- section.settings.empty_text | escape -}}
+          </p>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  // Ids for the headings, the reading bar, and the amber link for the part on screen
+  const root = document.querySelector('[data-apex-policy]:not([data-ready])');
+  if (root) {
+    root.setAttribute('data-ready', '');
+    const body = root.querySelector('[data-policy-body]');
+    const headings = body ? [...body.querySelectorAll('h2, h3')] : [];
+    const slug = (text) =>
+      text.toLowerCase().replace(/&/g, ' ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    for (const h of headings) if (!h.id) h.id = slug(h.textContent);
+
+    const hashLinks = [...root.querySelectorAll('[data-hash]')];
+    const fill = root.querySelector('[data-progress-fill]');
+    const label = root.querySelector('[data-progress-label]');
+    const pct = root.querySelector('[data-progress-pct]');
+
+    // Which top-level (h2) part is on screen, for the amber link
+    const partOf = (heading) => {
+      let i = headings.indexOf(heading);
+      while (i > 0 && headings[i].tagName !== 'H2') i -= 1;
+      return headings[i];
+    };
+
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      if (!body) return;
+      const rect = body.getBoundingClientRect();
+      const view = window.innerHeight;
+      const total = rect.height - view * 0.5;
+      const done = Math.min(1, Math.max(0, (view * 0.5 - rect.top) / Math.max(total, 1)));
+      if (fill) fill.style.width = `${Math.max(done * 100, 2)}%`;
+      if (pct) pct.textContent = String(Math.round(done * 100));
+
+      const line = view * 0.3;
+      let current = headings[0];
+      for (const h of headings) if (h.getBoundingClientRect().top <= line) current = h;
+      if (label && current) label.textContent = current.textContent.trim();
+
+      if (hashLinks.length && current) {
+        const part = partOf(current);
+        let match = hashLinks.find((a) => a.dataset.hash === current.id) || hashLinks.find((a) => a.dataset.hash === part?.id);
+        if (!match) match = hashLinks[0];
+        for (const a of hashLinks) {
+          const on = a === match;
+          a.classList.toggle('is-active', on);
+          if (on) a.setAttribute('aria-current', 'location');
+          else a.removeAttribute('aria-current');
+        }
+      }
+    };
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    update();
+    if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+  }
+</script>
+
+{% stylesheet %}
+  .apex-policy {
+    padding-block: 0 160px;
+  }
+
+  /* Reading bar: stays at the top of the screen while the policy scrolls */
+  .apex-policy__progress {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    padding-block: 16px 8px;
+    background: rgb(250 249 247 / 0.9);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .apex-policy__track {
+    height: 14px;
+    overflow: hidden;
+    border-radius: var(--apex-radius-pill);
+    background: var(--apex-stone-100-alt);
+  }
+
+  .apex-policy__fill {
+    display: block;
+    width: 2%;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--apex-dried-moss);
+    transition: width 0.15s linear;
+  }
+
+  .apex-policy__progress-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-block-start: 6px;
+    font-size: 0.625rem;
+    line-height: 0.875rem;
+    color: var(--apex-burrow);
+  }
+
+  .apex-policy__intro {
+    max-width: 640px;
+    padding-block-start: 64px;
+  }
+
+  .apex-policy__eyebrow {
+    margin: 0;
+  }
+
+  .apex-policy__title {
+    margin: 24px 0 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: clamp(4rem, 8.9vw, 8rem);
+    line-height: 0.8;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-policy__lead {
+    margin: 24px 0 0;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    color: var(--apex-burrow);
+  }
+
+  .apex-policy__grid {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 48px;
+    align-items: start;
+    margin-block-start: 64px;
+  }
+
+  .apex-policy__nav {
+    position: sticky;
+    top: 80px;
+    padding: 32px;
+    border-radius: var(--apex-radius-xl);
+    background: var(--apex-stone-100-alt);
+  }
+
+  .apex-policy__nav-title {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 2.5rem;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-policy__links {
+    display: grid;
+    gap: 16px;
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .apex-policy__link {
+    display: inline-block;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1rem;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--apex-burrow);
+    transform-origin: left center;
+    transition: scale 0.2s var(--ease-out-cubic, ease-out);
+  }
+
+  .apex-policy__link:is(:hover, :focus-visible) {
+    scale: 1.06;
+  }
+
+  .apex-policy__link.is-active {
+    color: var(--apex-amber);
+  }
+
+  .apex-policy__panel {
+    padding: 64px;
+    border-radius: var(--apex-radius-xl);
+    background: var(--apex-stone-100-alt);
+    color: var(--apex-burrow);
+  }
+
+  .apex-policy__body {
+    max-width: 768px;
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-policy__body > * {
+    margin: 0 0 16px;
+  }
+
+  .apex-policy__body > :last-child {
+    margin-block-end: 0;
+  }
+
+  .apex-policy__body :is(h2, h3) {
+    scroll-margin-top: 96px;
+    color: var(--apex-burrow);
+  }
+
+  .apex-policy__body h2 {
+    margin-block: 48px 16px;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 3rem;
+    line-height: 0.96;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .apex-policy__body h3 {
+    margin-block: 48px 16px;
+    font-family: var(--font-body--family);
+    font-weight: 600;
+    font-size: 1.5rem;
+    line-height: 1.875rem;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .apex-policy__body > :is(h2, h3):first-child {
+    margin-block-start: 0;
+  }
+
+  .apex-policy__body ul {
+    padding-inline-start: 20px;
+  }
+
+  .apex-policy__body li + li {
+    margin-block-start: 8px;
+  }
+
+  .apex-policy__body a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .apex-policy__empty {
+    margin: 0;
+    color: var(--apex-dried-moss);
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-policy__grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 24px;
+    }
+
+    .apex-policy__nav {
+      position: static;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-policy {
+      padding-block-end: 80px;
+    }
+
+    .apex-policy__intro {
+      padding-block-start: 32px;
+    }
+
+    .apex-policy__title {
+      margin-block-start: 16px;
+      font-size: 4.5rem;
+    }
+
+    .apex-policy__lead {
+      margin-block-start: 16px;
+    }
+
+    .apex-policy__grid {
+      margin-block-start: 32px;
+    }
+
+    .apex-policy__nav {
+      padding: 24px;
+      border-radius: 24px;
+    }
+
+    .apex-policy__nav-title {
+      font-size: 2.25rem;
+    }
+
+    .apex-policy__panel {
+      padding: 32px 24px;
+      border-radius: 24px;
+    }
+
+    .apex-policy__body h2 {
+      margin-block-start: 40px;
+      font-size: 2.5rem;
+    }
+
+    .apex-policy__body h3 {
+      margin-block-start: 32px;
+      font-size: 1.25rem;
+      line-height: 1.625rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .apex-policy__fill,
+    .apex-policy__link {
+      transition: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX policy",
+  "tag": "section",
+  "class": "apex-policy-section",
+  "max_blocks": 12,
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Policies"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_date",
+      "label": "Show \"Last updated\" date",
+      "info": "Uses the page's published date.",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "intro",
+      "label": "Intro line",
+      "default": "Please read these terms before placing your order."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_progress",
+      "label": "Show reading bar",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "nav_title",
+      "label": "Links card title",
+      "default": "Policies"
+    },
+    {
+      "type": "text",
+      "id": "empty_text",
+      "label": "Text when the policy is empty",
+      "default": "This policy is being updated. Please contact us if you have any questions."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "link",
+      "name": "Link",
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label",
+          "default": "Policy"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link",
+          "info": "Add #heading to jump to a heading, e.g. /pages/shipping-returns#refunds-returns-policy"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX policy"
+    }
+  ]
+}
+{% endschema %}
