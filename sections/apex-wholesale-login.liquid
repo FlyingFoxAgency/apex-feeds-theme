@@ -1,0 +1,396 @@
+{% comment %}
+  APEX wholesale login (Figma "APEX Wholesale Login Page").
+  - Left: eyebrow, Dharma title, intro and a button to the wholesale application page.
+  - Right: a "Sign in" tab card. The email box hands the address to Shopify's secure sign-in
+    (customer accounts send a one-time code by email, so there is no password here).
+    Shopify fills the address in for the shopper and brings them back to this page.
+  - Signed in: wholesale customers (tag set in the section) get a link to their account;
+    anyone else is told their account isn't approved for wholesale yet.
+{% endcomment %}
+{%- liquid
+  assign wholesale_tag = section.settings.wholesale_tag | default: 'wholesale' | strip | downcase
+  assign is_wholesale = false
+  if customer
+    for tag in customer.tags
+      assign t = tag | strip | downcase
+      if t == wholesale_tag
+        assign is_wholesale = true
+        break
+      endif
+    endfor
+  endif
+  assign apply_url = section.settings.apply_page.url | default: '/pages/wholesale-application'
+  assign return_to = request.path | default: '/pages/wholesale'
+-%}
+<div class="apex-wlogin">
+  <div class="apex-container apex-wlogin__grid">
+    <div class="apex-wlogin__intro">
+      {%- if section.settings.eyebrow != blank -%}
+        <p class="apex-eyebrow apex-wlogin__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+      {%- endif -%}
+      <h1 class="apex-wlogin__title">{{ section.settings.title | default: page.title | escape }}</h1>
+      {%- if section.settings.intro != blank -%}
+        <div class="apex-wlogin__text">{{ section.settings.intro }}</div>
+      {%- endif -%}
+    </div>
+
+    <div class="apex-wlogin__cta">
+      {%- if section.settings.apply_text != blank -%}
+        <p class="apex-wlogin__cta-text">{{ section.settings.apply_text | escape }}</p>
+      {%- endif -%}
+      <a class="apex-button apex-wlogin__apply" href="{{ apply_url }}">
+        {{- section.settings.apply_label | default: 'Wholesaler application form' | escape -}}
+      </a>
+    </div>
+
+    <div class="apex-wlogin__card">
+      <div class="apex-wlogin__tab" aria-hidden="true"></div>
+      <div class="apex-wlogin__panel">
+        {%- if customer -%}
+          {%- if is_wholesale -%}
+            <h2 class="apex-wlogin__heading">Welcome back</h2>
+            <p class="apex-wlogin__lead">You're signed in as {{ customer.first_name | default: customer.email | escape }}. Your wholesale pricing applies across the store.</p>
+            <div class="apex-wlogin__actions">
+              <a class="apex-button apex-wlogin__go" href="{{ routes.account_url }}">Go to my account</a>
+              <a class="apex-wlogin__link" href="{{ routes.all_products_collection_url }}">Shop now</a>
+            </div>
+          {%- else -%}
+            <h2 class="apex-wlogin__heading">Signed in</h2>
+            <p class="apex-wlogin__lead">You're signed in as {{ customer.email | escape }}, but this account isn't set up for wholesale yet. If you've applied, we'll email you once your application is approved.</p>
+            <div class="apex-wlogin__actions">
+              <a class="apex-button apex-wlogin__go" href="{{ apply_url }}">Apply for wholesale</a>
+              <a class="apex-wlogin__link" href="{{ routes.account_url }}">My account</a>
+            </div>
+          {%- endif -%}
+        {%- else -%}
+          <h2 class="apex-wlogin__heading">Sign in</h2>
+          <form class="apex-wlogin__form" action="/customer_authentication/login" method="get" data-apex-wlogin>
+            <input type="hidden" name="return_to" value="{{ return_to | escape }}">
+            <label class="apex-wlogin__lead" for="ApexWloginEmail">Already have an account? Sign in here.</label>
+            <span class="apex-wlogin__field">
+              <input id="ApexWloginEmail" class="apex-wlogin__input" type="email" name="login_hint" placeholder="Email" autocomplete="email" required>
+              <button class="apex-wlogin__submit" type="submit" aria-label="Continue to sign in">
+                {{- 'apex-icon-arrow.svg' | inline_asset_content -}}
+              </button>
+            </span>
+            <p class="apex-wlogin__note">We'll email you a one-time code to sign in. No password needed.</p>
+          </form>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% stylesheet %}
+  .apex-wlogin {
+    padding-block: 140px 200px;
+    color: var(--apex-burrow);
+    overflow-x: clip;
+  }
+
+  /* Desktop: intro and the application call to action stack on the left, sign in on the right.
+     Phones: intro, then sign in, then the application call to action. */
+  .apex-wlogin__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 470px) minmax(0, 1fr);
+    grid-template-areas:
+      'intro card'
+      'cta card';
+    column-gap: 48px;
+    row-gap: 0;
+  }
+
+  .apex-wlogin__intro {
+    grid-area: intro;
+    align-self: end;
+  }
+
+  .apex-wlogin__card {
+    grid-area: card;
+    align-self: center;
+  }
+
+  .apex-wlogin__cta {
+    grid-area: cta;
+    align-self: start;
+    padding-block-start: 24px;
+  }
+
+  .apex-wlogin__cta-text {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-wlogin__eyebrow {
+    margin: 0;
+    color: var(--apex-olive);
+  }
+
+  .apex-wlogin__title {
+    margin: 24px 0 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: clamp(4rem, 7vw, 6.25rem);
+    line-height: 0.85;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+    text-shadow: 0 4px 6px rgb(51 56 50 / 0.25);
+  }
+
+  .apex-wlogin__text {
+    margin-block-start: 32px;
+    font-size: 0.875rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-wlogin__text > * {
+    margin: 0 0 24px;
+  }
+
+  .apex-wlogin__text > :last-child {
+    margin-block-end: 0;
+  }
+
+  .apex-wlogin__go {
+    background-color: var(--apex-olive);
+    border-color: var(--apex-olive);
+    color: var(--apex-sandstone);
+  }
+
+  /* Secondary: the sign in is the main action on this page */
+  .apex-wlogin__apply {
+    background-color: transparent;
+    border: 1.5px solid var(--apex-olive);
+    color: var(--apex-olive);
+  }
+
+  .apex-wlogin__apply {
+    margin-block-start: 24px;
+  }
+
+  /* Sign in card: a folder-style tab on a panel that runs off the right edge of the page */
+  .apex-wlogin__card {
+    position: relative;
+    margin-inline-end: calc((100vw - min(100vw - 2 * var(--page-margin, 16px), var(--narrow-page-width))) / -2);
+    filter: drop-shadow(0 4px 18px rgb(51 56 50 / 0.18));
+  }
+
+  .apex-wlogin__tab {
+    width: 209px;
+    height: 120px;
+    margin-block-end: -40px;
+    border-radius: 40px 40px 0 0;
+    background: var(--apex-stone-200);
+  }
+
+  .apex-wlogin__panel {
+    position: relative;
+    min-height: 302px;
+    margin-block-start: 0;
+    padding: 0 160px 56px 60px;
+    border-radius: 0 0 0 40px;
+    background: var(--apex-stone-200);
+  }
+
+  .apex-wlogin__heading {
+    position: relative;
+    top: -62px;
+    margin: 0 0 -62px;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 4rem;
+    line-height: 3.8rem;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-wlogin__heading + * {
+    margin-block-start: 56px;
+  }
+
+  .apex-wlogin__form {
+    max-width: 693px;
+  }
+
+  .apex-wlogin__lead {
+    display: block;
+    max-width: 693px;
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-wlogin__field {
+    display: flex;
+    align-items: stretch;
+    margin-block-start: 6px;
+    border: 1px solid var(--apex-dried-moss);
+    background: transparent;
+  }
+
+  .apex-wlogin__input {
+    flex: 1;
+    min-width: 0;
+    padding: 11px 16px 11px 50px;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+    color: var(--apex-burrow);
+  }
+
+  .apex-wlogin__input::placeholder {
+    color: var(--apex-dried-moss);
+    opacity: 1;
+  }
+
+  .apex-wlogin__input:focus {
+    outline: none;
+  }
+
+  .apex-wlogin__field:focus-within {
+    border-color: var(--apex-burrow);
+  }
+
+  /* Amber square behind the arrow so the eye lands on signing in */
+  .apex-wlogin__submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 48px;
+    margin: -1px -1px -1px 0;
+    padding: 0;
+    border: 0;
+    background: var(--apex-amber);
+    color: var(--apex-burrow);
+    cursor: pointer;
+  }
+
+  .apex-wlogin__submit svg {
+    transition: transform 0.2s ease;
+  }
+
+  .apex-wlogin__submit:hover svg,
+  .apex-wlogin__submit:focus-visible svg {
+    transform: scale(1.06);
+  }
+
+  .apex-wlogin__submit:focus-visible {
+    outline: 2px solid var(--apex-burrow);
+    outline-offset: 2px;
+  }
+
+  .apex-wlogin__submit svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .apex-wlogin__note {
+    margin: 16px 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-wlogin__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 24px;
+    margin-block-start: 32px;
+  }
+
+  .apex-wlogin__link {
+    color: var(--apex-burrow);
+    font-weight: 600;
+    text-underline-offset: 3px;
+    transition: transform 0.2s ease;
+  }
+
+  .apex-wlogin__link:hover {
+    transform: scale(1.06);
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-wlogin {
+      padding-block: 64px 120px;
+    }
+
+    .apex-wlogin__grid {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'intro'
+        'card'
+        'cta';
+      row-gap: 56px;
+    }
+
+    .apex-wlogin__cta {
+      padding-block-start: 0;
+    }
+
+    .apex-wlogin__panel {
+      padding: 0 24px 40px;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-wlogin__tab {
+      width: 150px;
+      height: 96px;
+      border-radius: 28px 28px 0 0;
+    }
+
+    .apex-wlogin__heading {
+      top: -48px;
+      margin-block-end: -48px;
+      font-size: 3rem;
+      line-height: 2.9rem;
+    }
+
+    .apex-wlogin__heading + * {
+      margin-block-start: 40px;
+    }
+
+    .apex-wlogin__panel {
+      border-radius: 0 0 0 28px;
+    }
+
+    .apex-wlogin__input {
+      padding-inline-start: 16px;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX wholesale login",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Welcome to Apex Feeds wholesale" },
+    { "type": "text", "id": "title", "label": "Title", "info": "Leave blank to use the page title.", "default": "Wholesale program" },
+    {
+      "type": "richtext",
+      "id": "intro",
+      "label": "Intro",
+      "default": "<p>Our wholesale program is designed to provide retailers with competitive margins, reliable supply, quality products, and ongoing support to help grow their business and deliver value to their customers.</p>"
+    },
+    { "type": "text", "id": "apply_text", "label": "Application call to action", "default": "Apply for a wholesaler account today." },
+    { "type": "text", "id": "apply_label", "label": "Application button label", "default": "Wholesaler application form" },
+    { "type": "page", "id": "apply_page", "label": "Application page", "info": "Defaults to /pages/wholesale-application." },
+    {
+      "type": "text",
+      "id": "wholesale_tag",
+      "label": "Wholesale customer tag",
+      "default": "wholesale",
+      "info": "Approved wholesalers have this tag on their customer profile."
+    }
+  ],
+  "presets": [{ "name": "APEX wholesale login" }]
+}
+{% endschema %}

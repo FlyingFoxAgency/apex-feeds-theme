@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "main": {
+      "type": "apex-wholesale-login",
+      "settings": {}
+    }
+  },
+  "order": ["main"]
+}
