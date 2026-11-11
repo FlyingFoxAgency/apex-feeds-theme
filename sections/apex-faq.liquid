@@ -1,0 +1,666 @@
+{% comment %}
+  APEX Help Centre / FAQs page (Figma "APEX FAQs Page").
+  - Eyebrow, the page title in big Dharma and an intro line.
+  - Left: a stone "Topics" card. Each Topic block adds a link here and a heading on the right; the
+    link for the topic on screen shows in amber.
+  - Right: the questions. Add a Topic block, then Question blocks under it. Each question opens and
+    closes (the first one starts open).
+  - A "Still need help?" panel at the end, a reading bar under the header and a Back to top button.
+{% endcomment %}
+{%- liquid
+  assign groups = section.blocks | where: 'type', 'group'
+-%}
+<div class="apex-faq" data-apex-faq>
+  {%- if section.settings.show_progress -%}
+    <div class="apex-policy__progress" aria-hidden="true">
+      <div class="apex-container">
+        <div class="apex-policy__track"><span class="apex-policy__fill" data-progress-fill></span></div>
+        <div class="apex-policy__progress-meta">
+          <span data-progress-label></span>
+          <span><span data-progress-pct>0</span>% read</span>
+        </div>
+      </div>
+    </div>
+  {%- endif -%}
+
+  <div class="apex-container">
+    <div class="apex-faq__intro">
+      {%- if section.settings.eyebrow != blank -%}
+        <p class="apex-eyebrow apex-faq__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+      {%- endif -%}
+      <h1 class="apex-faq__title" tabindex="-1">
+        {{- section.settings.title | default: page.title | default: 'Help Centre' | escape -}}
+      </h1>
+      {%- if section.settings.intro != blank -%}
+        <div class="apex-faq__lead">{{ section.settings.intro }}</div>
+      {%- endif -%}
+    </div>
+
+    <div class="apex-faq__grid">
+      {%- if groups.size > 0 -%}
+        <nav class="apex-faq__nav" aria-label="{{ section.settings.nav_title | default: 'Topics' | escape }}">
+          {%- if section.settings.nav_title != blank -%}
+            <p class="apex-faq__nav-title">{{ section.settings.nav_title | escape }}</p>
+          {%- endif -%}
+          <ul class="apex-faq__links" role="list">
+            {%- for group in groups -%}
+              {%- assign group_id = group.settings.title | handleize | prepend: 'faq-' -%}
+              <li>
+                <a
+                  class="apex-faq__link{% if forloop.first %} is-active{% endif %}"
+                  href="#{{ group_id }}"
+                  data-topic="{{ group_id }}"
+                >
+                  {{- group.settings.nav_label | default: group.settings.title | escape -}}
+                </a>
+              </li>
+            {%- endfor -%}
+          </ul>
+        </nav>
+      {%- endif -%}
+
+      <div class="apex-faq__main" data-faq-body>
+        {%- assign opened = false -%}
+        {%- for block in section.blocks -%}
+          {%- case block.type -%}
+            {%- when 'group' -%}
+              {%- assign group_id = block.settings.title | handleize | prepend: 'faq-' -%}
+              <h2 class="apex-faq__group-title" id="{{ group_id }}" {{ block.shopify_attributes }}>
+                {{- block.settings.title | escape -}}
+              </h2>
+            {%- when 'question' -%}
+              {%- if block.settings.question != blank -%}
+                <details
+                  class="apex-faq__item"
+                  {% if opened == false and section.settings.open_first %}open{% endif %}
+                  {{ block.shopify_attributes }}
+                >
+                  <summary class="apex-faq__question">
+                    <span class="apex-faq__question-text">{{ block.settings.question | escape }}</span>
+                    <span class="apex-faq__icon" aria-hidden="true"></span>
+                  </summary>
+                  <div class="apex-faq__answer rte">{{ block.settings.answer }}</div>
+                </details>
+                {%- assign opened = true -%}
+              {%- endif -%}
+          {%- endcase -%}
+        {%- endfor -%}
+      </div>
+    </div>
+
+    {%- if section.settings.help_title != blank -%}
+      <div class="apex-faq__help">
+        <div class="apex-faq__help-copy">
+          <h2 class="apex-faq__help-title">{{ section.settings.help_title | escape }}</h2>
+          {%- if section.settings.help_text != blank -%}
+            <p class="apex-faq__help-text">{{ section.settings.help_text | escape }}</p>
+          {%- endif -%}
+        </div>
+        {%- if section.settings.help_button_label != blank -%}
+          <a
+            class="apex-button apex-faq__help-button"
+            href="{{ section.settings.help_button_link | default: '/pages/contact' }}"
+          >
+            {{- section.settings.help_button_label | escape -}}
+          </a>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  </div>
+
+  {%- if section.settings.show_back_to_top -%}
+    <button type="button" class="apex-policy__top" data-back-to-top hidden>
+      <span class="apex-policy__top-arrow" aria-hidden="true">{{- 'apex-icon-arrow.svg' | inline_asset_content -}}</span>
+      Back to top
+    </button>
+  {%- endif -%}
+</div>
+
+{%- comment -%} FAQ structured data, so search engines can show the answers {%- endcomment -%}
+{%- capture faq_items -%}
+  {%- for block in section.blocks -%}
+    {%- if block.type == 'question' and block.settings.question != blank and block.settings.answer != blank -%}
+      {"@type":"Question","name":{{ block.settings.question | json }},"acceptedAnswer":{"@type":"Answer","text":{{ block.settings.answer | strip_html | json }}}},
+    {%- endif -%}
+  {%- endfor -%}
+{%- endcapture -%}
+{%- if faq_items != blank -%}
+  <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{{ faq_items | remove_last: ',' }}]}
+  </script>
+{%- endif -%}
+
+<script type="module">
+  const root = document.querySelector('[data-apex-faq]:not([data-ready])');
+  if (root) {
+    root.setAttribute('data-ready', '');
+    const body = root.querySelector('[data-faq-body]');
+    const headings = [...root.querySelectorAll('.apex-faq__group-title')];
+    const links = [...root.querySelectorAll('[data-topic]')];
+    const fill = root.querySelector('[data-progress-fill]');
+    const label = root.querySelector('[data-progress-label]');
+    const pct = root.querySelector('[data-progress-pct]');
+
+    // Reading bar and the amber link for the topic on screen
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      if (!body) return;
+      const rect = body.getBoundingClientRect();
+      const view = window.innerHeight;
+      const total = rect.height - view * 0.5;
+      const done = Math.min(1, Math.max(0, (view * 0.5 - rect.top) / Math.max(total, 1)));
+      if (fill) fill.style.width = `${Math.max(done * 100, 2)}%`;
+      if (pct) pct.textContent = String(Math.round(done * 100));
+
+      const line = view * 0.3;
+      let current = headings[0];
+      for (const h of headings) if (h.getBoundingClientRect().top <= line) current = h;
+      if (label && current) label.textContent = current.textContent.trim();
+      for (const a of links) {
+        const on = current && a.dataset.topic === current.id;
+        a.classList.toggle('is-active', on);
+        if (on) a.setAttribute('aria-current', 'location');
+        else a.removeAttribute('aria-current');
+      }
+    };
+
+    // Back to top (same button as the policy pages)
+    const topButton = root.querySelector('[data-back-to-top]');
+    let startTop = null;
+    if (topButton) document.body.appendChild(topButton);
+    const updateTop = () => {
+      if (!topButton) return;
+      const top = root.getBoundingClientRect().top;
+      if (startTop === null || top > startTop) startTop = top;
+      // Phones: after two full screens. Larger screens: after half a screen, so it shows on any page
+      // that runs below the fold (a page that fits the screen can't scroll, so it never shows)
+      const screens = window.matchMedia('(max-width: 749px)').matches ? 2 : 0.5;
+      const show = startTop - top > window.innerHeight * screens;
+      if (show) topButton.hidden = false;
+      topButton.classList.toggle('is-visible', show);
+    };
+    topButton?.addEventListener('click', () => {
+      const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const behavior = smooth ? 'smooth' : 'auto';
+      let el = root.parentElement;
+      while (el && el !== document.body && el.scrollHeight <= el.clientHeight + 1) el = el.parentElement;
+      if (el && el !== document.body && el.scrollTop > 0) el.scrollTo({ top: 0, behavior });
+      window.scrollTo({ top: 0, behavior });
+      root.querySelector('h1')?.focus({ preventScroll: true });
+    });
+
+    const onScroll = () => {
+      updateTop();
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    };
+    document.addEventListener('scroll', onScroll, { passive: true, capture: true });
+    window.addEventListener('resize', onScroll);
+    root.addEventListener('toggle', onScroll, true);
+    update();
+    if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+  }
+</script>
+
+{% stylesheet %}
+  .apex-faq {
+    padding-block: 0 160px;
+    color: var(--apex-burrow);
+  }
+
+  .apex-faq__intro {
+    max-width: 640px;
+    padding-block-start: 64px;
+  }
+
+  .apex-faq__eyebrow {
+    margin: 0;
+  }
+
+  /* Figma: Dharma 128/102 */
+  .apex-faq__title {
+    margin: 24px 0 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: clamp(4rem, 8.9vw, 8rem);
+    line-height: 0.8;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-faq__title:focus {
+    outline: none;
+  }
+
+  .apex-faq__lead {
+    margin-block-start: 24px;
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-faq__lead > * {
+    margin: 0;
+  }
+
+  .apex-faq__lead a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .apex-faq__grid {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 896px);
+    gap: 48px;
+    align-items: start;
+    margin-block-start: 64px;
+  }
+
+  .apex-faq__nav {
+    position: sticky;
+    top: 80px;
+    padding: 32px;
+    border-radius: var(--apex-radius-xl);
+    background: var(--apex-stone-100-alt);
+  }
+
+  .apex-faq__nav-title {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 2.5rem;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .apex-faq__links {
+    display: grid;
+    gap: 16px;
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .apex-faq__link {
+    display: inline-block;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1rem;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--apex-burrow);
+    transform-origin: left center;
+    transition: scale 0.2s var(--ease-out-cubic, ease-out);
+  }
+
+  .apex-faq__link:is(:hover, :focus-visible) {
+    scale: 1.06;
+  }
+
+  .apex-faq__link.is-active {
+    color: var(--apex-amber);
+  }
+
+  .apex-faq__group-title:not(:first-child) {
+    margin-block-start: 48px;
+  }
+
+  /* Figma: Dharma 48/46, 16px gap, then a divider */
+  .apex-faq__group-title {
+    margin: 0;
+    padding-block-end: 16px;
+    border-block-end: 1px solid #d9d9d9;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 3rem;
+    line-height: 0.96;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+    scroll-margin-top: 96px;
+  }
+
+  .apex-faq__item {
+    border-block-end: 1px solid #d9d9d9;
+  }
+
+  .apex-faq__question {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding-block: 24px;
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .apex-faq__item[open] .apex-faq__question {
+    padding-block-end: 12px;
+  }
+
+  .apex-faq__question::-webkit-details-marker {
+    display: none;
+  }
+
+  .apex-faq__question:focus-visible {
+    outline: 2px solid var(--apex-burrow);
+    outline-offset: 4px;
+  }
+
+  /* Smaller, regular weight, upper case (Ell, 2026-11-11) */
+  .apex-faq__question-text {
+    font-size: 1.125rem;
+    font-weight: 400;
+    line-height: 1.625rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transform-origin: left center;
+    transition: scale 0.2s ease;
+  }
+
+  .apex-faq__question:hover :is(.apex-faq__question-text, .apex-faq__icon) {
+    scale: 1.06;
+  }
+
+  /* Plus that turns into a minus (27px) */
+  .apex-faq__icon {
+    position: relative;
+    flex: none;
+    width: 27px;
+    height: 27px;
+    transition: scale 0.2s ease;
+  }
+
+  .apex-faq__icon::before,
+  .apex-faq__icon::after {
+    content: '';
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: 16px;
+    height: 1.5px;
+    border-radius: 1px;
+    background-color: currentcolor;
+    translate: -50% -50%;
+    transition: rotate 0.2s ease;
+  }
+
+  .apex-faq__icon::after {
+    rotate: 90deg;
+  }
+
+  .apex-faq__item[open] .apex-faq__icon::after {
+    rotate: 0deg;
+  }
+
+  .apex-faq__answer {
+    max-width: 800px;
+    padding-block-end: 24px;
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-faq__answer > * {
+    margin: 0 0 12px;
+  }
+
+  .apex-faq__answer > :last-child {
+    margin-block-end: 0;
+  }
+
+  .apex-faq__answer a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* Still need help? */
+  .apex-faq__help {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    margin-block-start: 80px;
+    padding: 48px;
+    border-radius: var(--apex-radius-xl);
+    background: var(--apex-burrow);
+    color: var(--apex-sandstone);
+  }
+
+  .apex-faq__help-title {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 3rem;
+    line-height: 0.96;
+    text-transform: uppercase;
+    color: var(--apex-sandstone);
+  }
+
+  .apex-faq__help-text {
+    margin: 12px 0 0;
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-faq__help-button {
+    flex: none;
+    background-color: var(--apex-dried-moss);
+    border-color: var(--apex-dried-moss);
+    color: var(--apex-sandstone);
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-faq__grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 24px;
+    }
+
+    .apex-faq__nav {
+      position: static;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-faq {
+      padding-block-end: 80px;
+    }
+
+    .apex-faq__intro {
+      padding-block-start: 32px;
+    }
+
+    .apex-faq__title {
+      margin-block-start: 16px;
+      font-size: 4.5rem;
+    }
+
+    .apex-faq__lead {
+      margin-block-start: 16px;
+    }
+
+    .apex-faq__grid {
+      margin-block-start: 32px;
+    }
+
+    .apex-faq__nav {
+      padding: 24px;
+      border-radius: 24px;
+    }
+
+    .apex-faq__nav-title {
+      font-size: 2.25rem;
+    }
+
+    .apex-faq__group-title:not(:first-child) {
+      margin-block-start: 40px;
+    }
+
+    .apex-faq__group-title {
+      font-size: 2.5rem;
+    }
+
+    .apex-faq__question {
+      gap: 16px;
+      padding-block: 20px;
+    }
+
+    .apex-faq__question-text {
+      font-size: 1rem;
+      line-height: 1.375rem;
+    }
+
+    .apex-faq__help {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 24px;
+      margin-block-start: 56px;
+      padding: 32px 24px;
+      border-radius: 24px;
+    }
+
+    .apex-faq__help-title {
+      font-size: 2.5rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .apex-faq__link,
+    .apex-faq__question-text,
+    .apex-faq__icon,
+    .apex-faq__icon::after {
+      transition: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX FAQs",
+  "tag": "section",
+  "class": "apex-faq-section",
+  "max_blocks": 50,
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "FAQs"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "info": "Leave blank to use the page title.",
+      "default": "Help Centre"
+    },
+    {
+      "type": "richtext",
+      "id": "intro",
+      "label": "Intro",
+      "default": "<p>Answers to the questions we get asked most. Can’t find what you need? Get in touch and our team will help.</p>"
+    },
+    {
+      "type": "text",
+      "id": "nav_title",
+      "label": "Topics card title",
+      "default": "Topics"
+    },
+    {
+      "type": "checkbox",
+      "id": "open_first",
+      "label": "Open the first question",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_progress",
+      "label": "Show reading bar",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_back_to_top",
+      "label": "Show Back to top button",
+      "info": "Appears after half a screen of scrolling (two screens on phones). Hidden when the page fits on screen.",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Still need help? panel"
+    },
+    {
+      "type": "text",
+      "id": "help_title",
+      "label": "Title",
+      "info": "Leave blank to hide the panel.",
+      "default": "Still need help?"
+    },
+    {
+      "type": "text",
+      "id": "help_text",
+      "label": "Text",
+      "default": "Our team aims to respond to all enquiries as quickly as possible."
+    },
+    {
+      "type": "text",
+      "id": "help_button_label",
+      "label": "Button label",
+      "default": "Contact us"
+    },
+    {
+      "type": "url",
+      "id": "help_button_link",
+      "label": "Button link",
+      "info": "Leave blank to link to /pages/contact."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "group",
+      "name": "Topic",
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": "Starts a new topic. Add Question blocks below it."
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Heading",
+          "default": "Topic"
+        },
+        {
+          "type": "text",
+          "id": "nav_label",
+          "label": "Link label in the Topics card",
+          "info": "Leave blank to use the heading."
+        }
+      ]
+    },
+    {
+      "type": "question",
+      "name": "Question",
+      "settings": [
+        {
+          "type": "text",
+          "id": "question",
+          "label": "Question",
+          "default": "Question"
+        },
+        {
+          "type": "richtext",
+          "id": "answer",
+          "label": "Answer",
+          "default": "<p>Answer</p>"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX FAQs"
+    }
+  ]
+}
+{% endschema %}
