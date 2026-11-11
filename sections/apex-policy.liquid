@@ -157,7 +157,8 @@
       ticking = true;
       requestAnimationFrame(update);
     };
-    window.addEventListener('scroll', onScroll, { passive: true });
+    // Capture phase: the page may scroll inside a wrapper rather than the window
+    document.addEventListener('scroll', onScroll, { passive: true, capture: true });
     window.addEventListener('resize', onScroll);
     update();
     if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
