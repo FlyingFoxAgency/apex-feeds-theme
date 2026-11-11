@@ -42,6 +42,10 @@ document.addEventListener('click', (event) => {
   const target = /** @type {HTMLElement} */ (event.target);
   const inDrawer = target.closest('#cart-drawer [data-apex-drawer]');
   if (!inDrawer) return;
+  if (target.closest('[data-drawer-close]')) {
+    /** @type {any} */ (drawer())?.close?.();
+    return;
+  }
   const lineEl = /** @type {HTMLElement | null} */ (target.closest('[data-line]'));
   if (!lineEl) return;
   const line = Number(lineEl.dataset.line);

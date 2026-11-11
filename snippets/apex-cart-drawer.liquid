@@ -30,7 +30,7 @@
     <button
       type="button"
       class="apex-drawer__close"
-      on:click="#cart-drawer/close"
+      data-drawer-close
       aria-label="{{ 'actions.close' | t }}"
     >
       {{- 'apex-icon-close.svg' | inline_asset_content -}}
@@ -368,15 +368,14 @@
     padding: 24px 40px 40px;
   }
 
+  /* Figma: DM Sans 20/24 */
   .apex-drawer__subtotal {
     display: flex;
     justify-content: space-between;
     gap: 16px;
-    font-family: var(--font-heading--family);
-    font-weight: var(--font-heading--weight);
-    font-size: 2rem;
-    line-height: 1;
-    text-transform: uppercase;
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.5rem;
   }
 
   .apex-drawer__note {
