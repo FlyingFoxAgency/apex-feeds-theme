@@ -5,21 +5,18 @@
   Values come from the Figma file "AI - APEX FEEDS" (variables: Brand colours, Colour roles,
   Spacing, Radius; text styles: Heading/*, Body/*, Label, Nav, Caption/*).
 
-  Headings use Dharma Gothic C ExBold. The webfont is licensed separately, so the file has to be
-  added to assets/ as dharma-gothic-c-exbold.woff2 (and .woff). Until it is, headings fall back
-  to the heading font picked in theme settings (Oswald Bold).
+  Headings use Dharma Gothic C ExBold (licensed webfont, assets/dharma-gothic-c-exbold.woff2).
+  If it fails to load, headings fall back to the heading font picked in theme settings.
 {% enddoc %}
+<link rel="preload" href="{{ 'dharma-gothic-c-exbold.woff2' | asset_url }}" as="font" type="font/woff2" crossorigin>
 {% style %}
-  {% # theme-check-disable MissingAsset %}
   @font-face {
     font-family: 'Dharma Gothic C';
-    src: url('{{ 'dharma-gothic-c-exbold.woff2' | asset_url }}') format('woff2'),
-      url('{{ 'dharma-gothic-c-exbold.woff' | asset_url }}') format('woff');
+    src: url('{{ 'dharma-gothic-c-exbold.woff2' | asset_url }}') format('woff2');
     font-weight: 800;
     font-style: normal;
     font-display: swap;
   }
-  {% # theme-check-enable MissingAsset %}
 
   :root {
     /* Brand colours */

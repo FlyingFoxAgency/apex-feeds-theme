@@ -1,0 +1,1011 @@
+{% comment %}
+  APEX cart page (Figma "APEX Cart Page"): eyebrow + Dharma title, a table of line items
+  (image, category, title, options, quantity pill, line total, remove) and an order summary card
+  (free shipping progress, totals, dispatch note, order note, checkout, payment icons).
+  - Quantity and remove update the cart in place (/cart/change.js) and re-render this section.
+    Without JavaScript the remove link and the form still work.
+  - The order note saves as you type and is also sent with Checkout.
+  - Phones: summary below the items; each line stacks its controls under the title.
+{% endcomment %}
+{%- liquid
+  assign threshold_cents = section.settings.free_shipping_threshold | times: 100
+  assign remaining = threshold_cents | minus: cart.total_price
+  if threshold_cents > 0
+    assign progress = cart.total_price | times: 100 | divided_by: threshold_cents
+    if progress > 100
+      assign progress = 100
+    endif
+  endif
+  assign methods = 'afterpay,visa,amex,mastercard,stripe,paypal,googlepay,applepay' | split: ','
+  assign labels = 'Afterpay,Visa,American Express,Mastercard,Stripe,PayPal,Google Pay,Apple Pay' | split: ','
+-%}
+<apex-cart
+  class="apex-cart"
+  data-section-id="{{ section.id }}"
+  style="--apex-cart-pt: {{ section.settings.padding_top }}px; --apex-cart-pb: {{ section.settings.padding_bottom }}px;"
+>
+  <div class="apex-container">
+    <div class="apex-cart__header">
+      {%- if section.settings.eyebrow != blank -%}
+        <p class="apex-eyebrow apex-cart__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+      {%- endif -%}
+      <h1 class="apex-cart__title">{{ section.settings.title | default: 'Shopping cart' | escape }}</h1>
+    </div>
+
+    {%- if cart.item_count == 0 -%}
+      <div class="apex-cart__empty">
+        <p>{{ section.settings.empty_text | escape }}</p>
+        <a class="apex-button apex-cart__empty-button" href="{{ section.settings.empty_link | default: routes.all_products_collection_url }}">
+          {{- section.settings.empty_button | escape -}}
+        </a>
+      </div>
+    {%- else -%}
+      <form action="{{ routes.cart_url }}" method="post" class="apex-cart__layout" id="ApexCartForm" novalidate>
+        <div class="apex-cart__items">
+          <div class="apex-cart__labels" aria-hidden="true">
+            <span class="apex-cart__label apex-cart__label--product">Product</span>
+            <span class="apex-cart__label">Quantity</span>
+            <span class="apex-cart__label">Total</span>
+            <span></span>
+          </div>
+
+          <ul class="apex-cart__list" role="list">
+            {%- for item in cart.items -%}
+              <li class="apex-cart__line" data-line="{{ forloop.index }}" data-key="{{ item.key }}">
+                <a class="apex-cart__image" href="{{ item.url }}" tabindex="-1" aria-hidden="true">
+                  {%- if item.image -%}
+                    {{ item.image | image_url: width: 240 | image_tag: loading: 'lazy', alt: '', widths: '120, 240' }}
+                  {%- endif -%}
+                </a>
+
+                <div class="apex-cart__info">
+                  {%- liquid
+                    # Category: the Shop category metafield, else the product type
+                    assign category = item.product.metafields.custom.shop_category.value | default: item.product.metafields.custom.shop_nav_category.value
+                    if category.first != blank
+                      assign category = category.first
+                    endif
+                    if category == blank
+                      assign category = item.product.type
+                    endif
+                  -%}
+                  {%- if category != blank -%}
+                    <p class="apex-cart__category">{{ category | escape }}</p>
+                  {%- endif -%}
+                  <a class="apex-cart__name" href="{{ item.url }}">{{ item.product.title | escape }}</a>
+                  {%- unless item.product.has_only_default_variant -%}
+                    {%- for option in item.options_with_values -%}
+                      <p class="apex-cart__meta">{{ option.name | escape }}: {{ option.value | escape }}</p>
+                    {%- endfor -%}
+                  {%- endunless -%}
+                  {%- if item.selling_plan_allocation -%}
+                    <p class="apex-cart__meta">{{ item.selling_plan_allocation.selling_plan.name | escape }}</p>
+                  {%- endif -%}
+                  {%- for property in item.properties -%}
+                    {%- assign first_char = property.first | slice: 0 -%}
+                    {%- if property.last != blank and first_char != '_' -%}
+                      <p class="apex-cart__meta">{{ property.first | escape }}: {{ property.last | escape }}</p>
+                    {%- endif -%}
+                  {%- endfor -%}
+                </div>
+
+                <div class="apex-cart__qty">
+                  <button type="button" class="apex-cart__qty-btn" data-qty-step="-1" aria-label="Decrease quantity of {{ item.product.title | escape }}">−</button>
+                  <input
+                    class="apex-cart__qty-input"
+                    type="number"
+                    name="updates[]"
+                    value="{{ item.quantity }}"
+                    min="0"
+                    inputmode="numeric"
+                    aria-label="Quantity of {{ item.product.title | escape }}"
+                    data-qty-input
+                  >
+                  <button type="button" class="apex-cart__qty-btn" data-qty-step="1" aria-label="Increase quantity of {{ item.product.title | escape }}">+</button>
+                </div>
+
+                <div class="apex-cart__price">
+                  {%- if item.original_line_price > item.final_line_price -%}
+                    <s class="apex-cart__price-was">{{ item.original_line_price | money }}</s>
+                  {%- endif -%}
+                  <span>{{ item.final_line_price | money }}</span>
+                  {%- for allocation in item.line_level_discount_allocations -%}
+                    <span class="apex-cart__discount">{{ allocation.discount_application.title | escape }} (−{{ allocation.amount | money }})</span>
+                  {%- endfor -%}
+                </div>
+
+                <a class="apex-cart__remove" href="{{ item.url_to_remove }}" data-remove aria-label="Remove {{ item.product.title | escape }}">Remove</a>
+              </li>
+            {%- endfor -%}
+          </ul>
+
+          <p class="apex-cart__error" role="alert" data-cart-error hidden></p>
+
+          <a class="apex-cart__continue" href="{{ section.settings.continue_link | default: routes.all_products_collection_url }}">
+            <span aria-hidden="true">←</span> {{ section.settings.continue_label | escape }}
+          </a>
+        </div>
+
+        <aside class="apex-cart__summary" aria-label="{{ section.settings.summary_title | escape }}">
+          <h2 class="apex-cart__summary-title">{{ section.settings.summary_title | escape }}</h2>
+
+          {%- if threshold_cents > 0 -%}
+            <div class="apex-cart__shipping">
+              <p class="apex-cart__shipping-text">
+                {%- if remaining > 0 -%}
+                  You’re {{ remaining | money }} away from free shipping
+                {%- else -%}
+                  You’ve unlocked free shipping
+                {%- endif -%}
+              </p>
+              <div class="apex-cart__track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ progress }}" aria-label="Progress to free shipping">
+                <span class="apex-cart__fill" style="width: {{ progress }}%;"></span>
+              </div>
+            </div>
+          {%- endif -%}
+
+          <dl class="apex-cart__totals">
+            <div class="apex-cart__row">
+              <dt>Subtotal</dt>
+              <dd>{{ cart.items_subtotal_price | money }}</dd>
+            </div>
+            {%- for discount in cart.cart_level_discount_applications -%}
+              <div class="apex-cart__row">
+                <dt>{{ discount.title | escape }}</dt>
+                <dd>−{{ discount.total_allocated_amount | money }}</dd>
+              </div>
+            {%- endfor -%}
+            <div class="apex-cart__row">
+              <dt>Shipping</dt>
+              <dd>{{ section.settings.shipping_text | escape }}</dd>
+            </div>
+            <div class="apex-cart__row apex-cart__row--total">
+              <dt>Total</dt>
+              <dd>{{ cart.total_price | money_with_currency }}</dd>
+            </div>
+          </dl>
+
+          {%- if section.settings.note_title != blank or section.settings.note_text != blank -%}
+            <div class="apex-cart__dispatch">
+              {%- if section.settings.note_title != blank -%}
+                <p class="apex-cart__dispatch-title">{{ section.settings.note_title | escape }}</p>
+              {%- endif -%}
+              {%- if section.settings.note_text != blank -%}
+                <div class="apex-cart__dispatch-text">{{ section.settings.note_text }}</div>
+              {%- endif -%}
+            </div>
+          {%- endif -%}
+
+          {%- if section.settings.show_order_note -%}
+            <div class="apex-cart__note">
+              <label for="ApexCartNote">{{ section.settings.order_note_label | escape }}</label>
+              <textarea id="ApexCartNote" name="note" rows="3" placeholder="{{ section.settings.order_note_placeholder | escape }}" data-cart-note>{{ cart.note }}</textarea>
+            </div>
+          {%- endif -%}
+
+          <button type="submit" name="checkout" class="apex-button apex-cart__checkout">
+            {{- section.settings.checkout_label | default: 'Checkout' | escape -}}
+          </button>
+
+          {%- if section.settings.show_payment_icons -%}
+            <ul class="apex-cart__payments" role="list">
+              {%- for method in methods -%}
+                {%- assign icon = 'apex-pay-' | append: method | append: '.svg' -%}
+                <li>
+                  <span aria-hidden="true">{{ icon | inline_asset_content }}</span>
+                  <span class="visually-hidden">{{ labels[forloop.index0] }}</span>
+                </li>
+              {%- endfor -%}
+            </ul>
+          {%- endif -%}
+        </aside>
+      </form>
+    {%- endif -%}
+  </div>
+</apex-cart>
+
+<script type="module">
+  if (!customElements.get('apex-cart')) {
+    customElements.define(
+      'apex-cart',
+      class ApexCart extends HTMLElement {
+        connectedCallback() {
+          this.addEventListener('click', this.onClick);
+          this.addEventListener('change', this.onChange);
+          this.addEventListener('input', this.onInput);
+        }
+
+        disconnectedCallback() {
+          this.removeEventListener('click', this.onClick);
+          this.removeEventListener('change', this.onChange);
+          this.removeEventListener('input', this.onInput);
+        }
+
+        onClick = (event) => {
+          const step = event.target.closest('[data-qty-step]');
+          const remove = event.target.closest('[data-remove]');
+          if (!step && !remove) return;
+          const line = event.target.closest('[data-line]');
+          if (!line) return;
+          event.preventDefault();
+          if (remove) return this.update(line, 0);
+          const input = line.querySelector('[data-qty-input]');
+          const next = Math.max(0, (parseInt(input.value, 10) || 0) + Number(step.dataset.qtyStep));
+          input.value = next;
+          clearTimeout(this.stepTimer);
+          this.stepTimer = setTimeout(() => this.update(line, next), 250);
+        };
+
+        onChange = (event) => {
+          const input = event.target.closest('[data-qty-input]');
+          if (!input) return;
+          const line = input.closest('[data-line]');
+          this.update(line, Math.max(0, parseInt(input.value, 10) || 0));
+        };
+
+        onInput = (event) => {
+          if (!event.target.matches('[data-cart-note]')) return;
+          const note = event.target.value;
+          clearTimeout(this.noteTimer);
+          this.noteTimer = setTimeout(() => {
+            fetch(`${window.Shopify?.routes?.root ?? '/'}cart/update.js`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+              body: JSON.stringify({ note }),
+            }).catch(() => {});
+          }, 400);
+        };
+
+        async update(line, quantity) {
+          const sectionId = this.dataset.sectionId;
+          line.classList.add('is-loading');
+          this.setAttribute('aria-busy', 'true');
+          try {
+            const response = await fetch(`${window.Shopify?.routes?.root ?? '/'}cart/change.js`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+              body: JSON.stringify({
+                id: line.dataset.key,
+                quantity,
+                sections: [sectionId],
+                sections_url: window.location.pathname,
+              }),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.description || data.message || 'Could not update the cart.');
+
+            const html = data.sections?.[sectionId];
+            if (html) {
+              const fresh = new DOMParser().parseFromString(html, 'text/html').querySelector('apex-cart');
+              const note = this.querySelector('[data-cart-note]');
+              const noteValue = note?.value;
+              if (fresh) this.innerHTML = fresh.innerHTML;
+              const newNote = this.querySelector('[data-cart-note]');
+              if (newNote && noteValue !== undefined) newNote.value = noteValue;
+            } else {
+              window.location.reload();
+              return;
+            }
+            const icon = document.querySelector('cart-icon');
+            if (icon?.renderCartBubble) icon.renderCartBubble(data.item_count, false);
+          } catch (error) {
+            line.classList.remove('is-loading');
+            const input = line.querySelector('[data-qty-input]');
+            if (input) input.value = input.defaultValue;
+            const message = this.querySelector('[data-cart-error]');
+            if (message) {
+              message.textContent = error.message;
+              message.hidden = false;
+            }
+          } finally {
+            this.removeAttribute('aria-busy');
+          }
+        }
+      }
+    );
+  }
+</script>
+
+{% stylesheet %}
+  .apex-cart {
+    display: block;
+    padding-block: var(--apex-cart-pt, 64px) var(--apex-cart-pb, 160px);
+    color: var(--apex-burrow);
+  }
+
+  .apex-cart__eyebrow {
+    margin: 0;
+  }
+
+  /* Figma: Dharma 128/102 */
+  .apex-cart__title {
+    margin: 24px 0 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: clamp(4rem, 8.9vw, 8rem);
+    line-height: 0.8;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-cart__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+    margin-block-start: 48px;
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-cart__empty p {
+    margin: 0;
+  }
+
+  .apex-cart__empty-button {
+    background-color: var(--apex-dried-moss);
+    border-color: var(--apex-dried-moss);
+    color: var(--apex-sandstone);
+  }
+
+  /* Checkout: amber with burrow text, like Add to cart */
+  .apex-cart__checkout {
+    background-color: var(--apex-amber);
+    border-color: var(--apex-amber);
+    color: var(--apex-burrow);
+  }
+
+  .apex-cart__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 400px;
+    gap: 48px;
+    align-items: start;
+    margin-block-start: 48px;
+  }
+
+  /* Line items: image 120 | info | quantity 120 | total 120 | remove 64 */
+  .apex-cart__labels,
+  .apex-cart__line {
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr) 120px 120px 64px;
+    column-gap: 24px;
+  }
+
+  .apex-cart__labels {
+    padding-block-end: 24px;
+    border-block-end: 1px solid var(--apex-border-grey);
+  }
+
+  .apex-cart__label,
+  .apex-cart__category {
+    font-size: 0.625rem;
+    font-weight: 600;
+    line-height: 0.875rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-cart__label--product {
+    grid-column: span 2;
+  }
+
+  .apex-cart__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .apex-cart__line {
+    align-items: center;
+    padding-block: 24px;
+    border-block-end: 1px solid var(--apex-border-grey);
+    transition: opacity 0.2s ease;
+  }
+
+  .apex-cart__line.is-loading {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .apex-cart__image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 120px;
+    aspect-ratio: 1;
+    padding: 6px 11px;
+    overflow: hidden;
+    border-radius: var(--apex-radius-md);
+    background: var(--apex-stone-100-alt);
+  }
+
+  .apex-cart__image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .apex-cart__info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .apex-cart__info p {
+    margin: 0;
+  }
+
+  .apex-cart__category {
+    color: var(--apex-olive);
+  }
+
+  .apex-cart__name {
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.25rem;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--apex-olive);
+  }
+
+  .apex-cart__name:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .apex-cart__meta {
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: var(--apex-dried-moss);
+  }
+
+  /* Quantity pill (Figma: 42px tall, dried-moss outline) */
+  .apex-cart__qty {
+    display: inline-flex;
+    align-items: center;
+    justify-self: start;
+    height: 42px;
+    padding-inline: 6px;
+    border: 1px solid var(--apex-dried-moss);
+    border-radius: var(--apex-radius-pill);
+  }
+
+  .apex-cart__qty-btn {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    font: inherit;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--apex-burrow);
+    cursor: pointer;
+    transition: scale 0.2s ease, background-color 0.2s ease;
+  }
+
+  .apex-cart__qty-btn:is(:hover, :focus-visible) {
+    scale: 1.06;
+    background-color: var(--apex-stone-200);
+  }
+
+  .apex-cart .apex-cart__qty-input {
+    width: 2.25ch;
+    min-width: 20px;
+    height: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    font: inherit;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+    text-align: center;
+    color: var(--apex-burrow);
+    -moz-appearance: textfield;
+  }
+
+  .apex-cart__qty-input::-webkit-outer-spin-button,
+  .apex-cart__qty-input::-webkit-inner-spin-button {
+    margin: 0;
+    -webkit-appearance: none;
+  }
+
+  .apex-cart__price {
+    display: flex;
+    flex-direction: column;
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.875rem;
+    color: var(--apex-burrow);
+  }
+
+  .apex-cart__price-was {
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.25rem;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-cart__discount {
+    font-size: 0.75rem;
+    font-weight: 400;
+    line-height: 1rem;
+    color: var(--apex-olive);
+  }
+
+  .apex-cart__remove,
+  .apex-cart__continue {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1rem;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: scale 0.2s ease;
+  }
+
+  .apex-cart__remove {
+    justify-self: end;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-cart__continue {
+    display: inline-flex;
+    gap: 6px;
+    margin-block-start: 24px;
+    color: var(--apex-olive);
+  }
+
+  .apex-cart__remove:is(:hover, :focus-visible),
+  .apex-cart__continue:is(:hover, :focus-visible) {
+    scale: 1.06;
+  }
+
+  .apex-cart__error {
+    margin: 16px 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: #a3361f;
+  }
+
+  /* Order summary card (Figma: stone, radius 40, padding 40, soft shadow) */
+  .apex-cart__summary {
+    position: sticky;
+    top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 40px;
+    border-radius: var(--apex-radius-xl);
+    background: var(--apex-stone-100-alt);
+    box-shadow: 0 2px 6px rgb(51 56 50 / 0.08), 0 16px 64px rgb(51 56 50 / 0.22);
+  }
+
+  .apex-cart__summary-title {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 3rem;
+    line-height: 0.96;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-cart__shipping {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .apex-cart__shipping-text,
+  .apex-cart__note label,
+  .apex-cart__dispatch-text {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+  }
+
+  .apex-cart__track {
+    height: 8px;
+    overflow: hidden;
+    border-radius: var(--apex-radius-pill);
+    background: var(--apex-stone-200);
+  }
+
+  .apex-cart__fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--apex-amber);
+    transition: width 0.4s ease;
+  }
+
+  .apex-cart__totals {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+  }
+
+  .apex-cart__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-cart__row dt,
+  .apex-cart__row dd {
+    margin: 0;
+  }
+
+  .apex-cart__row dd {
+    text-align: end;
+  }
+
+  .apex-cart__row--total {
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.875rem;
+  }
+
+  .apex-cart__dispatch {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px;
+    border-radius: var(--apex-radius-md);
+    background: var(--apex-stone-200);
+  }
+
+  .apex-cart__dispatch-title {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+  }
+
+  .apex-cart__dispatch-text > * {
+    margin: 0;
+  }
+
+  .apex-cart__note {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .apex-cart__note textarea {
+    min-height: 72px;
+    padding: 12px 16px;
+    border: 1px solid var(--apex-dried-moss);
+    border-radius: var(--apex-radius-sm);
+    background: var(--apex-stone-100);
+    font: inherit;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: var(--apex-burrow);
+    resize: vertical;
+  }
+
+  .apex-cart__note textarea::placeholder {
+    color: var(--apex-dried-moss);
+    opacity: 1;
+  }
+
+  .apex-cart__checkout {
+    width: 100%;
+  }
+
+  .apex-cart__payments {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .apex-cart__payments li,
+  .apex-cart__payments span {
+    display: flex;
+  }
+
+  .apex-cart__payments svg {
+    width: 35px;
+    height: 24px;
+  }
+
+  @media screen and (max-width: 1199px) {
+    .apex-cart__layout {
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 32px;
+    }
+
+    .apex-cart__labels,
+    .apex-cart__line {
+      grid-template-columns: 96px minmax(0, 1fr) 104px 96px 56px;
+      column-gap: 16px;
+    }
+
+    .apex-cart__image {
+      width: 96px;
+    }
+
+    .apex-cart__price {
+      font-size: 1.25rem;
+    }
+
+    .apex-cart__summary {
+      padding: 32px;
+    }
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-cart__layout {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 48px;
+    }
+
+    .apex-cart__summary {
+      position: static;
+      justify-self: end;
+      width: min(100%, 480px);
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-cart {
+      padding-block: calc(var(--apex-cart-pt, 64px) * 0.5) calc(var(--apex-cart-pb, 160px) * 0.5);
+    }
+
+    .apex-cart__title {
+      margin-block-start: 16px;
+      font-size: 4.5rem;
+    }
+
+    .apex-cart__layout {
+      gap: 32px;
+      margin-block-start: 32px;
+    }
+
+    .apex-cart__labels {
+      display: none;
+    }
+
+    .apex-cart__list {
+      border-block-start: 1px solid var(--apex-border-grey);
+    }
+
+    /* Phone line: image | info, then quantity, remove and total in one row under the info */
+    .apex-cart__line {
+      grid-template-columns: 88px auto minmax(0, 1fr) auto;
+      grid-template-areas:
+        'image info info info'
+        'image qty remove price';
+      column-gap: 12px;
+      row-gap: 14px;
+      align-items: center;
+      padding-block: 20px;
+    }
+
+    .apex-cart__image {
+      grid-area: image;
+      align-self: start;
+      width: 88px;
+      padding: 4px 8px;
+    }
+
+    .apex-cart__info {
+      grid-area: info;
+      align-self: start;
+      gap: 6px;
+    }
+
+    .apex-cart__name {
+      font-size: 0.9375rem;
+    }
+
+    .apex-cart__qty {
+      grid-area: qty;
+      height: 38px;
+    }
+
+    .apex-cart__price {
+      grid-area: price;
+      align-items: flex-end;
+      font-size: 1.125rem;
+      line-height: 1.5rem;
+    }
+
+    .apex-cart__remove {
+      grid-area: remove;
+      justify-self: start;
+      font-size: 0.75rem;
+    }
+
+    .apex-cart__summary {
+      gap: 20px;
+      padding: 28px 20px;
+      border-radius: 24px;
+      box-shadow: 0 2px 6px rgb(51 56 50 / 0.08), 0 12px 40px rgb(51 56 50 / 0.2);
+    }
+
+    .apex-cart__summary-title {
+      font-size: 2.5rem;
+    }
+
+    .apex-cart__row--total {
+      font-size: 1.25rem;
+    }
+
+    .apex-cart__payments {
+      justify-content: center;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX cart",
+  "tag": "section",
+  "class": "apex-cart-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Your cart"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Shopping cart"
+    },
+    {
+      "type": "text",
+      "id": "continue_label",
+      "label": "Continue shopping label",
+      "default": "Continue shopping"
+    },
+    {
+      "type": "url",
+      "id": "continue_link",
+      "label": "Continue shopping link",
+      "info": "Empty: all products"
+    },
+    {
+      "type": "header",
+      "content": "Empty cart"
+    },
+    {
+      "type": "text",
+      "id": "empty_text",
+      "label": "Text",
+      "default": "Your cart is empty."
+    },
+    {
+      "type": "text",
+      "id": "empty_button",
+      "label": "Button label",
+      "default": "Shop all products"
+    },
+    {
+      "type": "url",
+      "id": "empty_link",
+      "label": "Button link",
+      "info": "Empty: all products"
+    },
+    {
+      "type": "header",
+      "content": "Order summary"
+    },
+    {
+      "type": "text",
+      "id": "summary_title",
+      "label": "Title",
+      "default": "Order summary"
+    },
+    {
+      "type": "range",
+      "id": "free_shipping_threshold",
+      "label": "Free shipping from",
+      "info": "Shows a progress bar. 0 hides it. Match this to your shipping rates and the announcement bar.",
+      "min": 0,
+      "max": 500,
+      "step": 5,
+      "unit": "$",
+      "default": 150
+    },
+    {
+      "type": "text",
+      "id": "shipping_text",
+      "label": "Shipping line",
+      "default": "Calculated at checkout"
+    },
+    {
+      "type": "text",
+      "id": "note_title",
+      "label": "Dispatch note title",
+      "default": "Live and frozen orders"
+    },
+    {
+      "type": "richtext",
+      "id": "note_text",
+      "label": "Dispatch note text",
+      "default": "<p>Dispatched Mondays and Tuesdays only. Order before 3:00pm Monday (AEST) for same-week dispatch.</p>"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_order_note",
+      "label": "Show order note",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "order_note_label",
+      "label": "Order note label",
+      "default": "Order note (optional)"
+    },
+    {
+      "type": "text",
+      "id": "order_note_placeholder",
+      "label": "Order note placeholder",
+      "default": "Add a note to your order"
+    },
+    {
+      "type": "text",
+      "id": "checkout_label",
+      "label": "Checkout button",
+      "default": "Checkout"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_payment_icons",
+      "label": "Show payment icons",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Space above",
+      "info": "Phones use half.",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Space below",
+      "info": "Phones use half.",
+      "min": 0,
+      "max": 240,
+      "step": 8,
+      "unit": "px",
+      "default": 160
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX cart"
+    }
+  ]
+}
+{% endschema %}
