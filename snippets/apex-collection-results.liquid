@@ -1,0 +1,201 @@
+{% doc %}
+  The APEX product grid's results (toolbar, animal buttons, filter chips, cards, pages), shared
+  by collections and search results. Rendered inside the section's paginate tag.
+
+  @param {object} section - The apex-main-collection section
+  @param {object} pager - The paginate object
+  @param {object} source - The collection or search object (filters, sort options)
+  @param {object[]} items - Products on this page
+  @param {number} products_count - Total number of products
+  @param {string} filter_inputs - Hidden inputs that keep the active filters
+  @param {number} active_count - Number of active filters
+  @param {string} sort_by - Current sort order
+  @param {string} clear_url - Address with every filter removed
+  @param {number} per_page - Products per page
+  @param {string[]} per_page_options - Choices for the Show menu
+  @param {boolean} show_all - Whether this is the Shop all page (shows the animal buttons)
+  @param {string} empty_text - Message when there are no products
+{% enddoc %}
+  <div class="apex-collection__results" data-results>
+  <div class="apex-collection__toolbar"{% if pager.current_page > 1 %} data-scroll-to{% endif %}>
+    {%- if source.filters.size > 0 -%}
+      <button type="button" class="apex-collection__filters-button" data-open-filters aria-haspopup="dialog">
+        {{- 'apex-icon-filter.svg' | inline_asset_content -}}
+        <span>Show filters{% if active_count > 0 %} ({{ active_count }}){% endif %}</span>
+      </button>
+    {%- endif -%}
+
+    <p class="apex-collection__count">
+      {{ products_count }}
+      {% if products_count == 1 %}product{% else %}products{% endif %}
+    </p>
+
+    <form class="apex-collection__sort" method="get" data-sort-form>
+      {{ filter_inputs }}
+      <label for="ApexSort-{{ section.id }}">Sort by:</label>
+      <select id="ApexSort-{{ section.id }}" name="sort_by" data-sort-select>
+        {%- for option in source.sort_options -%}
+          <option value="{{ option.value | escape }}"{% if option.value == sort_by %} selected{% endif %}>
+            {{- option.name | escape -}}
+          </option>
+        {%- endfor -%}
+      </select>
+      <noscript><button type="submit">Sort</button></noscript>
+    </form>
+  </div>
+
+  {%- liquid
+    # Quick animal buttons: the Suitable for filter as one-tap shortcuts, on Shop all (or on
+    # every category when the setting is on)
+    assign animal_filter = nil
+    for filter in source.filters
+      if filter.param_name contains 'suitable_for'
+        assign animal_filter = filter
+      endif
+    endfor
+    assign show_animals = false
+    if animal_filter and animal_filter.values.size > 1
+      if show_all or section.settings.animal_buttons_everywhere
+        assign show_animals = true
+      endif
+    endif
+  -%}
+  {%- if show_animals -%}
+    <nav class="apex-collection__animals" aria-labelledby="ApexAnimalsLabel-{{ section.id }}">
+      <div class="apex-collection__animals-track" data-animal-track>
+      <p class="apex-collection__animals-label" id="ApexAnimalsLabel-{{ section.id }}">
+        {{- section.settings.animal_label | default: 'Shop for' | escape -}}
+      </p>
+      <ul class="apex-collection__animals-list list-unstyled" role="list">
+        {%- for value in animal_filter.values -%}
+          {%- if value.count > 0 or value.active -%}
+            <li>
+              <a
+                class="apex-collection__animal{% if value.active %} is-active{% endif %}"
+                href="{% if value.active %}{{ value.url_to_remove }}{% else %}{{ value.url_to_add }}{% endif %}"
+                {% if value.active %}
+                  aria-current="true"
+                {% endif %}
+                data-swap
+              >
+                {{- value.label | escape -}}
+              </a>
+            </li>
+          {%- endif -%}
+        {%- endfor -%}
+      </ul>
+      </div>
+    </nav>
+  {%- endif -%}
+
+  {%- if active_count > 0 -%}
+    <div class="apex-collection__chips">
+      <ul class="list-unstyled" role="list">
+        {%- for filter in source.filters -%}
+          {%- for value in filter.active_values -%}
+            <li>
+              <a class="apex-collection__chip" href="{{ value.url_to_remove }}" data-swap>
+                <span class="visually-hidden">Remove filter:</span>
+                {{ value.label | escape }}
+                {{- 'apex-icon-close.svg' | inline_asset_content -}}
+              </a>
+            </li>
+          {%- endfor -%}
+          {%- if filter.type == 'price_range' -%}
+            {%- if filter.min_value.value != blank or filter.max_value.value != blank -%}
+              <li>
+                <a class="apex-collection__chip" href="{{ filter.url_to_remove }}" data-swap>
+                  <span class="visually-hidden">Remove filter:</span>
+                  {{ filter.min_value.value | default: 0 | money_without_trailing_zeros }}
+                  to
+                  {{ filter.max_value.value | default: filter.range_max | money_without_trailing_zeros }}
+                  {{- 'apex-icon-close.svg' | inline_asset_content -}}
+                </a>
+              </li>
+            {%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
+        <li>
+          <a class="apex-collection__chips-clear" href="{{ clear_url }}" data-swap>Clear all</a>
+        </li>
+      </ul>
+    </div>
+  {%- endif -%}
+
+  {%- if items.size > 0 -%}
+    <ul class="apex-collection__grid list-unstyled" role="list">
+      {%- for product in items -%}
+        <li class="apex-collection__item">
+          {%- render 'apex-product-card',
+            product: product,
+            show_buttons: true,
+            sizes: '(min-width: 990px) 300px, (min-width: 750px) 33vw, 50vw'
+          -%}
+        </li>
+      {%- endfor -%}
+    </ul>
+  {%- else -%}
+    <div class="apex-collection__empty">
+      <p>{{ empty_text }}</p>
+      {%- if active_count > 0 -%}
+        <a class="apex-button apex-button--outline-moss" href="{{ clear_url }}">Clear filters</a>
+      {%- endif -%}
+    </div>
+  {%- endif -%}
+
+  {%- if pager.pages > 1 or products_count > 12 -%}
+  <div class="apex-collection__footer">
+  {%- if pager.pages > 1 -%}
+    <nav class="apex-collection__pages" aria-label="Pages">
+      {%- if pager.previous -%}
+        <a class="apex-collection__page-arrow apex-collection__page-arrow--prev" href="{{ pager.previous.url }}" aria-label="Previous page">
+          {{- 'apex-icon-arrow-circle.svg' | inline_asset_content -}}
+        </a>
+      {%- else -%}
+        <span class="apex-collection__page-arrow apex-collection__page-arrow--prev is-disabled" aria-hidden="true">
+          {{- 'apex-icon-arrow-circle.svg' | inline_asset_content -}}
+        </span>
+      {%- endif -%}
+
+      <ul class="apex-collection__page-list list-unstyled" role="list">
+        {%- for part in pager.parts -%}
+          <li>
+            {%- if part.is_link -%}
+              <a class="apex-collection__page" href="{{ part.url }}">{{ part.title }}</a>
+            {%- elsif part.title == pager.current_page -%}
+              <span class="apex-collection__page is-current" aria-current="page">{{ part.title }}</span>
+            {%- else -%}
+              <span class="apex-collection__page">{{ part.title }}</span>
+            {%- endif -%}
+          </li>
+        {%- endfor -%}
+      </ul>
+
+      {%- if pager.next -%}
+        <a class="apex-collection__page-arrow" href="{{ pager.next.url }}" aria-label="Next page">
+          {{- 'apex-icon-arrow-circle.svg' | inline_asset_content -}}
+        </a>
+      {%- else -%}
+        <span class="apex-collection__page-arrow is-disabled" aria-hidden="true">
+          {{- 'apex-icon-arrow-circle.svg' | inline_asset_content -}}
+        </span>
+      {%- endif -%}
+    </nav>
+  {%- endif -%}
+
+  {%- if products_count > 12 -%}
+    <div class="apex-collection__show">
+      <label for="ApexShow-{{ section.id }}">Show:</label>
+      <select id="ApexShow-{{ section.id }}" data-per-page-select>
+        {%- for option in per_page_options -%}
+          {%- assign option_number = option | plus: 0 -%}
+          <option value="{{ option }}"{% if option_number == per_page %} selected{% endif %}>
+            {{- option }} products
+          </option>
+        {%- endfor -%}
+      </select>
+    </div>
+  {%- endif -%}
+  </div>
+  {%- endif -%}
+  </div>
