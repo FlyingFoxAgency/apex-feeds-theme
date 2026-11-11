@@ -1,0 +1,147 @@
+{
+  "sections": {
+    "main": {
+      "type": "apex-faq",
+      "blocks": {
+        "group_1": {
+          "type": "group",
+          "settings": {
+            "title": "Orders & shipping",
+            "nav_label": ""
+          }
+        },
+        "q_1_1": {
+          "type": "question",
+          "settings": {
+            "question": "Which carrier do you use?",
+            "answer": "<p>All Apex Feeds orders are shipped via Australia Post. Shipping timeframes are estimates only and are not guaranteed, as delays can occur due to weather, public holidays, peak periods or carrier disruptions.</p>"
+          }
+        },
+        "q_1_2": {
+          "type": "question",
+          "settings": {
+            "question": "When are live and frozen orders dispatched?",
+            "answer": "<p>Live and frozen orders are dispatched on Mondays and Tuesdays only, so they don’t sit in transit over the weekend. Place your order before 3:00pm Monday (AEST) for same-week dispatch.</p>"
+          }
+        },
+        "q_1_3": {
+          "type": "question",
+          "settings": {
+            "question": "What if my order arrives damaged or incorrect?",
+            "answer": "<p>Please email us within 24 hours of delivery with your order number and clear photos of the item and packaging. We’ll review it and let you know the next steps.</p>"
+          }
+        },
+        "q_1_4": {
+          "type": "question",
+          "settings": {
+            "question": "Do you offer free shipping?",
+            "answer": "<p>Yes. Orders over $150 ship free.</p>"
+          }
+        },
+        "group_2": {
+          "type": "group",
+          "settings": {
+            "title": "Live insects",
+            "nav_label": ""
+          }
+        },
+        "q_2_1": {
+          "type": "question",
+          "settings": {
+            "question": "Are minor losses in transit covered?",
+            "answer": "<p>Live insects are living animals, and minor losses in transit are considered normal. These are not refunded. If a large share of your order arrives dead, contact us within 24 hours of delivery with photos.</p>"
+          }
+        },
+        "q_2_2": {
+          "type": "question",
+          "settings": {
+            "question": "Can I buy live feeders in my state?",
+            "answer": "<p>Some states restrict which live feeders you can keep. It’s your responsibility to check that you’re allowed to keep the insects you order where you live before you buy.</p>"
+          }
+        },
+        "group_3": {
+          "type": "group",
+          "settings": {
+            "title": "Frozen & freeze-dried",
+            "nav_label": ""
+          }
+        },
+        "q_3_1": {
+          "type": "question",
+          "settings": {
+            "question": "Can frozen products be shipped to me?",
+            "answer": "<p>Frozen products aren’t available for standard shipping in small quantities. Please contact us and we’ll let you know what we can do for your area.</p>"
+          }
+        },
+        "q_3_2": {
+          "type": "question",
+          "settings": {
+            "question": "How should I store my order?",
+            "answer": "<p>Unpack frozen products into the freezer as soon as they arrive, and follow the storage directions on each product. Once your order has been delivered, storage is your responsibility.</p>"
+          }
+        },
+        "group_4": {
+          "type": "group",
+          "settings": {
+            "title": "Returns & refunds",
+            "nav_label": ""
+          }
+        },
+        "q_4_1": {
+          "type": "question",
+          "settings": {
+            "question": "Can I return a product I no longer want?",
+            "answer": "<p>Because our products are food and live animals, we can’t accept returns or offer refunds for change of mind. If something is wrong with your order, please see our <a href=\"/pages/shipping-returns#refunds-returns-policy\">refunds and returns policy</a>.</p>"
+          }
+        },
+        "group_5": {
+          "type": "group",
+          "settings": {
+            "title": "Wholesale",
+            "nav_label": ""
+          }
+        },
+        "q_5_1": {
+          "type": "question",
+          "settings": {
+            "question": "How do I become a stockist?",
+            "answer": "<p>We work with brick-and-mortar pet and reptile stores. To apply, please send us your business details through our <a href=\"/pages/contact\">contact page</a> and we’ll send you our wholesale application.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "group_1",
+        "q_1_1",
+        "q_1_2",
+        "q_1_3",
+        "q_1_4",
+        "group_2",
+        "q_2_1",
+        "q_2_2",
+        "group_3",
+        "q_3_1",
+        "q_3_2",
+        "group_4",
+        "q_4_1",
+        "group_5",
+        "q_5_1"
+      ],
+      "settings": {
+        "eyebrow": "FAQs",
+        "title": "Help Centre",
+        "intro": "<p>Answers to the questions we get asked most. Can’t find what you need? <a href=\"/pages/contact\">Get in touch</a> and our team will help.</p>",
+        "nav_title": "Topics",
+        "open_first": true,
+        "show_progress": true,
+        "show_back_to_top": true,
+        "help_title": "Still need help?",
+        "help_text": "Our team aims to respond to all enquiries as quickly as possible.",
+        "help_button_label": "Contact us",
+        "help_button_link": "/pages/contact"
+      }
+    }
+  },
+  "order": [
+    "main"
+  ]
+}
