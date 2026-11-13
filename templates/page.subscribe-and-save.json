@@ -6,7 +6,7 @@
         "eyebrow": "Subscribe and save",
         "title": "Never run out of food again",
         "title_size": "page",
-        "text": "<p>Put the foods your animals eat every week on a schedule. You save 15% on every delivery, get 30% off your first subscription order, and you can skip, pause or cancel any time.</p>",
+        "text": "<p>Put the foods your animals eat every month on a schedule. You save 10% on every delivery, get free shipping on orders over $100, and you can skip, pause or cancel any time.</p>",
         "vertical_align": "center",
         "button_label": "Shop subscribable products",
         "button_link": "/collections/all",
@@ -15,7 +15,7 @@
         "image_label": "Three jars on the stone panel (cut-out PNG)",
         "image_position": "right",
         "image_fit": "contain",
-        "badge": "Save 15%",
+        "badge": "Save 10%",
         "image_height": 520,
         "padding_top": 84,
         "padding_bottom": 96
@@ -27,22 +27,22 @@
         "tile_1": {
           "type": "tile",
           "settings": {
-            "title": "Save 15% every time",
-            "text": "<p>Every subscription delivery is 15% off the regular price, for as long as you stay subscribed.</p>"
+            "title": "Save 10% every time",
+            "text": "<p>Every subscription delivery is 10% off the regular price, for as long as you stay subscribed.</p>"
           }
         },
         "tile_2": {
           "type": "tile",
           "settings": {
-            "title": "30% off your first order",
-            "text": "<p>Your first subscription order is 30% off RRP, so it costs less to try.</p>"
+            "title": "Free shipping over $100",
+            "text": "<p>Subscription orders over $100 ship free, well under the usual $150 free shipping mark.</p>"
           }
         },
         "tile_3": {
           "type": "tile",
           "settings": {
-            "title": "You set the schedule",
-            "text": "<p>Choose a delivery every 2 to 8 weeks to match how much your animals eat.</p>"
+            "title": "Delivered monthly",
+            "text": "<p>Your order arrives once a month, so you're topped up before the tub runs out.</p>"
           }
         },
         "tile_4": {
@@ -53,7 +53,12 @@
           }
         }
       },
-      "block_order": ["tile_1", "tile_2", "tile_3", "tile_4"],
+      "block_order": [
+        "tile_1",
+        "tile_2",
+        "tile_3",
+        "tile_4"
+      ],
       "settings": {
         "eyebrow": "Why subscribe",
         "title": "Feeding made easy",
@@ -75,8 +80,8 @@
         "step_2": {
           "type": "tile",
           "settings": {
-            "title": "Pick your frequency",
-            "text": "<p>Choose how often you want it delivered. We remind you by email before each order ships.</p>"
+            "title": "Check out once",
+            "text": "<p>Pay for your first delivery as usual. After that it repeats every month, and we email you before each order ships.</p>"
           }
         },
         "step_3": {
@@ -87,7 +92,11 @@
           }
         }
       },
-      "block_order": ["step_1", "step_2", "step_3"],
+      "block_order": [
+        "step_1",
+        "step_2",
+        "step_3"
+      ],
       "settings": {
         "eyebrow": "How it works",
         "title": "Three steps to set and forget",
@@ -100,12 +109,12 @@
       "type": "apex-savings",
       "settings": {
         "eyebrow": "What you could save",
-        "title": "One tub every four weeks",
-        "text": "<p>Based on a 500g Frozen Omnivore Buffet™ delivered every 4 weeks for a year.</p>",
+        "title": "One tub every month",
+        "text": "<p>Based on a 500g Freeze-Dried Omnivore Buffet™ delivered every month for a year.</p>",
         "price": "59.99",
-        "deliveries": 13,
-        "discount": 15,
-        "first_order_discount": 30,
+        "deliveries": 12,
+        "discount": 10,
+        "first_order_discount": 10,
         "label_one_off": "One-off price, [count] tubs",
         "label_subscribe": "Subscribe and Save, [count] tubs",
         "label_bonus": "First order bonus",
@@ -119,15 +128,15 @@
         "q_1": {
           "type": "tile",
           "settings": {
-            "title": "Can I subscribe to live insects?",
-            "text": "<p>Live insects ship on set days to keep them healthy, so they can be added on a weekly or fortnightly schedule.</p>"
+            "title": "How often does it ship?",
+            "text": "<p>Once a month. You can skip a month, pause or cancel any time from My account.</p>"
           }
         },
         "q_2": {
           "type": "tile",
           "settings": {
             "title": "When am I charged?",
-            "text": "<p>Your card is charged when each delivery is prepared. We email you three days before so you can skip or change it.</p>"
+            "text": "<p>Your card is charged when each delivery is prepared. We email you before each order so you can skip or change it.</p>"
           }
         },
         "q_3": {
@@ -145,7 +154,12 @@
           }
         }
       },
-      "block_order": ["q_1", "q_2", "q_3", "q_4"],
+      "block_order": [
+        "q_1",
+        "q_2",
+        "q_3",
+        "q_4"
+      ],
       "settings": {
         "eyebrow": "Good to know",
         "title": "Subscription questions",
@@ -168,5 +182,12 @@
       }
     }
   },
-  "order": ["hero", "benefits", "steps", "savings", "questions", "cta"]
+  "order": [
+    "hero",
+    "benefits",
+    "steps",
+    "savings",
+    "questions",
+    "cta"
+  ]
 }
