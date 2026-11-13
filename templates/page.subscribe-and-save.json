@@ -1,0 +1,172 @@
+{
+  "sections": {
+    "hero": {
+      "type": "apex-split",
+      "settings": {
+        "eyebrow": "Subscribe and save",
+        "title": "Never run out of food again",
+        "title_size": "page",
+        "text": "<p>Put the foods your animals eat every week on a schedule. You save 15% on every delivery, get 30% off your first subscription order, and you can skip, pause or cancel any time.</p>",
+        "vertical_align": "center",
+        "button_label": "Shop subscribable products",
+        "button_link": "/collections/all",
+        "button_2_label": "Manage subscriptions",
+        "button_2_link": "",
+        "image_label": "Three jars on the stone panel (cut-out PNG)",
+        "image_position": "right",
+        "image_fit": "contain",
+        "badge": "Save 15%",
+        "image_height": 520,
+        "padding_top": 84,
+        "padding_bottom": 96
+      }
+    },
+    "benefits": {
+      "type": "apex-tiles",
+      "blocks": {
+        "tile_1": {
+          "type": "tile",
+          "settings": {
+            "title": "Save 15% every time",
+            "text": "<p>Every subscription delivery is 15% off the regular price, for as long as you stay subscribed.</p>"
+          }
+        },
+        "tile_2": {
+          "type": "tile",
+          "settings": {
+            "title": "30% off your first order",
+            "text": "<p>Your first subscription order is 30% off RRP, so it costs less to try.</p>"
+          }
+        },
+        "tile_3": {
+          "type": "tile",
+          "settings": {
+            "title": "You set the schedule",
+            "text": "<p>Choose a delivery every 2 to 8 weeks to match how much your animals eat.</p>"
+          }
+        },
+        "tile_4": {
+          "type": "tile",
+          "settings": {
+            "title": "No lock-in",
+            "text": "<p>Skip a delivery, change the frequency, pause or cancel any time from your account.</p>"
+          }
+        }
+      },
+      "block_order": ["tile_1", "tile_2", "tile_3", "tile_4"],
+      "settings": {
+        "eyebrow": "Why subscribe",
+        "title": "Feeding made easy",
+        "style": "cards",
+        "columns": 4,
+        "margin_bottom": 96
+      }
+    },
+    "steps": {
+      "type": "apex-tiles",
+      "blocks": {
+        "step_1": {
+          "type": "tile",
+          "settings": {
+            "title": "Choose your products",
+            "text": "<p>Pick Subscribe and Save on any product page that offers it, or add it from your cart.</p>"
+          }
+        },
+        "step_2": {
+          "type": "tile",
+          "settings": {
+            "title": "Pick your frequency",
+            "text": "<p>Choose how often you want it delivered. We remind you by email before each order ships.</p>"
+          }
+        },
+        "step_3": {
+          "type": "tile",
+          "settings": {
+            "title": "We deliver on schedule",
+            "text": "<p>Fresh stock arrives when you need it. Manage everything from My account.</p>"
+          }
+        }
+      },
+      "block_order": ["step_1", "step_2", "step_3"],
+      "settings": {
+        "eyebrow": "How it works",
+        "title": "Three steps to set and forget",
+        "style": "steps",
+        "columns": 3,
+        "margin_bottom": 96
+      }
+    },
+    "savings": {
+      "type": "apex-savings",
+      "settings": {
+        "eyebrow": "What you could save",
+        "title": "One tub every four weeks",
+        "text": "<p>Based on a 500g Frozen Omnivore Buffet™ delivered every 4 weeks for a year.</p>",
+        "price": "59.99",
+        "deliveries": 13,
+        "discount": 15,
+        "first_order_discount": 30,
+        "label_one_off": "One-off price, [count] tubs",
+        "label_subscribe": "Subscribe and Save, [count] tubs",
+        "label_bonus": "First order bonus",
+        "label_total": "You save in the first year",
+        "margin_bottom": 96
+      }
+    },
+    "questions": {
+      "type": "apex-tiles",
+      "blocks": {
+        "q_1": {
+          "type": "tile",
+          "settings": {
+            "title": "Can I subscribe to live insects?",
+            "text": "<p>Live insects ship on set days to keep them healthy, so they can be added on a weekly or fortnightly schedule.</p>"
+          }
+        },
+        "q_2": {
+          "type": "tile",
+          "settings": {
+            "title": "When am I charged?",
+            "text": "<p>Your card is charged when each delivery is prepared. We email you three days before so you can skip or change it.</p>"
+          }
+        },
+        "q_3": {
+          "type": "tile",
+          "settings": {
+            "title": "Can I change what is in my subscription?",
+            "text": "<p>Yes. Swap flavours or sizes, add products, or remove them from My account at any time.</p>"
+          }
+        },
+        "q_4": {
+          "type": "tile",
+          "settings": {
+            "title": "Where do you deliver?",
+            "text": "<p>We currently deliver to QLD, NSW, ACT and VIC, with more areas coming soon.</p>"
+          }
+        }
+      },
+      "block_order": ["q_1", "q_2", "q_3", "q_4"],
+      "settings": {
+        "eyebrow": "Good to know",
+        "title": "Subscription questions",
+        "style": "plain",
+        "columns": 2,
+        "margin_bottom": 96
+      }
+    },
+    "cta": {
+      "type": "apex-cta",
+      "settings": {
+        "eyebrow": "Ready when you are",
+        "title": "Set it and forget it",
+        "text": "",
+        "button_label": "Shop subscribable products",
+        "button_link": "/collections/all",
+        "button_2_label": "Read the full terms",
+        "button_2_link": "/pages/terms-conditions",
+        "padding_bottom": 160
+      }
+    }
+  },
+  "order": ["hero", "benefits", "steps", "savings", "questions", "cta"]
+}

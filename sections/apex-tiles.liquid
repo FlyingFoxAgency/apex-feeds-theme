@@ -1,0 +1,286 @@
+{% comment %}
+  APEX tiles (Figma "APEX Subscribe and Save Page" > Why subscribe, How it works, Subscription
+  questions): an eyebrow and Dharma title, then a row of tiles (one block per tile).
+  Tile styles:
+  - Stone cards: filled stone panels with a Dharma title (Why subscribe).
+  - Outlined steps: moss outline, numbered burrow circles, small upper case title (How it works).
+  - Plain text: no panel, small upper case title over the text, in columns (questions).
+  Phones: tiles stack in one column.
+{% endcomment %}
+{%- liquid
+  assign columns = section.settings.columns
+  if section.blocks.size < columns and section.blocks.size > 0
+    assign columns = section.blocks.size
+  endif
+-%}
+<div
+  class="apex-tiles apex-tiles--{{ section.settings.style }}"
+  style="--apex-tiles-cols: {{ columns }}; --apex-tiles-mb: {{ section.settings.margin_bottom }}px;"
+>
+  <div class="apex-container">
+    {%- if section.settings.eyebrow != blank -%}
+      <p class="apex-eyebrow apex-tiles__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {%- endif -%}
+    {%- if section.settings.title != blank -%}
+      <h2 class="apex-tiles__title">{{ section.settings.title | escape }}</h2>
+    {%- endif -%}
+
+    {%- if section.blocks.size > 0 -%}
+      <ol class="apex-tiles__list" role="list">
+        {%- for block in section.blocks -%}
+          <li class="apex-tiles__tile" {{ block.shopify_attributes }}>
+            {%- if section.settings.style == 'steps' -%}
+              <span class="apex-tiles__number" aria-hidden="true">{{ forloop.index }}</span>
+            {%- endif -%}
+            {%- if block.settings.title != blank -%}
+              <h3 class="apex-tiles__tile-title">{{ block.settings.title | escape }}</h3>
+            {%- endif -%}
+            {%- if block.settings.text != blank -%}
+              <div class="apex-tiles__tile-text">{{ block.settings.text }}</div>
+            {%- endif -%}
+          </li>
+        {%- endfor -%}
+      </ol>
+    {%- endif -%}
+  </div>
+</div>
+
+{% stylesheet %}
+  .apex-tiles {
+    margin-block-end: var(--apex-tiles-mb, 96px);
+  }
+
+  .apex-tiles__eyebrow {
+    margin: 0;
+  }
+
+  .apex-tiles__title {
+    margin: 24px 0 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: var(--font-size--h2);
+    line-height: 0.95;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-tiles__list {
+    display: grid;
+    grid-template-columns: repeat(var(--apex-tiles-cols, 4), minmax(0, 1fr));
+    gap: 24px;
+    margin: 48px 0 0;
+    padding: 0;
+    list-style: none;
+    color: var(--apex-burrow);
+  }
+
+  .apex-tiles__tile {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .apex-tiles__tile-title {
+    margin: 0;
+    color: var(--apex-burrow);
+  }
+
+  .apex-tiles__tile-text {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-tiles__tile-text > * {
+    margin: 0 0 12px;
+  }
+
+  .apex-tiles__tile-text > :last-child {
+    margin-block-end: 0;
+  }
+
+  .apex-tiles__tile-text a {
+    color: inherit;
+    text-underline-offset: 3px;
+  }
+
+  /* Stone cards: Figma 32px padding, 40px radius, Dharma 40/40 title */
+  .apex-tiles--cards .apex-tiles__tile {
+    padding: 32px;
+    border-radius: var(--apex-radius-xl);
+    background: var(--apex-stone-100-alt);
+  }
+
+  .apex-tiles--cards .apex-tiles__tile-title {
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 2.5rem;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  /* Outlined steps: 1px moss outline, 40px burrow number circle */
+  .apex-tiles--steps .apex-tiles__tile {
+    padding: 32px;
+    border: 1px solid var(--apex-dried-moss);
+    border-radius: var(--apex-radius-xl);
+  }
+
+  .apex-tiles__number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin-block-end: 8px;
+    border-radius: 50%;
+    background: var(--apex-burrow);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--apex-sandstone);
+  }
+
+  .apex-tiles--steps .apex-tiles__tile-title,
+  .apex-tiles--plain .apex-tiles__tile-title {
+    font-family: var(--font-body--family);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  /* Plain questions: Figma 40px rows, 48px columns, 12px under the question */
+  .apex-tiles--plain .apex-tiles__list {
+    gap: 40px 48px;
+  }
+
+  .apex-tiles--plain .apex-tiles__tile {
+    gap: 12px;
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-tiles--cards .apex-tiles__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .apex-tiles--steps .apex-tiles__tile {
+      padding: 24px;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-tiles {
+      margin-block-end: calc(var(--apex-tiles-mb, 96px) * 0.6);
+    }
+
+    .apex-tiles__title {
+      margin-block-start: 16px;
+    }
+
+    .apex-tiles .apex-tiles__list {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 16px;
+      margin-block-start: 32px;
+    }
+
+    .apex-tiles--plain .apex-tiles__list {
+      gap: 28px;
+    }
+
+    .apex-tiles--cards .apex-tiles__tile,
+    .apex-tiles--steps .apex-tiles__tile {
+      gap: 12px;
+      padding: 24px;
+      border-radius: 24px;
+    }
+
+    .apex-tiles--cards .apex-tiles__tile-title {
+      font-size: 2.25rem;
+    }
+
+    .apex-tiles__number {
+      margin-block-end: 4px;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX tiles",
+  "tag": "section",
+  "class": "apex-tiles-section",
+  "max_blocks": 8,
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Why subscribe"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Feeding made easy"
+    },
+    {
+      "type": "select",
+      "id": "style",
+      "label": "Tile style",
+      "options": [
+        { "value": "cards", "label": "Stone cards" },
+        { "value": "steps", "label": "Outlined numbered steps" },
+        { "value": "plain", "label": "Plain text (questions)" }
+      ],
+      "default": "cards"
+    },
+    {
+      "type": "range",
+      "id": "columns",
+      "label": "Tiles per row",
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "range",
+      "id": "margin_bottom",
+      "label": "Space below",
+      "info": "Phones use 60%.",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "default": 96
+    }
+  ],
+  "blocks": [
+    {
+      "type": "tile",
+      "name": "Tile",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Tile title"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text",
+          "default": "<p>A short description.</p>"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX tiles",
+      "blocks": [{ "type": "tile" }, { "type": "tile" }, { "type": "tile" }, { "type": "tile" }]
+    }
+  ]
+}
+{% endschema %}
