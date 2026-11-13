@@ -4,6 +4,9 @@
   - Title size: page title (h1, 128px) for the top of a page, or section title (h2, 64px).
   - Without an image a stone panel shows in its place (its label shows only in the theme editor).
   - Phones: text first, image below.
+  - Optional (Figma "APEX Subscribe and Save Page" > Hero): up to two buttons under the text, a
+    round badge on the image (e.g. "Save 15%"), the image fitted inside the panel instead of
+    filling it (for cut-out product shots), and the text centred against the image.
 {% endcomment %}
 {%- liquid
   assign heading_tag = 'h2'
@@ -12,7 +15,7 @@
   endif
 -%}
 <div
-  class="apex-split apex-split--image-{{ section.settings.image_position }}"
+  class="apex-split apex-split--image-{{ section.settings.image_position }} apex-split--fit-{{ section.settings.image_fit | default: 'cover' }} apex-split--align-{{ section.settings.vertical_align | default: 'top' }}"
   style="--apex-split-pt: {{ section.settings.padding_top }}px; --apex-split-pb: {{ section.settings.padding_bottom }}px; --apex-split-img-h: {{ section.settings.image_height }}px;"
 >
   <div class="apex-container apex-split__grid">
@@ -27,6 +30,20 @@
       {%- endif -%}
       {%- if section.settings.text != blank -%}
         <div class="apex-split__body">{{ section.settings.text }}</div>
+      {%- endif -%}
+      {%- if section.settings.button_label != blank or section.settings.button_2_label != blank -%}
+        <div class="apex-split__buttons">
+          {%- if section.settings.button_label != blank -%}
+            <a class="apex-button apex-split__button apex-split__button--filled" href="{{ section.settings.button_link | default: routes.all_products_collection_url }}">
+              {{- section.settings.button_label | escape -}}
+            </a>
+          {%- endif -%}
+          {%- if section.settings.button_2_label != blank -%}
+            <a class="apex-button apex-split__button apex-split__button--outline" href="{{ section.settings.button_2_link | default: routes.account_url }}">
+              {{- section.settings.button_2_label | escape -}}
+            </a>
+          {%- endif -%}
+        </div>
       {%- endif -%}
     </div>
 
@@ -43,6 +60,9 @@
         }}
       {%- elsif request.design_mode and section.settings.image_label != blank -%}
         <span class="apex-split__label">{{ section.settings.image_label | escape }}</span>
+      {%- endif -%}
+      {%- if section.settings.badge != blank -%}
+        <span class="apex-split__badge">{{ section.settings.badge | escape }}</span>
       {%- endif -%}
     </div>
   </div>
@@ -122,6 +142,62 @@
     object-fit: cover;
   }
 
+  /* Cut-out product shots sit inside the stone panel (Figma: jars on stone-100, 40px radius) */
+  .apex-split--fit-contain .apex-split__media {
+    background: var(--apex-stone-100-alt);
+  }
+
+  .apex-split--fit-contain .apex-split__media img {
+    inset: 48px;
+    width: calc(100% - 96px);
+    height: calc(100% - 96px);
+    object-fit: contain;
+  }
+
+  .apex-split--align-center .apex-split__grid {
+    align-items: center;
+  }
+
+  .apex-split--align-center .apex-split__media {
+    margin-block-start: 0;
+  }
+
+  .apex-split__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-block-start: 32px;
+  }
+
+  .apex-split__button--filled {
+    background-color: var(--apex-dried-moss);
+    border-color: var(--apex-dried-moss);
+    color: var(--apex-sandstone);
+  }
+
+  .apex-split__button--outline {
+    background-color: transparent;
+    border-color: var(--apex-dried-moss);
+    color: var(--apex-burrow);
+  }
+
+  /* Figma: amber pill, 15/24 semibold white, 32px in from the top right */
+  .apex-split__badge {
+    position: absolute;
+    z-index: 1;
+    inset-block-start: 32px;
+    inset-inline-end: 32px;
+    padding: 16px 20px;
+    border-radius: var(--apex-radius-pill);
+    background: var(--apex-amber);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #fff;
+  }
+
   .apex-split__label {
     padding: 16px;
     font-size: 0.625rem;
@@ -167,6 +243,27 @@
       margin-block-start: 0;
       border-radius: 24px;
     }
+
+    .apex-split--fit-contain .apex-split__media img {
+      inset: 24px;
+      width: calc(100% - 48px);
+      height: calc(100% - 48px);
+    }
+
+    .apex-split__badge {
+      inset-block-start: 16px;
+      inset-inline-end: 16px;
+      padding: 10px 16px;
+      font-size: 0.8125rem;
+      line-height: 1rem;
+    }
+
+    .apex-split__buttons {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      margin-block-start: 24px;
+    }
   }
 {% endstylesheet %}
 
@@ -205,6 +302,43 @@
       "default": "<p>Tell your story here.</p>"
     },
     {
+      "type": "select",
+      "id": "vertical_align",
+      "label": "Text position",
+      "options": [
+        { "value": "top", "label": "Top" },
+        { "value": "center", "label": "Centred against the image" }
+      ],
+      "default": "top"
+    },
+    {
+      "type": "header",
+      "content": "Buttons"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label",
+      "info": "Leave empty to hide."
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Button link"
+    },
+    {
+      "type": "text",
+      "id": "button_2_label",
+      "label": "Second button label",
+      "info": "Outlined. Leave empty to hide."
+    },
+    {
+      "type": "url",
+      "id": "button_2_link",
+      "label": "Second button link",
+      "info": "Defaults to the customer account."
+    },
+    {
       "type": "header",
       "content": "Image"
     },
@@ -228,6 +362,22 @@
         { "value": "left", "label": "Left" }
       ],
       "default": "right"
+    },
+    {
+      "type": "select",
+      "id": "image_fit",
+      "label": "Image fit",
+      "options": [
+        { "value": "cover", "label": "Fill the panel" },
+        { "value": "contain", "label": "Fit inside the panel (cut-out product shots)" }
+      ],
+      "default": "cover"
+    },
+    {
+      "type": "text",
+      "id": "badge",
+      "label": "Badge on the image",
+      "info": "For example: Save 15%. Leave empty to hide."
     },
     {
       "type": "range",
