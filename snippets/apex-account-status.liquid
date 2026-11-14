@@ -1,0 +1,22 @@
+{% comment %}
+  Order status pill for the APEX account pages.
+  @param {object} order
+  Shopify doesn't tell the theme when a parcel is delivered, so the last state is "Shipped".
+{% endcomment %}
+{%- liquid
+  assign label = 'Processing'
+  assign dark = true
+  if order.cancelled
+    assign label = 'Cancelled'
+    assign dark = false
+  elsif order.financial_status == 'refunded'
+    assign label = 'Refunded'
+    assign dark = false
+  elsif order.fulfillment_status == 'fulfilled'
+    assign label = 'Shipped'
+    assign dark = false
+  elsif order.fulfillment_status == 'partial'
+    assign label = 'Part shipped'
+  endif
+-%}
+<span class="apex-account__status{% if dark %} apex-account__status--dark{% endif %}">{{ label }}</span>

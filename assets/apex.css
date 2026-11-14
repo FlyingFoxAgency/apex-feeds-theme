@@ -331,6 +331,14 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
   justify-content: center;
 }
 
+/* Person icon as a plain link to the APEX my-account page (Theme settings > APEX Feeds) */
+#header-component .apex-account-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+
 /* <cart-icon> is inline by default, so its icon sat on the text baseline, a few px off the
    search and account icons. As a flex box it centres like they do. */
 #header-component
@@ -973,4 +981,64 @@ html {
    APEX product page (assets/apex-product.css) */
 .variant-option__selected-value {
   display: none;
+}
+
+/* ==========================================================================
+   Wishlist heart (snippets/apex-wishlist-button, assets/apex-wishlist.js)
+   Figma "APEX Wishlist Page": white circle with a soft shadow, amber heart when saved.
+   ========================================================================== */
+apex-wishlist-button {
+  display: inline-flex;
+}
+
+.apex-wishlist-button__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--apex-wishlist-size, 48px);
+  height: var(--apex-wishlist-size, 48px);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--apex-bg-page, #fff);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.15);
+  color: var(--apex-burrow);
+  cursor: pointer;
+  transition: scale 0.2s var(--ease-out-cubic, ease-out);
+}
+
+.apex-wishlist-button__button:is(:hover, :focus-visible) {
+  scale: 1.06;
+}
+
+.apex-wishlist-button__button svg {
+  width: 20px;
+  height: 20px;
+  fill: transparent;
+  transition: fill 0.15s ease, color 0.15s ease;
+}
+
+.apex-wishlist-button__button[aria-pressed='true'] {
+  color: var(--apex-amber);
+}
+
+.apex-wishlist-button__button[aria-pressed='true'] svg {
+  fill: var(--apex-amber);
+}
+
+.apex-wishlist-button__button.is-popping svg {
+  animation: apex-heart-pop 0.35s var(--ease-out-cubic, ease-out);
+}
+
+@keyframes apex-heart-pop {
+  40% { scale: 1.3; }
+  100% { scale: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .apex-wishlist-button__button,
+  .apex-wishlist-button__button.is-popping svg {
+    transition: none;
+    animation: none;
+  }
 }

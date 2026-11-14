@@ -1,0 +1,55 @@
+{% doc %}
+  One saved product on the my-account Wishlist (Figma "APEX Wishlist Page" item): white image
+  panel with an On sale / Out of stock pill and the heart, title, price (with the was price when
+  on sale), Add to cart and Remove. The variant is the one saved with the heart
+  (?variant= on the request picks it).
+
+  @param {object} product
+{% enddoc %}
+{%- liquid
+  assign variant = product.selected_or_first_available_variant
+  assign image = variant.featured_media.preview_image | default: product.featured_media.preview_image
+  assign on_sale = false
+  if variant.compare_at_price > variant.price
+    assign on_sale = true
+  endif
+-%}
+<article class="apex-wishlist-item" data-apex-drawer-add>
+  <div class="apex-wishlist-item__media">
+    <a class="apex-wishlist-item__image" href="{{ variant.url | default: product.url }}" tabindex="-1" aria-hidden="true">
+      {%- if image -%}
+        {{ image | image_url: width: 480 | image_tag: loading: 'lazy', widths: '240, 360, 480', sizes: '(min-width: 990px) 260px, 45vw', alt: '' }}
+      {%- else -%}
+        {{ 'product-1' | placeholder_svg_tag: 'apex-wishlist-item__placeholder' }}
+      {%- endif -%}
+    </a>
+    {%- if variant.available == false -%}
+      <span class="apex-account__status apex-wishlist-item__status">Out of stock</span>
+    {%- elsif on_sale -%}
+      <span class="apex-account__status apex-account__status--dark apex-wishlist-item__status">On sale</span>
+    {%- endif -%}
+    {%- render 'apex-wishlist-button', product: product, class: 'apex-wishlist-item__heart' -%}
+  </div>
+
+  <a class="apex-wishlist-item__title" href="{{ variant.url | default: product.url }}">{{ product.title | escape }}</a>
+  {%- unless product.has_only_default_variant -%}
+    <p class="apex-wishlist-item__variant">{{ variant.title | escape | replace: ' / ', '&nbsp;&nbsp;·&nbsp;&nbsp;' }}</p>
+  {%- endunless -%}
+  <p class="apex-wishlist-item__price">
+    <span>{{ variant.price | money }}</span>
+    {%- if on_sale -%}
+      <s class="apex-wishlist-item__was"><span class="visually-hidden">Was </span>{{ variant.compare_at_price | money }}</s>
+    {%- endif -%}
+  </p>
+
+  {%- if variant.available -%}
+    <form class="apex-wishlist-item__form" action="{{ routes.cart_add_url }}" method="post" data-wishlist-variant="{{ variant.id }}">
+      <input type="hidden" name="id" value="{{ variant.id }}">
+      <input type="hidden" name="quantity" value="1">
+      <button type="submit" class="apex-button apex-account__button--moss apex-wishlist-item__cart">Add to cart</button>
+    </form>
+  {%- else -%}
+    <span class="apex-button apex-account__button--outline apex-wishlist-item__cart" aria-disabled="true">Sold out</span>
+  {%- endif -%}
+  <button type="button" class="apex-wishlist-item__remove" data-wishlist-remove="{{ product.handle }}">Remove</button>
+</article>

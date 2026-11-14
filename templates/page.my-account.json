@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "main": {
+      "type": "apex-account",
+      "settings": {}
+    }
+  },
+  "order": ["main"]
+}

@@ -1,0 +1,21 @@
+{% comment %}
+  Order table for the APEX account pages (Figma "Order history" card).
+  @param {array} orders - customer.orders (inside paginate)
+  @param {number} limit - how many rows to show
+{% endcomment %}
+<div class="apex-account__table">
+  <div class="apex-account__row apex-account__row--head" aria-hidden="true">
+    <span>Order</span>
+    <span>Date</span>
+    <span>Status</span>
+    <span class="apex-account__align-end">Total</span>
+  </div>
+  {%- for order in orders limit: limit -%}
+    <a class="apex-account__row" href="?order={{ order.id }}" data-apex-go="order-{{ order.id }}" aria-label="Order {{ order.name | escape }}, {{ order.created_at | date: '%-d %b %Y' }}, {{ order.total_price | money }}">
+      <span class="apex-account__cell-name apex-account__order-name">{{ order.name | escape }}</span>
+      <span class="apex-account__cell-date">{{ order.created_at | date: '%-d %b %Y' }}</span>
+      <span class="apex-account__cell-status">{%- render 'apex-account-status', order: order -%}</span>
+      <span class="apex-account__cell-total">{{ order.total_price | money }}</span>
+    </a>
+  {%- endfor -%}
+</div>

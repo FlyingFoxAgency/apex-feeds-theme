@@ -1,0 +1,197 @@
+{% comment %}
+  One order on the APEX account page (Figma "APEX Order Detail Page").
+  @param {object} order
+  - Timeline: Order placed > Packing > Shipped. Shopify doesn't tell the theme when a parcel is
+    delivered, so the carrier's tracking link takes over from there.
+  - Payment shows the card brand and last four digits when Shopify has them.
+{% endcomment %}
+{%- liquid
+  assign fulfillment = nil
+  for line_item in order.line_items
+    if line_item.fulfillment
+      assign fulfillment = line_item.fulfillment
+      break
+    endif
+  endfor
+
+  assign item_count = 0
+  for line_item in order.line_items
+    assign item_count = item_count | plus: line_item.quantity
+  endfor
+
+  assign shipped = false
+  if order.fulfillment_status == 'fulfilled' or order.fulfillment_status == 'partial'
+    assign shipped = true
+  endif
+
+  if order.cancelled
+    assign progress = 0
+  elsif shipped
+    assign progress = 1
+  else
+    assign progress = 0.5
+  endif
+
+  assign payment = nil
+  for transaction in order.transactions
+    if transaction.status == 'success'
+      if transaction.kind == 'sale' or transaction.kind == 'capture' or transaction.kind == 'authorization'
+        assign payment = transaction
+        break
+      endif
+    endif
+  endfor
+
+  assign same_billing = false
+  if order.billing_address and order.shipping_address
+    if order.billing_address.address1 == order.shipping_address.address1 and order.billing_address.zip == order.shipping_address.zip
+      assign same_billing = true
+    endif
+  endif
+-%}
+<a class="apex-account__link apex-account__back" href="?view=orders" data-apex-go="orders">Back to order history</a>
+
+<div class="apex-account__card apex-account__card--wide apex-account__card--order">
+  <div class="apex-account__order-top">
+    <div>
+      <div class="apex-account__order-title">
+        <h2 class="apex-account__h3">Order {{ order.name | escape }}</h2>
+        {%- render 'apex-account-status', order: order -%}
+      </div>
+      <p class="apex-account__order-meta">
+        Placed {{ order.created_at | date: '%-d %b %Y' }}&nbsp;&nbsp;·&nbsp;&nbsp;{{ item_count }} {% if item_count == 1 %}item{% else %}items{% endif %}&nbsp;&nbsp;·&nbsp;&nbsp;{{ order.total_price | money }}
+      </p>
+    </div>
+    {%- render 'apex-account-reorder', order: order, label: 'Reorder these items' -%}
+  </div>
+
+  {%- unless order.cancelled -%}
+    <ol class="apex-account__track" style="--apex-track-progress: {{ progress }};" aria-label="Order progress">
+      <li class="apex-account__step apex-account__step--done">
+        <span class="apex-account__dot" aria-hidden="true"></span>
+        <span class="apex-account__step-label">Order placed</span>
+        <span class="apex-account__step-date">{{ order.created_at | date: '%-d %b, %-I:%M%P' }}</span>
+      </li>
+      <li class="apex-account__step {% if shipped %}apex-account__step--done{% else %}apex-account__step--current{% endif %}">
+        <span class="apex-account__dot" aria-hidden="true"></span>
+        <span class="apex-account__step-label">Packing</span>
+        <span class="apex-account__step-date">{% if shipped %}Done{% else %}In progress{% endif %}</span>
+      </li>
+      <li class="apex-account__step{% if shipped %} apex-account__step--current{% endif %}">
+        <span class="apex-account__dot" aria-hidden="true"></span>
+        <span class="apex-account__step-label">Shipped</span>
+        <span class="apex-account__step-date">
+          {%- if shipped and fulfillment -%}
+            {{ fulfillment.created_at | date: '%-d %b, %-I:%M%P' }}
+          {%- elsif shipped -%}
+            On its way
+          {%- else -%}
+            Not yet
+          {%- endif -%}
+        </span>
+      </li>
+    </ol>
+
+    {%- if fulfillment and fulfillment.tracking_number != blank -%}
+      <div class="apex-account__carrier">
+        <div>
+          <p class="apex-account__carrier-name">{{ fulfillment.tracking_company | default: 'Your parcel' | escape }}</p>
+          <p class="apex-account__small">Tracking number {{ fulfillment.tracking_number | escape }}</p>
+        </div>
+        {%- if fulfillment.tracking_url != blank -%}
+          <a class="apex-button apex-account__button--outline" href="{{ fulfillment.tracking_url }}" target="_blank" rel="noopener">Track parcel</a>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  {%- endunless -%}
+</div>
+
+<div class="apex-account__card apex-account__card--wide">
+  <h2 class="apex-account__h4">Items</h2>
+  <ul class="apex-account__items" role="list">
+    {%- for line_item in order.line_items -%}
+      <li class="apex-account__item">
+        <div class="apex-account__item-image">
+          {%- if line_item.image -%}
+            {{ line_item.image | image_url: width: 176 | image_tag: loading: 'lazy', alt: line_item.title, width: 88, height: 88 }}
+          {%- endif -%}
+        </div>
+        <div class="apex-account__item-info">
+          {%- if line_item.product and line_item.product.available -%}
+            <a class="apex-account__item-title" href="{{ line_item.product.url }}">{{ line_item.product.title | default: line_item.title | escape }}</a>
+          {%- else -%}
+            <span class="apex-account__item-title">{{ line_item.product.title | default: line_item.title | escape }}</span>
+          {%- endif -%}
+          {%- if line_item.variant_title != blank -%}
+            <p class="apex-account__item-options">{{ line_item.variant_title | escape | replace: ' / ', '&nbsp;&nbsp;·&nbsp;&nbsp;' }}</p>
+          {%- endif -%}
+          {%- for property in line_item.properties -%}
+            {%- assign first_char = property.first | slice: 0 -%}
+            {%- if property.last != blank and first_char != '_' -%}
+              <p class="apex-account__item-options">{{ property.first | escape }}: {{ property.last | escape }}</p>
+            {%- endif -%}
+          {%- endfor -%}
+          {%- if line_item.selling_plan_allocation -%}
+            <p class="apex-account__item-options">{{ line_item.selling_plan_allocation.selling_plan.name | escape }}</p>
+          {%- endif -%}
+          <p>Qty {{ line_item.quantity }}</p>
+        </div>
+        <span class="apex-account__item-price">{{ line_item.final_line_price | money }}</span>
+      </li>
+    {%- endfor -%}
+  </ul>
+
+  <dl class="apex-account__totals">
+    <div><dt>Subtotal</dt><dd>{{ order.line_items_subtotal_price | money }}</dd></div>
+    {%- if order.total_discounts > 0 -%}
+      <div><dt>Discount</dt><dd>-{{ order.total_discounts | money }}</dd></div>
+    {%- endif -%}
+    <div><dt>Shipping</dt><dd>{% if order.shipping_price == 0 %}Free{% else %}{{ order.shipping_price | money }}{% endif %}</dd></div>
+    {%- if order.tax_price > 0 -%}
+      <div><dt>{% if order.taxes_included %}GST included{% else %}GST{% endif %}</dt><dd>{{ order.tax_price | money }}</dd></div>
+    {%- endif -%}
+    {%- if order.total_refunded_amount > 0 -%}
+      <div><dt>Refunded</dt><dd>-{{ order.total_refunded_amount | money }}</dd></div>
+    {%- endif -%}
+    <div class="apex-account__total-row"><dt>Total</dt><dd>{{ order.total_price | money }}</dd></div>
+  </dl>
+</div>
+
+<div class="apex-account__pair">
+  <div class="apex-account__card apex-account__card--side">
+    <h2 class="apex-account__h4">Shipping address</h2>
+    <div class="apex-account__lines">
+      {%- if order.shipping_address -%}
+        {%- render 'apex-account-address-lines', address: order.shipping_address, show_name: true -%}
+      {%- else -%}
+        <p>No shipping needed for this order.</p>
+      {%- endif -%}
+    </div>
+  </div>
+
+  <div class="apex-account__card apex-account__card--side">
+    <h2 class="apex-account__h4">Payment</h2>
+    <div class="apex-account__lines">
+      {%- if payment -%}
+        {%- if payment.payment_details.credit_card_last_four_digits != blank -%}
+          <p>{{ payment.payment_details.credit_card_company | default: 'Card' | escape }} ending {{ payment.payment_details.credit_card_last_four_digits }}</p>
+        {%- else -%}
+          <p>{{ payment.gateway_display_name | default: payment.gateway | escape }}</p>
+        {%- endif -%}
+      {%- endif -%}
+      {%- if order.billing_address -%}
+        {%- if same_billing -%}
+          <p>Billing address same as shipping</p>
+        {%- else -%}
+          <p>Billing: {{ order.billing_address.address1 | escape }}, {{ order.billing_address.city | escape }}</p>
+        {%- endif -%}
+      {%- endif -%}
+      {%- if payment -%}
+        <p>Paid {{ payment.created_at | date: '%-d %b %Y' }}</p>
+      {%- elsif order.financial_status == 'pending' -%}
+        <p>Payment pending</p>
+      {%- endif -%}
+    </div>
+    <a class="apex-account__link" href="{{ order.customer_url }}">View full order</a>
+  </div>
+</div>

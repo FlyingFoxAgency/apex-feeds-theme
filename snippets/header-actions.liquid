@@ -88,6 +88,21 @@
     <div
       class="account-button header-actions__action{% if display_style == 'text' %} account-button--text{% endif %} color-custom-popover"
     >
+      {%- comment -%}
+        APEX: when Theme settings > APEX Feeds > My account page is set, the person icon goes to
+        that page (sign in when signed out, the account dashboard when signed in) instead of
+        Shopify's account pop-up.
+      {%- endcomment -%}
+      {%- if settings.apex_account_page != blank -%}
+        <a
+          class="apex-account-link"
+          href="{{ settings.apex_account_page.url }}"
+          aria-label="{% if customer %}My account{% else %}Sign in{% endif %}"
+          {% if request.path == settings.apex_account_page.url %}aria-current="page"{% endif %}
+        >
+          {{ account_icon }}
+        </a>
+      {%- else -%}
       <shopify-account
         menu="{{ customer_account_menu }}"
         {% if account_actions_style != blank %}
@@ -113,6 +128,7 @@
           </span>
         {% endif %}
       </shopify-account>
+      {%- endif -%}
     </div>
   {% endif %}
 

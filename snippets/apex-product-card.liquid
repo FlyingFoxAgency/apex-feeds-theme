@@ -2,6 +2,8 @@
   APEX product card (Figma best seller card): glass card with a white image area, a rating pill,
   then category, title, price and a short note.
 
+  A wishlist heart sits top left of the image (snippets/apex-wishlist-button).
+
   The category is the product type. The note lists the animals the product suits, from the
   product metafield custom.suitable_for (a list of single line text, e.g. Reptiles, Amphibians),
   as "For reptiles + amphibians." If that's empty, the free text metafield custom.card_note is
@@ -94,6 +96,9 @@
       <p class="apex-product-card__note">{{ note | escape }}</p>
     </div>
   </a>
+
+  {%- comment -%} Wishlist heart: outside the link so it can be its own button {%- endcomment -%}
+  {%- render 'apex-wishlist-button', product: product, class: 'apex-product-card__wishlist' -%}
 
   {%- if show_buttons -%}
     {%- liquid
@@ -196,6 +201,24 @@
   }
 
   /* Ell: 10px from the card's top right corner */
+  /* Wishlist heart, top left of the image (the rating pill sits top right) */
+  .apex-product-card__wishlist {
+    --apex-wishlist-size: 36px;
+    position: absolute;
+    z-index: 4;
+    inset-block-start: 10px;
+    inset-inline-start: 10px;
+  }
+
+  .apex-product-card__wishlist .apex-wishlist-button__button {
+    box-shadow: 0 2px 10px rgb(0 0 0 / 0.12);
+  }
+
+  .apex-product-card__wishlist svg {
+    width: 18px;
+    height: 18px;
+  }
+
   .apex-product-card__rating {
     position: absolute;
     inset-block-start: 10px;

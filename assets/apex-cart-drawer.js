@@ -66,7 +66,7 @@ document.addEventListener('click', (event) => {
 document.addEventListener('submit', async (event) => {
   const form = /** @type {HTMLFormElement} */ (event.target);
   if (!(form instanceof HTMLFormElement)) return;
-  if (!form.closest('.apex-product-card') || !form.action.includes('/cart/add')) return;
+  if (!form.closest('.apex-product-card, [data-apex-drawer-add]') || !form.action.includes('/cart/add')) return;
   const theDrawer = /** @type {any} */ (drawer());
   if (!theDrawer || typeof theDrawer.open !== 'function') return; // no drawer: normal cart page add
 
@@ -143,3 +143,20 @@ document.addEventListener('touchend', () => {
     panel.style.translate = '';
   }
 });
+
+// For other APEX scripts (wishlist "Add all", account "Reorder"): after adding to the cart with
+// /cart/add.js, refresh the drawer and open it. Returns false when there is no drawer.
+/** @type {any} */ (window).ApexCartDrawer = {
+  async refreshAndOpen() {
+    const theDrawer = /** @type {any} */ (drawer());
+    if (!theDrawer || typeof theDrawer.open !== 'function') return false;
+    const root = window.Shopify?.routes?.root || '/';
+    const [sections, cart] = await Promise.all([
+      fetch(`${window.location.pathname}?sections=${SECTION}`).then((r) => r.json()),
+      fetch(`${root}cart.js`).then((r) => r.json()),
+    ]);
+    renderDrawer(sections?.[SECTION] || '', cart.item_count ?? 0);
+    theDrawer.open();
+    return true;
+  },
+};
