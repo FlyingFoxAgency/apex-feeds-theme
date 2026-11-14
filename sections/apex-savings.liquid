@@ -1,0 +1,325 @@
+{% comment %}
+  APEX savings example (Figma "APEX Subscribe and Save Page" > What you could save): a rounded
+  burrow panel with an eyebrow, a light Dharma title and a note on the left, and on the right a
+  worked example of what a subscriber saves in a year.
+  - The sums are worked out here, from a product's price (or a typed price while products have
+    none), the number of deliveries, the subscription discount and the first order discount, so
+    the figures always agree with each other.
+  - [count] in a label is replaced by the number of deliveries.
+  Phones: the panel stacks, heading first.
+{% endcomment %}
+{%- liquid
+  assign price_cents = 0
+  if section.settings.product != blank and section.settings.product.price > 0
+    assign price_cents = section.settings.product.selected_or_first_available_variant.price
+  else
+    assign price_cents = section.settings.price | times: 100 | round
+  endif
+
+  assign count = section.settings.deliveries
+  assign keep = 100 | minus: section.settings.discount
+  assign first_keep = 100 | minus: section.settings.first_order_discount
+
+  assign subscribe_each = price_cents | times: keep | divided_by: 100.0 | round
+  assign first_each = price_cents | times: first_keep | divided_by: 100.0 | round
+  assign one_off_total = price_cents | times: count
+  assign subscribe_total = subscribe_each | times: count
+  assign bonus = subscribe_each | minus: first_each
+  if bonus < 0
+    assign bonus = 0
+  endif
+  assign saving = one_off_total | minus: subscribe_total | plus: bonus
+
+  assign count_text = count | append: ''
+-%}
+<div class="apex-savings" style="--apex-savings-mb: {{ section.settings.margin_bottom }}px;">
+  <div class="apex-container">
+    <div class="apex-savings__panel">
+      <div class="apex-savings__intro">
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="apex-eyebrow apex-savings__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+        {%- if section.settings.title != blank -%}
+          <h2 class="apex-savings__title">{{ section.settings.title | escape }}</h2>
+        {%- endif -%}
+        {%- if section.settings.text != blank -%}
+          <div class="apex-savings__text">{{ section.settings.text }}</div>
+        {%- endif -%}
+      </div>
+
+      {%- if price_cents > 0 -%}
+        <dl class="apex-savings__table">
+          <div class="apex-savings__row">
+            <dt>{{ section.settings.label_one_off | replace: '[count]', count_text | escape }}</dt>
+            <dd>{{ one_off_total | money }}</dd>
+          </div>
+          <div class="apex-savings__row">
+            <dt>{{ section.settings.label_subscribe | replace: '[count]', count_text | escape }}</dt>
+            <dd>{{ subscribe_total | money }}</dd>
+          </div>
+          {%- if bonus > 0 -%}
+            <div class="apex-savings__row">
+              <dt>{{ section.settings.label_bonus | escape }}</dt>
+              <dd>&minus; {{ bonus | money }}</dd>
+            </div>
+          {%- endif -%}
+          <div class="apex-savings__row apex-savings__row--total">
+            <dt>{{ section.settings.label_total | escape }}</dt>
+            <dd>{{ saving | money }}</dd>
+          </div>
+        </dl>
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+
+{% stylesheet %}
+  .apex-savings {
+    margin-block-end: var(--apex-savings-mb, 96px);
+  }
+
+  /* Figma: 64px padding, 96px gap, 40px radius, heading column 480px */
+  .apex-savings__panel {
+    display: grid;
+    grid-template-columns: minmax(0, 480px) minmax(0, 1fr);
+    align-items: center;
+    gap: 96px;
+    padding: 64px;
+    border-radius: var(--apex-radius-xl);
+    background: var(--apex-burrow);
+    color: var(--apex-sandstone);
+  }
+
+  .apex-savings__eyebrow {
+    margin: 0;
+    color: var(--apex-sandstone);
+  }
+
+  .apex-savings__title {
+    margin: 24px 0 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: var(--font-size--h2);
+    line-height: 0.95;
+    text-transform: uppercase;
+    color: var(--apex-sandstone);
+  }
+
+  .apex-savings__text {
+    margin-block-start: 24px;
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-savings__text > * {
+    margin: 0;
+  }
+
+  .apex-savings__table {
+    display: grid;
+    margin: 0;
+  }
+
+  .apex-savings__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 24px;
+    padding-block: 16px;
+    border-block-end: 1px solid rgb(234 221 198 / 0.2);
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-savings__row:first-child {
+    padding-block-start: 0;
+  }
+
+  .apex-savings__row dt,
+  .apex-savings__row dd {
+    margin: 0;
+  }
+
+  .apex-savings__row dd {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .apex-savings__row--total {
+    align-items: center;
+    padding-block-end: 0;
+    border-block-end: 0;
+  }
+
+  .apex-savings__row--total dt {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  /* Figma: Dharma 40/40 in amber */
+  .apex-savings__row--total dd {
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 2.5rem;
+    line-height: 1;
+    color: var(--apex-amber);
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-savings__panel {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 48px;
+      padding: 48px;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-savings {
+      margin-block-end: calc(var(--apex-savings-mb, 96px) * 0.6);
+    }
+
+    .apex-savings__panel {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 32px;
+      padding: 32px 24px;
+      border-radius: 24px;
+    }
+
+    .apex-savings__title {
+      margin-block-start: 16px;
+    }
+
+    .apex-savings__text {
+      margin-block-start: 16px;
+    }
+
+    .apex-savings__row {
+      font-size: 0.9375rem;
+    }
+
+    .apex-savings__row--total dd {
+      font-size: 2.25rem;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX savings example",
+  "tag": "section",
+  "class": "apex-savings-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "What you could save"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "One tub every month"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Text",
+      "default": "<p>Based on a 500g Freeze-Dried Omnivore Buffet™ delivered every month for a year.</p>"
+    },
+    {
+      "type": "header",
+      "content": "Example"
+    },
+    {
+      "type": "product",
+      "id": "product",
+      "label": "Product",
+      "info": "Uses this product's price once it has one. Until then the price below is used."
+    },
+    {
+      "type": "text",
+      "id": "price",
+      "label": "Price per delivery",
+      "info": "Numbers only, for example 59.99.",
+      "default": "59.99"
+    },
+    {
+      "type": "range",
+      "id": "deliveries",
+      "label": "Deliveries in a year",
+      "min": 1,
+      "max": 52,
+      "step": 1,
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "discount",
+      "label": "Subscription discount",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "%",
+      "default": 10
+    },
+    {
+      "type": "range",
+      "id": "first_order_discount",
+      "label": "First order discount",
+      "info": "Total off the regular price on the first order. The bonus row hides when this isn't more than the subscription discount.",
+      "min": 0,
+      "max": 60,
+      "step": 1,
+      "unit": "%",
+      "default": 0
+    },
+    {
+      "type": "header",
+      "content": "Labels"
+    },
+    {
+      "type": "text",
+      "id": "label_one_off",
+      "label": "One-off row",
+      "info": "[count] shows the number of deliveries.",
+      "default": "One-off price, [count] tubs"
+    },
+    {
+      "type": "text",
+      "id": "label_subscribe",
+      "label": "Subscription row",
+      "default": "Subscribe and Save, [count] tubs"
+    },
+    {
+      "type": "text",
+      "id": "label_bonus",
+      "label": "First order row",
+      "default": "First order bonus"
+    },
+    {
+      "type": "text",
+      "id": "label_total",
+      "label": "Total row",
+      "default": "You save in the first year"
+    },
+    {
+      "type": "range",
+      "id": "margin_bottom",
+      "label": "Space below",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "default": 96
+    }
+  ],
+  "presets": [
+    {
+      "name": "APEX savings example"
+    }
+  ]
+}
+{% endschema %}

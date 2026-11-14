@@ -28,7 +28,14 @@
           "type": "link",
           "settings": {
             "label": "Terms & conditions",
-            "link": "/pages/terms-conditions"
+            "link": "/pages/terms-conditions#terms-and-conditions"
+          }
+        },
+        "link_5": {
+          "type": "link",
+          "settings": {
+            "label": "Subscribe & Save terms",
+            "link": "/pages/terms-conditions#subscribe-save-terms"
           }
         }
       },
@@ -36,7 +43,8 @@
         "link_1",
         "link_2",
         "link_3",
-        "link_4"
+        "link_4",
+        "link_5"
       ],
       "settings": {
         "eyebrow": "Policies",

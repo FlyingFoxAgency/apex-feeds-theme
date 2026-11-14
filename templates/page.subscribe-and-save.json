@@ -1,0 +1,204 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "hero": {
+      "type": "apex-split",
+      "settings": {
+        "eyebrow": "Subscribe and save",
+        "title": "Never run out of food again",
+        "title_size": "page",
+        "text": "<p>Put the foods your animals eat every month on a schedule. You save 10% on every delivery, get free shipping on orders over $100, and you can skip, pause or cancel any time.</p>",
+        "vertical_align": "center",
+        "button_label": "Shop subscribable products",
+        "button_link": "/collections/all",
+        "button_2_label": "Manage subscriptions",
+        "button_2_link": "",
+        "image": "shopify://shop_images/Nutricore-group-mockup_b39044d0-3e92-4c40-926d-ad7897b0fc1b.png",
+        "image_label": "Three jars on the stone panel (cut-out PNG)",
+        "image_position": "right",
+        "image_fit": "cover",
+        "badge": "Save 10%",
+        "image_height": 460,
+        "padding_top": 96,
+        "padding_bottom": 96
+      }
+    },
+    "benefits": {
+      "type": "apex-tiles",
+      "blocks": {
+        "tile_1": {
+          "type": "tile",
+          "settings": {
+            "title": "Save 10% every time",
+            "text": "<p>Every subscription delivery is 10% off the regular price, for as long as you stay subscribed.</p>"
+          }
+        },
+        "tile_2": {
+          "type": "tile",
+          "settings": {
+            "title": "Free shipping over $100",
+            "text": "<p>Subscription orders over $100 ship free, well under the usual $150 free shipping mark.</p>"
+          }
+        },
+        "tile_3": {
+          "type": "tile",
+          "settings": {
+            "title": "Delivered monthly",
+            "text": "<p>Your order arrives once a month, so you're topped up before the tub runs out.</p>"
+          }
+        },
+        "tile_4": {
+          "type": "tile",
+          "settings": {
+            "title": "No lock-in",
+            "text": "<p>Skip a delivery, change the frequency, pause or cancel any time from your account.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "tile_1",
+        "tile_2",
+        "tile_3",
+        "tile_4"
+      ],
+      "settings": {
+        "eyebrow": "Why subscribe",
+        "title": "Feeding made easy",
+        "style": "cards",
+        "columns": 4,
+        "margin_bottom": 96
+      }
+    },
+    "steps": {
+      "type": "apex-tiles",
+      "blocks": {
+        "step_1": {
+          "type": "tile",
+          "settings": {
+            "title": "Choose your products",
+            "text": "<p>Pick Subscribe and Save on any product page that offers it, or add it from your cart.</p>"
+          }
+        },
+        "step_2": {
+          "type": "tile",
+          "settings": {
+            "title": "Check out once",
+            "text": "<p>Pay for your first delivery as usual. After that it repeats every month, and we email you before each order ships.</p>"
+          }
+        },
+        "step_3": {
+          "type": "tile",
+          "settings": {
+            "title": "We deliver on schedule",
+            "text": "<p>Fresh stock arrives when you need it. Manage everything from My account.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "step_1",
+        "step_2",
+        "step_3"
+      ],
+      "settings": {
+        "eyebrow": "How it works",
+        "title": "Three steps to set and forget",
+        "style": "steps",
+        "columns": 3,
+        "margin_bottom": 96
+      }
+    },
+    "savings": {
+      "type": "apex-savings",
+      "settings": {
+        "eyebrow": "What you could save",
+        "title": "One tub every month",
+        "text": "<p>Based on a 500g Freeze-Dried Omnivore Buffet™ delivered every month for a year.</p>",
+        "product": "",
+        "price": "59.99",
+        "deliveries": 12,
+        "discount": 10,
+        "first_order_discount": 10,
+        "label_one_off": "One-off price, [count] tubs",
+        "label_subscribe": "Subscribe and Save, [count] tubs",
+        "label_bonus": "First order bonus",
+        "label_total": "You save in the first year",
+        "margin_bottom": 96
+      }
+    },
+    "questions": {
+      "type": "apex-tiles",
+      "blocks": {
+        "q_1": {
+          "type": "tile",
+          "settings": {
+            "title": "Can I subscribe to live insects?",
+            "text": "<p>Yes. Add live insects to your subscription and they arrive with your monthly delivery. Skip a month, pause or cancel any time from My account.</p>"
+          }
+        },
+        "q_2": {
+          "type": "tile",
+          "settings": {
+            "title": "When am I charged?",
+            "text": "<p>Your card is charged when each delivery is prepared. We email you before each order so you can skip or change it.</p>"
+          }
+        },
+        "q_3": {
+          "type": "tile",
+          "settings": {
+            "title": "Can I change what is in my subscription?",
+            "text": "<p>Yes. Swap flavours or sizes, add products, or remove them from My account at any time.</p>"
+          }
+        },
+        "q_4": {
+          "type": "tile",
+          "settings": {
+            "title": "Where do you deliver?",
+            "text": "<p>We currently deliver to QLD, NSW, ACT and VIC, with more areas coming soon.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "q_1",
+        "q_2",
+        "q_3",
+        "q_4"
+      ],
+      "settings": {
+        "eyebrow": "Good to know",
+        "title": "Subscription questions",
+        "style": "plain",
+        "columns": 2,
+        "margin_bottom": 96
+      }
+    },
+    "cta": {
+      "type": "apex-cta",
+      "settings": {
+        "eyebrow": "Ready when you are",
+        "title": "Set it and forget it",
+        "text": "",
+        "button_label": "Shop subscribable products",
+        "button_link": "/collections/all",
+        "button_2_label": "Read the full terms",
+        "button_2_link": "/pages/terms-conditions#subscribe-save-terms",
+        "padding_bottom": 160
+      }
+    }
+  },
+  "order": [
+    "hero",
+    "benefits",
+    "steps",
+    "savings",
+    "questions",
+    "cta"
+  ]
+}
