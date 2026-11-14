@@ -128,8 +128,8 @@
         "q_1": {
           "type": "tile",
           "settings": {
-            "title": "How often does it ship?",
-            "text": "<p>Once a month. You can skip a month, pause or cancel any time from My account.</p>"
+            "title": "Can I subscribe to live insects?",
+            "text": "<p>Yes. Add live insects to your subscription and they arrive with your monthly delivery. Skip a month, pause or cancel any time from My account.</p>"
           }
         },
         "q_2": {
