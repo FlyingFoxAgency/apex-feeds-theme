@@ -193,14 +193,7 @@
     document.addEventListener('scroll', onScroll, { passive: true, capture: true });
     window.addEventListener('resize', onScroll);
     update();
-    // Arriving with a #heading (e.g. from the Subscribe and Save page): the heading ids only exist
-    // once this script runs, and fonts/images can still shift the page, so jump again after load
-    const jumpToHash = () => {
-      if (location.hash) document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
-    };
-    jumpToHash();
-    if (document.readyState === 'complete') requestAnimationFrame(jumpToHash);
-    else window.addEventListener('load', () => requestAnimationFrame(jumpToHash), { once: true });
+    if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
   }
 </script>
 
