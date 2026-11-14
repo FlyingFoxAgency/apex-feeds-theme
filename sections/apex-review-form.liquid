@@ -269,7 +269,15 @@
               assign rating = rating_field.value.rating | default: rating_field.value
             endif
             assign count = p.metafields.reviews.rating_count.value | default: 0
-            assign range = p.metafields.custom.shop_category.value | default: p.type
+            assign cat = p.metafields.custom.shop_category
+            if cat.type contains 'list.'
+              assign range = cat.value | join: ', '
+            else
+              assign range = cat.value
+            endif
+            if range == blank
+              assign range = p.type
+            endif
           -%}
           {{ p.handle | json }}: {
             "id": {{ p.id | json }},
@@ -284,7 +292,7 @@
               {%- for v in p.variants -%}
                 {%- unless v.title == 'Default Title' -%}
                   {%- if forloop.first == false %},{% endif -%}
-                  {{ v.id | json }}: {{ v.options | join: ' · ' | json }}
+                  {{ v.id | append: '' | json }}: {{ v.options | join: ' · ' | json }}
                 {%- endunless -%}
               {%- endfor -%}
             }
