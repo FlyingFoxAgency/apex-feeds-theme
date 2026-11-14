@@ -8,7 +8,8 @@
     and registering are the same step. Shopify brings the shopper back to this page.
   - Signed in: the dashboard reads the signed-in customer (orders, addresses, details). Views:
     overview, order history (?view=orders), one order (?order=<id>), addresses (?view=addresses) and
-    account details (?view=details). All views render on the page and a small script shows the one
+    account details (?view=details) and wishlist (?view=wishlist; saved in the browser, see
+    assets/apex-wishlist.js). All views render on the page and a small script shows the one
     the address asks for, so the side menu switches views without reloading.
   - Changing name, email or addresses happens on Shopify's own profile screen (the theme can't change
     customer data); the Edit buttons go there.
@@ -96,6 +97,13 @@
           </div>
           <a class="apex-account__logout" href="{{ routes.account_logout_url }}">{{ icon_logout }}<span>Log out</span></a>
         </div>
+        <div class="apex-account__header" data-apex-view="wishlist" hidden>
+          <div class="apex-account__titles">
+            <p class="apex-eyebrow"><a href="?view=overview" data-apex-go="overview">My account</a></p>
+            <h1 class="apex-account__title">Wishlist</h1>
+          </div>
+          <a class="apex-account__logout" href="{{ routes.account_logout_url }}">{{ icon_logout }}<span>Log out</span></a>
+        </div>
         <div class="apex-account__header" data-apex-view="addresses" hidden>
           <div class="apex-account__titles">
             <p class="apex-eyebrow"><a href="?view=overview" data-apex-go="overview">My account</a></p>
@@ -133,9 +141,7 @@
               {%- if section.settings.subscriptions_url != blank -%}
                 <li><a class="apex-account__menu-item" href="{{ section.settings.subscriptions_url }}">Subscriptions</a></li>
               {%- endif -%}
-              {%- if section.settings.wishlist_url != blank -%}
-                <li><a class="apex-account__menu-item" href="{{ section.settings.wishlist_url }}">Wishlist</a></li>
-              {%- endif -%}
+              <li><a class="apex-account__menu-item" href="?view=wishlist" data-apex-go="wishlist" data-apex-menu="wishlist">Wishlist</a></li>
               <li><a class="apex-account__menu-item" href="?view=addresses" data-apex-go="addresses" data-apex-menu="addresses">Addresses</a></li>
               <li><a class="apex-account__menu-item" href="?view=details" data-apex-go="details" data-apex-menu="details">Account details</a></li>
             </ul>
@@ -215,6 +221,25 @@
                 {%- render 'apex-account-order', order: order -%}
               </div>
             {%- endfor -%}
+
+            {%- comment -%} Wishlist: saved in this browser, items rendered by Shopify (assets/apex-wishlist.js) {%- endcomment -%}
+            <div class="apex-account__view" data-apex-view="wishlist" hidden>
+              <apex-wishlist-list class="apex-account__card apex-account__card--wide apex-wishlist">
+                <div class="apex-account__card-top">
+                  <div class="apex-wishlist__intro">
+                    <h2 class="apex-account__h3">Saved items (<span data-wishlist-count>0</span>)</h2>
+                    <p class="apex-account__small apex-account__muted">{{ section.settings.wishlist_text | escape }}</p>
+                  </div>
+                  <button type="button" class="apex-button apex-account__button--outline" data-wishlist-add-all hidden>Add all to cart</button>
+                </div>
+                <p class="apex-account__small" data-wishlist-status role="status"></p>
+                <div class="apex-wishlist__grid" data-wishlist-grid hidden></div>
+                <div class="apex-wishlist__empty" data-wishlist-empty>
+                  <p class="apex-account__empty">{{ section.settings.wishlist_empty | escape }}</p>
+                  <a class="apex-account__link" href="{{ shop_url }}">Start shopping</a>
+                </div>
+              </apex-wishlist-list>
+            </div>
 
             {%- comment -%} Addresses {%- endcomment -%}
             <div class="apex-account__view" data-apex-view="addresses" hidden>
@@ -848,6 +873,138 @@
     color: var(--apex-burrow);
   }
 
+  /* Wishlist (Figma: 3 columns of 257px, 24px apart, 60px between rows) */
+  .apex-wishlist__intro {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 520px;
+  }
+
+  .apex-wishlist [data-wishlist-status]:empty {
+    display: none;
+  }
+
+  .apex-wishlist__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 60px 24px;
+    width: 100%;
+    margin-block-start: 16px;
+  }
+
+  .apex-wishlist__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .apex-wishlist-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .apex-wishlist-item__media {
+    position: relative;
+    width: 100%;
+  }
+
+  .apex-wishlist-item__image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 240px;
+    padding: 28px 24px;
+    border-radius: var(--apex-radius-lg);
+    background: var(--apex-bg-page, #fff);
+  }
+
+  .apex-wishlist-item__image img,
+  .apex-wishlist-item__image svg {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .apex-wishlist-item__status {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+  }
+
+  .apex-wishlist-item__heart {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+  }
+
+  .apex-wishlist-item__title {
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.25rem;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--apex-olive) !important;
+  }
+
+  .apex-wishlist-item__variant {
+    margin: -6px 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-wishlist-item__price {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+  }
+
+  .apex-wishlist-item__was {
+    font-size: 0.8125rem;
+    font-weight: 400;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-wishlist-item__form {
+    width: 100%;
+    margin-top: auto;
+  }
+
+  .apex-wishlist-item__cart {
+    width: 100%;
+  }
+
+  .apex-wishlist-item__cart[aria-disabled='true'] {
+    margin-top: auto;
+    cursor: default;
+    color: var(--apex-dried-moss) !important;
+  }
+
+  .apex-wishlist-item__cart[aria-disabled='true']:hover {
+    scale: none;
+  }
+
+  .apex-wishlist-item__remove {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    text-decoration: underline;
+    color: var(--apex-dried-moss);
+    cursor: pointer;
+  }
+
   /* Addresses + details */
   .apex-account__addresses {
     display: grid;
@@ -1002,6 +1159,12 @@
     }
   }
 
+  @media screen and (min-width: 750px) and (max-width: 1199px) {
+    .apex-wishlist__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
   @media screen and (max-width: 749px) {
     .apex-account {
       padding-block: calc(var(--apex-account-pt, 84px) * 0.5) calc(var(--apex-account-pb, 160px) * 0.5);
@@ -1086,6 +1249,25 @@
     .apex-account__facts div {
       grid-template-columns: minmax(0, 1fr);
       gap: 4px;
+    }
+
+    .apex-wishlist__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 40px 16px;
+    }
+
+    .apex-wishlist-item__image {
+      height: 180px;
+      padding: 20px 16px;
+    }
+
+    .apex-wishlist-item {
+      --apex-wishlist-size: 40px;
+    }
+
+    .apex-wishlist-item__cart {
+      padding-inline: 8px;
+      font-size: 0.8125rem;
     }
   }
 {% endstylesheet %}
@@ -1239,10 +1421,16 @@
       "info": "Leave empty to hide Subscriptions from the menu (until Appstle's portal is set up)."
     },
     {
-      "type": "url",
-      "id": "wishlist_url",
-      "label": "Wishlist link",
-      "info": "Leave empty to hide Wishlist from the menu."
+      "type": "text",
+      "id": "wishlist_text",
+      "label": "Wishlist text",
+      "default": "Saved items stay here until you remove them. Tap the heart on any product to add it."
+    },
+    {
+      "type": "text",
+      "id": "wishlist_empty",
+      "label": "Empty wishlist text",
+      "default": "Nothing saved yet. Tap the heart on any product to save it here."
     },
     {
       "type": "text",

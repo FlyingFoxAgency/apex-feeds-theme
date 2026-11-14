@@ -1,0 +1,24 @@
+{% doc %}
+  APEX wishlist heart (Figma "APEX Wishlist Page": white 48px circle, amber heart when saved).
+  Works for every shopper: the list saves in their browser (assets/apex-wishlist.js).
+
+  @param {object} product - The product to save
+  @param {string} [class] - Extra classes for placement
+  @param {boolean} [use_form_variant] - Product page: save the variant picked in the product form
+
+  @example
+  {% render 'apex-wishlist-button', product: product, class: 'apex-product-card__wishlist' %}
+{% enddoc %}
+<apex-wishlist-button
+  class="apex-wishlist-button {{ class }}"
+  data-handle="{{ product.handle }}"
+  data-title="{{ product.title | escape }}"
+  data-variant="{{ product.selected_or_first_available_variant.id }}"
+  {% if use_form_variant %}data-variant-from-form{% endif %}
+>
+  <button type="button" class="apex-wishlist-button__button" aria-pressed="false" aria-label="Save {{ product.title | escape }} to wishlist">
+    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M12.62 20.81c-.34.12-.9.12-1.24 0C8.48 19.82 2 15.69 2 8.69 2 5.6 4.49 3.1 7.56 3.1c1.82 0 3.43.88 4.44 2.24a5.53 5.53 0 0 1 4.44-2.24C19.51 3.1 22 5.6 22 8.69c0 7-6.48 11.13-9.38 12.12Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+</apex-wishlist-button>

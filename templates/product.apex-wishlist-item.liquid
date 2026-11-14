@@ -1,0 +1,6 @@
+{%- comment -%}
+  Not a page: the my-account Wishlist fetches /products/<handle>?view=apex-wishlist-item[&variant=<id>]
+  for each saved product and drops this card into its grid (assets/apex-wishlist.js).
+{%- endcomment -%}
+{%- layout none -%}
+{%- render 'apex-wishlist-item', product: product -%}

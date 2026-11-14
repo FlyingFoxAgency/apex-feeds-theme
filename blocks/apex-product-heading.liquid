@@ -4,6 +4,7 @@
   - Eyebrow: the product's Shop Nav Category + " range" (e.g. "Frozen Meals range"), or the block
     setting when filled in.
   - Subtitle: product metafield custom.subtitle (single line text).
+  - Wishlist heart beside the title (saves the variant picked in the form), with a block setting.
   - Rating: reviews.rating / reviews.rating_count (review apps fill these in), else custom.rating.
     Hidden when there is no rating.
 {% endcomment %}
@@ -30,10 +31,17 @@
   assign rating_scale = product.metafields.reviews.rating.value.scale_max | default: 5
 -%}
 <div class="apex-product-heading" {{ block.shopify_attributes }}>
-  {%- if eyebrow != blank -%}
-    <p class="apex-eyebrow apex-product-heading__eyebrow">{{ eyebrow | escape }}</p>
-  {%- endif -%}
-  <h1 class="apex-product-heading__title">{{ product.title | default: 'Product title' | escape }}</h1>
+  <div class="apex-product-heading__top">
+    <div class="apex-product-heading__text">
+      {%- if eyebrow != blank -%}
+        <p class="apex-eyebrow apex-product-heading__eyebrow">{{ eyebrow | escape }}</p>
+      {%- endif -%}
+      <h1 class="apex-product-heading__title">{{ product.title | default: 'Product title' | escape }}</h1>
+    </div>
+    {%- if block.settings.show_wishlist and product != blank -%}
+      {%- render 'apex-wishlist-button', product: product, class: 'apex-product-heading__wishlist', use_form_variant: true -%}
+    {%- endif -%}
+  </div>
   {%- assign subtitle = product.metafields.custom.subtitle.value -%}
   {%- if subtitle != blank -%}
     <p class="apex-product-heading__subtitle">{{ subtitle | escape }}</p>
@@ -58,6 +66,23 @@
 </div>
 
 {% stylesheet %}
+  /* Title with the wishlist heart on its right */
+  .apex-product-heading__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .apex-product-heading__text {
+    min-width: 0;
+  }
+
+  .apex-product-heading__wishlist {
+    flex: none;
+    margin-top: 4px;
+  }
+
   .apex-product-heading__eyebrow {
     margin: 0;
   }
@@ -128,6 +153,12 @@
   "name": "APEX product heading",
   "tag": null,
   "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_wishlist",
+      "label": "Show wishlist heart",
+      "default": true
+    },
     {
       "type": "text",
       "id": "eyebrow",
