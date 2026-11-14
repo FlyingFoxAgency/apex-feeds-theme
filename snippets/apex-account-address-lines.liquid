@@ -1,0 +1,11 @@
+{% comment %}
+  Address as separate lines (Figma: name / street / suburb state postcode / country).
+  @param {object} address
+  @param {boolean} show_name
+{% endcomment %}
+{%- if show_name and address.name != blank -%}<p>{{ address.name | escape }}</p>{%- endif -%}
+{%- if address.company != blank -%}<p>{{ address.company | escape }}</p>{%- endif -%}
+{%- if address.address1 != blank -%}<p>{{ address.address1 | escape }}</p>{%- endif -%}
+{%- if address.address2 != blank -%}<p>{{ address.address2 | escape }}</p>{%- endif -%}
+<p>{{ address.city | escape }} {{ address.province_code | escape }} {{ address.zip | escape }}</p>
+{%- if address.country != blank -%}<p>{{ address.country | escape }}</p>{%- endif -%}

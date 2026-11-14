@@ -1,0 +1,28 @@
+{% comment %}
+  "Reorder" button: adds an order's items that are still on sale to the cart, then opens the cart.
+  @param {object} order
+  @param {string} label
+  @param {string} [class]
+{% endcomment %}
+{%- liquid
+  assign items = ''
+  for line_item in order.line_items
+    if line_item.variant and line_item.variant.available
+      assign item = '{"id":' | append: line_item.variant.id | append: ',"quantity":' | append: line_item.quantity | append: '}'
+      if items != ''
+        assign items = items | append: ','
+      endif
+      assign items = items | append: item
+    endif
+  endfor
+-%}
+{%- if items != '' -%}
+  <div class="apex-account__reorder">
+    <button type="button" class="apex-button apex-account__button--moss {{ class }}" data-apex-reorder="[{{ items | escape }}]">
+      {{- label | escape -}}
+    </button>
+    <p class="apex-account__small" data-apex-reorder-status role="status"></p>
+  </div>
+{%- else -%}
+  <p class="apex-account__small">These items aren't available right now.</p>
+{%- endif -%}

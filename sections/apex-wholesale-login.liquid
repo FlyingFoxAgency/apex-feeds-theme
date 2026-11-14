@@ -51,7 +51,7 @@
             <h2 class="apex-wlogin__heading">Welcome back</h2>
             <p class="apex-wlogin__lead">You're signed in as {{ customer.first_name | default: customer.email | escape }}. Your wholesale pricing applies across the store.</p>
             <div class="apex-wlogin__actions">
-              <a class="apex-button apex-wlogin__go" href="{{ routes.account_url }}">Go to my account</a>
+              <a class="apex-button apex-wlogin__go" href="{{ settings.apex_account_page.url | default: routes.account_url }}">Go to my account</a>
               <a class="apex-wlogin__link" href="{{ routes.all_products_collection_url }}">Shop now</a>
             </div>
           {%- else -%}
@@ -59,7 +59,7 @@
             <p class="apex-wlogin__lead">You're signed in as {{ customer.email | escape }}, but this account isn't set up for wholesale yet. If you've applied, we'll email you once your application is approved.</p>
             <div class="apex-wlogin__actions">
               <a class="apex-button apex-wlogin__go" href="{{ apply_url }}">Apply for wholesale</a>
-              <a class="apex-wlogin__link" href="{{ routes.account_url }}">My account</a>
+              <a class="apex-wlogin__link" href="{{ settings.apex_account_page.url | default: routes.account_url }}">My account</a>
             </div>
           {%- endif -%}
         {%- else -%}

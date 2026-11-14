@@ -331,6 +331,14 @@ main .shopify-section .section-background:not([class*="color-custom-"]) {
   justify-content: center;
 }
 
+/* Person icon as a plain link to the APEX my-account page (Theme settings > APEX Feeds) */
+#header-component .apex-account-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+
 /* <cart-icon> is inline by default, so its icon sat on the text baseline, a few px off the
    search and account icons. As a flex box it centres like they do. */
 #header-component

@@ -2178,6 +2178,16 @@
       { "type": "url", "id": "apex_social_tiktok", "label": "TikTok" },
       {
         "type": "header",
+        "content": "My account"
+      },
+      {
+        "type": "page",
+        "id": "apex_account_page",
+        "label": "My account page",
+        "info": "The page using the my-account template. When set, the header's person icon goes there instead of Shopify's account pop-up."
+      },
+      {
+        "type": "header",
         "content": "Cart drawer"
       },
       {

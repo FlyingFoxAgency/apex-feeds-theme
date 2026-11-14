@@ -1,0 +1,1310 @@
+{% comment %}
+  APEX customer account (Figma "APEX Customer Login Page", "APEX Customer Account Page",
+  "APEX Order Detail Page"). One page, /pages/my-account, with the template "my-account".
+
+  The store uses Shopify's new customer accounts, so:
+  - Signed out: "Sign in or register". The email boxes hand the address to Shopify's secure sign-in,
+    which emails a one-time code (no passwords). The first sign-in creates the account, so signing in
+    and registering are the same step. Shopify brings the shopper back to this page.
+  - Signed in: the dashboard reads the signed-in customer (orders, addresses, details). Views:
+    overview, order history (?view=orders), one order (?order=<id>), addresses (?view=addresses) and
+    account details (?view=details). All views render on the page and a small script shows the one
+    the address asks for, so the side menu switches views without reloading.
+  - Changing name, email or addresses happens on Shopify's own profile screen (the theme can't change
+    customer data); the Edit buttons go there.
+  - Orders come 20 at a time (Shopify's limit); older orders use ?view=orders&page=2 and so on.
+{% endcomment %}
+{%- liquid
+  assign return_to = request.path | default: '/pages/my-account'
+  assign wholesale_url = section.settings.wholesale_page.url | default: '/pages/wholesale'
+  assign profile_url = routes.account_addresses_url
+  assign shop_url = section.settings.shop_link | default: routes.all_products_collection_url
+-%}
+
+{%- capture icon_logout -%}
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+    <path d="M8 3.5H3.5v13H8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M7.5 10h9M13.5 6.75 16.75 10l-3.25 3.25" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+{%- endcapture -%}
+
+<apex-account
+  class="apex-account"
+  style="--apex-account-pt: {{ section.settings.padding_top }}px; --apex-account-pb: {{ section.settings.padding_bottom }}px;"
+>
+  <div class="apex-container">
+    {%- unless customer -%}
+      {%- comment -%} Signed out: Sign in or register {%- endcomment -%}
+      <div class="apex-account__header">
+        <div class="apex-account__titles">
+          <p class="apex-eyebrow">{{ section.settings.login_eyebrow | escape }}</p>
+          <h1 class="apex-account__title">{{ section.settings.login_title | escape }}</h1>
+        </div>
+      </div>
+
+      <div class="apex-account__login">
+        <div class="apex-account__card apex-account__card--signin">
+          <h2 class="apex-account__h4">{{ section.settings.signin_heading | escape }}</h2>
+          <p class="apex-account__lead">{{ section.settings.signin_text | escape }}</p>
+          <form class="apex-account__form" action="/customer_authentication/login" method="get">
+            <input type="hidden" name="return_to" value="{{ return_to | escape }}">
+            <label class="apex-account__label" for="ApexAccountSigninEmail">Email</label>
+            <input id="ApexAccountSigninEmail" class="apex-account__input" type="email" name="login_hint" placeholder="you@example.com" autocomplete="email" required>
+            <button class="apex-button apex-account__button--moss" type="submit">Sign in</button>
+          </form>
+          <p class="apex-account__note">{{ section.settings.code_note | escape }}</p>
+        </div>
+
+        <div class="apex-account__card apex-account__card--register">
+          <h2 class="apex-account__h4">{{ section.settings.register_heading | escape }}</h2>
+          <p class="apex-account__lead">{{ section.settings.register_text | escape }}</p>
+          <form class="apex-account__form" action="/customer_authentication/login" method="get">
+            <input type="hidden" name="return_to" value="{{ return_to | escape }}">
+            <label class="apex-account__label" for="ApexAccountRegisterEmail">Email</label>
+            <input id="ApexAccountRegisterEmail" class="apex-account__input" type="email" name="login_hint" placeholder="you@example.com" autocomplete="email" required>
+            <button class="apex-button apex-account__button--outline" type="submit">Create account</button>
+          </form>
+          <p class="apex-account__retailer">
+            Are you a retailer?
+            <a class="apex-account__link" href="{{ wholesale_url }}">Wholesale sign in</a>
+          </p>
+        </div>
+      </div>
+    {%- else -%}
+      {%- liquid
+        assign first_name = customer.first_name | default: customer.name | default: ''
+        if first_name != blank
+          assign welcome = 'Welcome back, ' | append: first_name
+        else
+          assign welcome = 'Welcome back'
+        endif
+        assign address_count = customer.addresses_count | default: customer.addresses.size
+      -%}
+      {%- paginate customer.orders by 20 -%}
+        {%- comment -%} Page headers, one per view {%- endcomment -%}
+        <div class="apex-account__header" data-apex-view="overview">
+          <div class="apex-account__titles">
+            <p class="apex-eyebrow">{{ welcome | escape }}</p>
+            <h1 class="apex-account__title">My account</h1>
+          </div>
+          <a class="apex-account__logout" href="{{ routes.account_logout_url }}">{{ icon_logout }}<span>Log out</span></a>
+        </div>
+        <div class="apex-account__header" data-apex-view="orders" hidden>
+          <div class="apex-account__titles">
+            <p class="apex-eyebrow"><a href="?view=overview" data-apex-go="overview">My account</a></p>
+            <h1 class="apex-account__title">Order history</h1>
+          </div>
+          <a class="apex-account__logout" href="{{ routes.account_logout_url }}">{{ icon_logout }}<span>Log out</span></a>
+        </div>
+        <div class="apex-account__header" data-apex-view="addresses" hidden>
+          <div class="apex-account__titles">
+            <p class="apex-eyebrow"><a href="?view=overview" data-apex-go="overview">My account</a></p>
+            <h1 class="apex-account__title">Addresses</h1>
+          </div>
+          <a class="apex-account__logout" href="{{ routes.account_logout_url }}">{{ icon_logout }}<span>Log out</span></a>
+        </div>
+        <div class="apex-account__header" data-apex-view="details" hidden>
+          <div class="apex-account__titles">
+            <p class="apex-eyebrow"><a href="?view=overview" data-apex-go="overview">My account</a></p>
+            <h1 class="apex-account__title">Account details</h1>
+          </div>
+          <a class="apex-account__logout" href="{{ routes.account_logout_url }}">{{ icon_logout }}<span>Log out</span></a>
+        </div>
+        {%- for order in customer.orders -%}
+          <div class="apex-account__header" data-apex-view="order-{{ order.id }}" hidden>
+            <div class="apex-account__titles">
+              <p class="apex-eyebrow">
+                <a href="?view=overview" data-apex-go="overview">My account</a>
+                <span aria-hidden="true">&nbsp;/&nbsp;</span>
+                <a href="?view=orders" data-apex-go="orders">Order history</a>
+              </p>
+              <h1 class="apex-account__title">Order {{ order.name | escape }}</h1>
+            </div>
+            <a class="apex-account__logout" href="{{ routes.account_logout_url }}">{{ icon_logout }}<span>Log out</span></a>
+          </div>
+        {%- endfor -%}
+
+        <div class="apex-account__body">
+          {%- comment -%} Side menu {%- endcomment -%}
+          <nav class="apex-account__menu" aria-label="My account">
+            <ul class="apex-account__menu-list" role="list">
+              <li><a class="apex-account__menu-item" href="?view=overview" data-apex-go="overview" data-apex-menu="overview">Account overview</a></li>
+              <li><a class="apex-account__menu-item" href="?view=orders" data-apex-go="orders" data-apex-menu="orders">Order history</a></li>
+              {%- if section.settings.subscriptions_url != blank -%}
+                <li><a class="apex-account__menu-item" href="{{ section.settings.subscriptions_url }}">Subscriptions</a></li>
+              {%- endif -%}
+              {%- if section.settings.wishlist_url != blank -%}
+                <li><a class="apex-account__menu-item" href="{{ section.settings.wishlist_url }}">Wishlist</a></li>
+              {%- endif -%}
+              <li><a class="apex-account__menu-item" href="?view=addresses" data-apex-go="addresses" data-apex-menu="addresses">Addresses</a></li>
+              <li><a class="apex-account__menu-item" href="?view=details" data-apex-go="details" data-apex-menu="details">Account details</a></li>
+            </ul>
+            <hr class="apex-account__rule">
+            <a class="apex-account__menu-item apex-account__menu-logout" href="{{ routes.account_logout_url }}">{{ icon_logout }}<span>Log out</span></a>
+          </nav>
+
+          <div class="apex-account__main">
+            {%- comment -%} Overview {%- endcomment -%}
+            <div class="apex-account__view" data-apex-view="overview">
+              <div class="apex-account__card apex-account__card--wide">
+                <h2 class="apex-account__h3">Order history</h2>
+                {%- if customer.orders_count > 0 -%}
+                  {%- render 'apex-account-orders-table', orders: customer.orders, limit: 3 -%}
+                  <a class="apex-account__link" href="?view=orders" data-apex-go="orders">View all orders</a>
+                {%- else -%}
+                  <p class="apex-account__empty">You haven't placed any orders yet.</p>
+                  <a class="apex-account__link" href="{{ shop_url }}">Start shopping</a>
+                {%- endif -%}
+              </div>
+
+              <div class="apex-account__pair">
+                <div class="apex-account__card apex-account__card--side">
+                  <h2 class="apex-account__h4">Account details</h2>
+                  <div class="apex-account__lines">
+                    {%- if customer.name != blank -%}<p>{{ customer.name | escape }}</p>{%- endif -%}
+                    <p>{{ customer.email | escape }}</p>
+                    {%- if customer.default_address -%}
+                      {%- render 'apex-account-address-lines', address: customer.default_address, show_name: false -%}
+                    {%- endif -%}
+                  </div>
+                  <a class="apex-account__link" href="?view=addresses" data-apex-go="addresses">Manage addresses ({{ address_count }})</a>
+                </div>
+
+                <div class="apex-account__card apex-account__card--dark">
+                  {%- if customer.last_order -%}
+                    <h2 class="apex-account__h4">{{ section.settings.reorder_heading | escape }}</h2>
+                    <p class="apex-account__small">{{ section.settings.reorder_text | escape }}</p>
+                    {%- assign reorder_label = 'Reorder ' | append: customer.last_order.name -%}
+                    {%- render 'apex-account-reorder', order: customer.last_order, label: reorder_label -%}
+                  {%- else -%}
+                    <h2 class="apex-account__h4">{{ section.settings.first_order_heading | escape }}</h2>
+                    <p class="apex-account__small">{{ section.settings.first_order_text | escape }}</p>
+                    <a class="apex-button apex-account__button--moss" href="{{ shop_url }}">Shop all</a>
+                  {%- endif -%}
+                </div>
+              </div>
+            </div>
+
+            {%- comment -%} Order history {%- endcomment -%}
+            <div class="apex-account__view" data-apex-view="orders" hidden>
+              <div class="apex-account__card apex-account__card--wide">
+                <h2 class="apex-account__h3">Your orders</h2>
+                {%- if customer.orders_count > 0 -%}
+                  {%- render 'apex-account-orders-table', orders: customer.orders, limit: 20 -%}
+                  {%- if paginate.pages > 1 -%}
+                    <nav class="apex-account__pager" aria-label="Order pages">
+                      {%- if paginate.previous -%}
+                        <a class="apex-account__link" href="?view=orders&amp;page={{ paginate.current_page | minus: 1 }}">Newer orders</a>
+                      {%- endif -%}
+                      <span class="apex-account__small">Page {{ paginate.current_page }} of {{ paginate.pages }}</span>
+                      {%- if paginate.next -%}
+                        <a class="apex-account__link" href="?view=orders&amp;page={{ paginate.current_page | plus: 1 }}">Older orders</a>
+                      {%- endif -%}
+                    </nav>
+                  {%- endif -%}
+                {%- else -%}
+                  <p class="apex-account__empty">You haven't placed any orders yet.</p>
+                  <a class="apex-account__link" href="{{ shop_url }}">Start shopping</a>
+                {%- endif -%}
+              </div>
+            </div>
+
+            {%- comment -%} One order {%- endcomment -%}
+            {%- for order in customer.orders -%}
+              <div class="apex-account__view" data-apex-view="order-{{ order.id }}" hidden>
+                {%- render 'apex-account-order', order: order -%}
+              </div>
+            {%- endfor -%}
+
+            {%- comment -%} Addresses {%- endcomment -%}
+            <div class="apex-account__view" data-apex-view="addresses" hidden>
+              <div class="apex-account__card apex-account__card--wide">
+                <div class="apex-account__card-top">
+                  <h2 class="apex-account__h3">Saved addresses</h2>
+                  <a class="apex-button apex-account__button--outline" href="{{ profile_url }}">Add or edit</a>
+                </div>
+                {%- if customer.addresses.size > 0 -%}
+                  <div class="apex-account__addresses">
+                    {%- for address in customer.addresses -%}
+                      <div class="apex-account__address">
+                        {%- if address.id == customer.default_address.id -%}
+                          <span class="apex-account__status apex-account__status--dark">Default</span>
+                        {%- endif -%}
+                        <div class="apex-account__lines">
+                          {%- render 'apex-account-address-lines', address: address, show_name: true -%}
+                        </div>
+                      </div>
+                    {%- endfor -%}
+                  </div>
+                {%- else -%}
+                  <p class="apex-account__empty">No saved addresses yet. Your address saves when you check out, or add one now.</p>
+                {%- endif -%}
+                <p class="apex-account__small apex-account__muted">{{ section.settings.edit_note | escape }}</p>
+              </div>
+            </div>
+
+            {%- comment -%} Account details {%- endcomment -%}
+            <div class="apex-account__view" data-apex-view="details" hidden>
+              <div class="apex-account__card apex-account__card--wide">
+                <div class="apex-account__card-top">
+                  <h2 class="apex-account__h3">Your details</h2>
+                  <a class="apex-button apex-account__button--outline" href="{{ profile_url }}">Edit details</a>
+                </div>
+                <dl class="apex-account__facts">
+                  <div><dt>Name</dt><dd>{{ customer.name | default: 'Not added yet' | escape }}</dd></div>
+                  <div><dt>Email</dt><dd>{{ customer.email | escape }}</dd></div>
+                  {%- if customer.phone != blank -%}
+                    <div><dt>Phone</dt><dd>{{ customer.phone | escape }}</dd></div>
+                  {%- endif -%}
+                  <div><dt>News and offers</dt><dd>{% if customer.accepts_marketing %}Subscribed{% else %}Not subscribed{% endif %}</dd></div>
+                </dl>
+                <p class="apex-account__small apex-account__muted">{{ section.settings.edit_note | escape }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      {%- endpaginate -%}
+    {%- endunless -%}
+  </div>
+</apex-account>
+
+{% stylesheet %}
+  .apex-account {
+    display: block;
+    padding-block: var(--apex-account-pt, 84px) var(--apex-account-pb, 160px);
+    color: var(--apex-burrow);
+  }
+
+  .apex-account [hidden] {
+    display: none !important;
+  }
+
+  .apex-account a {
+    color: inherit;
+  }
+
+  /* Header: eyebrow + Dharma 128/102 title, log out link on the right */
+  .apex-account__header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .apex-account__titles .apex-eyebrow {
+    margin: 0;
+  }
+
+  .apex-account__titles .apex-eyebrow a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .apex-account__title {
+    margin: 24px 0 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: var(--apex-font-size-display, clamp(4rem, 8.9vw, 8rem));
+    line-height: 0.8;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-account__logout,
+  .apex-account__menu-logout {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-body--family);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1rem;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--apex-olive) !important;
+    transition: scale 0.2s var(--ease-out-cubic, ease-out);
+  }
+
+  .apex-account__logout:is(:hover, :focus-visible) {
+    scale: 1.06;
+  }
+
+  .apex-account__logout svg,
+  .apex-account__menu-logout svg {
+    flex: none;
+    color: var(--apex-burrow);
+  }
+
+  /* Body: 280px menu + main column, 48px apart (Figma) */
+  .apex-account__body {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: 48px;
+    align-items: start;
+    margin-block-start: 64px;
+  }
+
+  .apex-account__menu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 24px;
+    border-radius: var(--apex-radius-xl);
+    background: var(--apex-stone-100-alt);
+  }
+
+  .apex-account__menu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .apex-account__menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: var(--apex-radius-md);
+    font-family: var(--font-body--family);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1rem;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--apex-burrow);
+    white-space: nowrap;
+  }
+
+  .apex-account__menu-item:hover {
+    background: rgb(221 221 209 / 0.5);
+  }
+
+  /* Active item: stone-200 fill with a 3px amber marker */
+  .apex-account__menu-item[aria-current='page'] {
+    background: var(--apex-stone-200);
+  }
+
+  .apex-account__menu-item[aria-current='page']::before {
+    content: '';
+    width: 3px;
+    height: 16px;
+    flex: none;
+    background: var(--apex-amber);
+  }
+
+  .apex-account__rule {
+    width: 100%;
+    height: 1px;
+    margin: 0;
+    border: 0;
+    background: var(--apex-border-grey);
+  }
+
+  .apex-account__main,
+  .apex-account__view {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-width: 0;
+  }
+
+  /* Cards */
+  .apex-account__card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 40px;
+    border-radius: var(--apex-radius-xl);
+    background: var(--apex-stone-100-alt);
+  }
+
+  .apex-account__card--wide {
+    padding: 48px;
+  }
+
+  .apex-account__card--side {
+    gap: 12px;
+  }
+
+  .apex-account__card--dark {
+    background: var(--apex-burrow);
+    color: var(--apex-sandstone);
+  }
+
+  .apex-account__card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .apex-account__pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .apex-account__h3,
+  .apex-account__h4 {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    text-transform: uppercase;
+    color: inherit;
+  }
+
+  .apex-account__h3 {
+    font-size: 3rem;
+    line-height: 0.96;
+  }
+
+  .apex-account__h4 {
+    font-size: 2.5rem;
+    line-height: 1;
+  }
+
+  .apex-account__lead,
+  .apex-account__lines p,
+  .apex-account__empty {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-account__lines {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .apex-account__small {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+  }
+
+  .apex-account__muted {
+    color: var(--apex-dried-moss);
+  }
+
+  /* Olive Nav-style text links (View all orders, Manage addresses) */
+  .apex-account__link {
+    display: inline-block;
+    font-family: var(--font-body--family);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1rem;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--apex-olive) !important;
+    transition: scale 0.2s var(--ease-out-cubic, ease-out);
+    transform-origin: left center;
+  }
+
+  .apex-account__link:is(:hover, :focus-visible) {
+    scale: 1.06;
+  }
+
+  /* Buttons: filled dried moss with sandstone text, and outlined */
+  .apex-account__button--moss {
+    background: var(--apex-dried-moss);
+    border-color: var(--apex-dried-moss);
+    color: var(--apex-sandstone) !important;
+  }
+
+  .apex-account__button--outline {
+    background: transparent;
+    border-color: var(--apex-dried-moss);
+    color: var(--apex-burrow) !important;
+  }
+
+  .apex-account__button--moss:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+
+  /* Status pills */
+  .apex-account__status {
+    display: inline-flex;
+    padding: 4px 12px;
+    border-radius: var(--apex-radius-pill);
+    background: var(--apex-stone-200);
+    font-size: 0.625rem;
+    font-weight: 600;
+    line-height: 0.875rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--apex-burrow);
+  }
+
+  .apex-account__status--dark {
+    background: var(--apex-burrow);
+    color: var(--apex-sandstone);
+  }
+
+  /* Order table */
+  .apex-account__table {
+    width: 100%;
+  }
+
+  .apex-account__row {
+    display: grid;
+    grid-template-columns: 120px 160px minmax(0, 1fr) 120px;
+    gap: 24px;
+    align-items: center;
+    padding-block: 16px;
+    border-block-end: 1px solid var(--apex-border-grey);
+    text-decoration: none;
+    color: var(--apex-burrow);
+  }
+
+  a.apex-account__row:hover .apex-account__order-name {
+    color: var(--apex-olive);
+  }
+
+  .apex-account__row--head {
+    font-size: 0.625rem;
+    font-weight: 600;
+    line-height: 0.875rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-account__order-name {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+  }
+
+  .apex-account__cell-date,
+  .apex-account__cell-total {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-account__cell-total,
+  .apex-account__align-end {
+    text-align: right;
+  }
+
+  .apex-account__pager {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  /* Order detail */
+  .apex-account__back {
+    align-self: flex-start;
+  }
+
+  .apex-account__card--order {
+    gap: 32px;
+  }
+
+  .apex-account__order-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    width: 100%;
+  }
+
+  .apex-account__order-title {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+
+  .apex-account__order-meta {
+    margin: 8px 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: var(--apex-dried-moss);
+  }
+
+  /* Tracking timeline: line behind three steps */
+  .apex-account__track {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .apex-account__track::before,
+  .apex-account__track::after {
+    content: '';
+    position: absolute;
+    top: 9px;
+    left: 10px;
+    height: 2px;
+  }
+
+  .apex-account__track::before {
+    right: 10px;
+    background: var(--apex-dried-moss);
+    opacity: 0.5;
+  }
+
+  .apex-account__track::after {
+    width: calc((100% - 20px) * var(--apex-track-progress, 0));
+    background: var(--apex-burrow);
+  }
+
+  .apex-account__step {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 160px;
+    text-align: center;
+  }
+
+  .apex-account__step:first-child {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .apex-account__step:last-child {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .apex-account__dot {
+    box-sizing: border-box;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--apex-dried-moss);
+    border-radius: 50%;
+    background: var(--apex-bg-page, #fff);
+  }
+
+  .apex-account__step--done .apex-account__dot {
+    border-color: var(--apex-burrow);
+    background: var(--apex-burrow);
+  }
+
+  .apex-account__step--current .apex-account__dot {
+    border: 5px solid var(--apex-bg-page, #fff);
+    background: var(--apex-amber);
+    box-shadow: 0 0 0 1px var(--apex-amber);
+  }
+
+  .apex-account__step-label {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+    text-transform: uppercase;
+  }
+
+  .apex-account__step:not(.apex-account__step--done, .apex-account__step--current) .apex-account__step-label {
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-account__step-date {
+    margin-top: -12px;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-account__carrier {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    width: 100%;
+    padding: 20px 24px;
+    border-radius: var(--apex-radius-lg);
+    background: var(--apex-bg-page, #fff);
+  }
+
+  .apex-account__carrier p {
+    margin: 0;
+  }
+
+  .apex-account__carrier-name {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+  }
+
+  .apex-account__carrier .apex-account__small {
+    margin-top: 4px;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-account__items {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-block-start: 1px solid var(--apex-border-grey);
+  }
+
+  .apex-account__item {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr) auto;
+    gap: 24px;
+    align-items: center;
+    padding-block: 24px;
+    border-block-end: 1px solid var(--apex-border-grey);
+  }
+
+  .apex-account__item-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 88px;
+    height: 88px;
+    overflow: hidden;
+    border-radius: var(--apex-radius-lg);
+    background: var(--apex-bg-page, #fff);
+  }
+
+  .apex-account__item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .apex-account__item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .apex-account__item-info p {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+  }
+
+  .apex-account__item-title {
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.25rem;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--apex-olive) !important;
+  }
+
+  .apex-account__item-options {
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-account__item-price {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+    white-space: nowrap;
+  }
+
+  .apex-account__totals {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    margin: 0;
+    padding-top: 8px;
+  }
+
+  .apex-account__totals div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-account__totals dt {
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-account__totals dd {
+    margin: 0;
+  }
+
+  .apex-account__totals .apex-account__total-row {
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+
+  .apex-account__totals .apex-account__total-row dt {
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  /* Addresses + details */
+  .apex-account__addresses {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 24px;
+    width: 100%;
+  }
+
+  .apex-account__address {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 24px;
+    border-radius: var(--apex-radius-lg);
+    background: var(--apex-bg-page, #fff);
+  }
+
+  .apex-account__facts {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin: 0;
+  }
+
+  .apex-account__facts div {
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 24px;
+    padding-block: 16px;
+    border-block-end: 1px solid var(--apex-border-grey);
+  }
+
+  .apex-account__facts dt {
+    font-size: 0.625rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-account__facts dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  /* Sign in or register: two cards (Figma 622px each, 48px apart, right card drops 0px) */
+  .apex-account__login {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+    margin-block-start: 64px;
+  }
+
+  .apex-account__card--signin {
+    box-shadow: 0 30px 60px rgb(64 68 61 / 0.08);
+  }
+
+  .apex-account__form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+    margin-block-start: 8px;
+  }
+
+  .apex-account__label {
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-account__input {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 1px solid var(--apex-dried-moss);
+    border-radius: 4px;
+    background: transparent;
+    font: inherit;
+    font-size: 0.875rem;
+    color: var(--apex-burrow);
+  }
+
+  .apex-account__input::placeholder {
+    color: var(--apex-dried-moss);
+    opacity: 1;
+  }
+
+  .apex-account__input:focus {
+    outline: none;
+    border-color: var(--apex-burrow);
+  }
+
+  .apex-account__form .apex-button {
+    margin-block-start: 16px;
+  }
+
+  .apex-account__note {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-account__retailer {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-account__body {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 24px;
+      margin-block-start: 40px;
+    }
+
+    /* Menu becomes a row of tabs that scrolls sideways */
+    .apex-account__menu {
+      flex-direction: row;
+      align-items: center;
+      padding: 8px;
+      border-radius: var(--apex-radius-lg);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .apex-account__menu::-webkit-scrollbar {
+      display: none;
+    }
+
+    .apex-account__menu-list {
+      flex-direction: row;
+    }
+
+    .apex-account__rule {
+      width: 1px;
+      height: 24px;
+    }
+
+    .apex-account__login {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 24px;
+      margin-block-start: 40px;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-account {
+      padding-block: calc(var(--apex-account-pt, 84px) * 0.5) calc(var(--apex-account-pb, 160px) * 0.5);
+    }
+
+    .apex-account__header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .apex-account__title {
+      margin-block-start: 16px;
+      font-size: 4.5rem;
+    }
+
+    .apex-account__card,
+    .apex-account__card--wide {
+      padding: 24px;
+      border-radius: var(--apex-panel-radius, 20px);
+    }
+
+    .apex-account__h3 {
+      font-size: 2.25rem;
+    }
+
+    .apex-account__h4 {
+      font-size: 2rem;
+    }
+
+    .apex-account__pair {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .apex-account__card-top,
+    .apex-account__order-top,
+    .apex-account__carrier {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    /* Order rows: number + total on top, date + status underneath */
+    .apex-account__row {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas: 'name total' 'date status';
+      gap: 4px 16px;
+    }
+
+    .apex-account__row--head {
+      display: none;
+    }
+
+    .apex-account__cell-name { grid-area: name; }
+    .apex-account__cell-total { grid-area: total; }
+    .apex-account__cell-date { grid-area: date; font-size: 0.8125rem; color: var(--apex-dried-moss); }
+    .apex-account__cell-status { grid-area: status; justify-self: end; }
+
+    .apex-account__step {
+      width: auto;
+      max-width: 33%;
+    }
+
+    .apex-account__step-label {
+      font-size: 0.75rem;
+      line-height: 1rem;
+    }
+
+    .apex-account__item {
+      grid-template-columns: 64px minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .apex-account__item-image {
+      width: 64px;
+      height: 64px;
+    }
+
+    .apex-account__item-price {
+      grid-column: 2;
+    }
+
+    .apex-account__facts div {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 4px;
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  if (!customElements.get('apex-account')) {
+    class ApexAccount extends HTMLElement {
+      connectedCallback() {
+        this.onClick = this.onClick.bind(this);
+        this.onPop = () => this.show(this.viewFromUrl(), false);
+        this.addEventListener('click', this.onClick);
+        window.addEventListener('popstate', this.onPop);
+        this.querySelectorAll('[data-apex-reorder]').forEach((button) => {
+          button.addEventListener('click', () => this.reorder(button));
+        });
+        if (this.querySelector('[data-apex-view]')) this.show(this.viewFromUrl(), false);
+      }
+
+      disconnectedCallback() {
+        this.removeEventListener('click', this.onClick);
+        window.removeEventListener('popstate', this.onPop);
+      }
+
+      viewFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('order')) return `order-${params.get('order')}`;
+        return params.get('view') || 'overview';
+      }
+
+      show(view, scroll) {
+        if (!this.querySelector(`[data-apex-view="${CSS.escape(view)}"]`)) view = 'overview';
+        this.querySelectorAll('[data-apex-view]').forEach((el) => {
+          el.hidden = el.dataset.apexView !== view;
+        });
+        const menuKey = view.startsWith('order-') ? 'orders' : view;
+        this.querySelectorAll('[data-apex-menu]').forEach((el) => {
+          if (el.dataset.apexMenu === menuKey) el.setAttribute('aria-current', 'page');
+          else el.removeAttribute('aria-current');
+        });
+        if (scroll) this.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      }
+
+      onClick(event) {
+        const link = event.target.closest('a[data-apex-go]');
+        if (!link || event.metaKey || event.ctrlKey || event.shiftKey) return;
+        const view = link.dataset.apexGo;
+        if (!this.querySelector(`[data-apex-view="${CSS.escape(view)}"]`)) return;
+        event.preventDefault();
+        const url = new URL(link.href, window.location.href);
+        history.pushState({}, '', url);
+        this.show(view, true);
+      }
+
+      async reorder(button) {
+        let items = [];
+        try {
+          items = JSON.parse(button.dataset.apexReorder || '[]');
+        } catch (e) {
+          items = [];
+        }
+        if (!items.length) return;
+        button.disabled = true;
+        const status = button.parentElement.querySelector('[data-apex-reorder-status]');
+        try {
+          const root = (window.Shopify && window.Shopify.routes && window.Shopify.routes.root) || '/';
+          const res = await fetch(`${root}cart/add.js`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ items }),
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.description || data.message || 'Some items could not be added.');
+          }
+          window.location.href = `${root}cart`;
+        } catch (error) {
+          button.disabled = false;
+          if (status) status.textContent = error.message;
+        }
+      }
+    }
+    customElements.define('apex-account', ApexAccount);
+  }
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "APEX my account",
+  "tag": "section",
+  "class": "apex-account-section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Signed out (Sign in or register)"
+    },
+    {
+      "type": "text",
+      "id": "login_eyebrow",
+      "label": "Eyebrow",
+      "default": "My account"
+    },
+    {
+      "type": "text",
+      "id": "login_title",
+      "label": "Title",
+      "default": "Sign in or register"
+    },
+    {
+      "type": "text",
+      "id": "signin_heading",
+      "label": "Sign in heading",
+      "default": "Sign in"
+    },
+    {
+      "type": "text",
+      "id": "signin_text",
+      "label": "Sign in text",
+      "default": "Welcome back. Sign in to track orders and check out faster."
+    },
+    {
+      "type": "text",
+      "id": "code_note",
+      "label": "Code note",
+      "default": "We'll email you a one-time code to sign in. No password needed."
+    },
+    {
+      "type": "text",
+      "id": "register_heading",
+      "label": "Register heading",
+      "default": "New to APEX Feeds?"
+    },
+    {
+      "type": "textarea",
+      "id": "register_text",
+      "label": "Register text",
+      "default": "Create an account to save your details, view your order history and reorder your animals' favourites in a few clicks. Enter your email and we'll send you a code to get started."
+    },
+    {
+      "type": "page",
+      "id": "wholesale_page",
+      "label": "Wholesale sign in page"
+    },
+    {
+      "type": "header",
+      "content": "Signed in"
+    },
+    {
+      "type": "url",
+      "id": "subscriptions_url",
+      "label": "Subscriptions link",
+      "info": "Leave empty to hide Subscriptions from the menu (until Appstle's portal is set up)."
+    },
+    {
+      "type": "url",
+      "id": "wishlist_url",
+      "label": "Wishlist link",
+      "info": "Leave empty to hide Wishlist from the menu."
+    },
+    {
+      "type": "text",
+      "id": "reorder_heading",
+      "label": "Reorder card heading",
+      "default": "Running low?"
+    },
+    {
+      "type": "text",
+      "id": "reorder_text",
+      "label": "Reorder card text",
+      "default": "Reorder your last purchase in one click."
+    },
+    {
+      "type": "text",
+      "id": "first_order_heading",
+      "label": "Heading before a first order",
+      "default": "Ready to stock up?"
+    },
+    {
+      "type": "text",
+      "id": "first_order_text",
+      "label": "Text before a first order",
+      "default": "Browse the full range of feeds, insects and supplements."
+    },
+    {
+      "type": "url",
+      "id": "shop_link",
+      "label": "Shop link"
+    },
+    {
+      "type": "text",
+      "id": "edit_note",
+      "label": "Edit note",
+      "default": "Changes to your details and addresses are made on our secure account page."
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Space above",
+      "info": "Phones use half.",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "default": 84
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Space below",
+      "info": "Phones use half.",
+      "min": 0,
+      "max": 240,
+      "step": 4,
+      "unit": "px",
+      "default": 160
+    }
+  ]
+}
+{% endschema %}
