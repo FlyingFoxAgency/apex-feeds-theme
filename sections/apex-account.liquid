@@ -97,6 +97,13 @@
           </div>
           <a class="apex-account__logout" href="{{ routes.account_logout_url }}">{{ icon_logout }}<span>Log out</span></a>
         </div>
+        <div class="apex-account__header" data-apex-view="subscriptions" hidden>
+          <div class="apex-account__titles">
+            <p class="apex-eyebrow"><a href="?view=overview" data-apex-go="overview">My account</a></p>
+            <h1 class="apex-account__title">Subscriptions</h1>
+          </div>
+          <a class="apex-account__logout" href="{{ routes.account_logout_url }}">{{ icon_logout }}<span>Log out</span></a>
+        </div>
         <div class="apex-account__header" data-apex-view="wishlist" hidden>
           <div class="apex-account__titles">
             <p class="apex-eyebrow"><a href="?view=overview" data-apex-go="overview">My account</a></p>
@@ -138,9 +145,7 @@
             <ul class="apex-account__menu-list" role="list">
               <li><a class="apex-account__menu-item" href="?view=overview" data-apex-go="overview" data-apex-menu="overview">Account overview</a></li>
               <li><a class="apex-account__menu-item" href="?view=orders" data-apex-go="orders" data-apex-menu="orders">Order history</a></li>
-              {%- if section.settings.subscriptions_url != blank -%}
-                <li><a class="apex-account__menu-item" href="{{ section.settings.subscriptions_url }}">Subscriptions</a></li>
-              {%- endif -%}
+              <li><a class="apex-account__menu-item" href="?view=subscriptions" data-apex-go="subscriptions" data-apex-menu="subscriptions">Subscriptions</a></li>
               <li><a class="apex-account__menu-item" href="?view=wishlist" data-apex-go="wishlist" data-apex-menu="wishlist">Wishlist</a></li>
               <li><a class="apex-account__menu-item" href="?view=addresses" data-apex-go="addresses" data-apex-menu="addresses">Addresses</a></li>
               <li><a class="apex-account__menu-item" href="?view=details" data-apex-go="details" data-apex-menu="details">Account details</a></li>
@@ -221,6 +226,11 @@
                 {%- render 'apex-account-order', order: order -%}
               </div>
             {%- endfor -%}
+
+            {%- comment -%} Subscriptions: Appstle's customer portal API (assets/apex-subscriptions.js) {%- endcomment -%}
+            <div class="apex-account__view" data-apex-view="subscriptions" hidden>
+              {%- render 'apex-account-subscriptions', config: section.settings, orders: customer.orders -%}
+            </div>
 
             {%- comment -%} Wishlist: saved in this browser, items rendered by Shopify (assets/apex-wishlist.js) {%- endcomment -%}
             <div class="apex-account__view" data-apex-view="wishlist" hidden>
@@ -1307,6 +1317,7 @@
           if (el.dataset.apexMenu === menuKey) el.setAttribute('aria-current', 'page');
           else el.removeAttribute('aria-current');
         });
+        this.dispatchEvent(new CustomEvent('apex:account-view', { detail: { view }, bubbles: true }));
         if (scroll) this.scrollIntoView({ block: 'start', behavior: 'smooth' });
       }
 
@@ -1415,10 +1426,67 @@
       "content": "Signed in"
     },
     {
+      "type": "header",
+      "content": "Subscriptions (Appstle)"
+    },
+    {
+      "type": "text",
+      "id": "subscriptions_api",
+      "label": "Appstle portal API path",
+      "info": "Appstle's customer portal API on the store domain. Only change this if Appstle's support says so.",
+      "default": "/apps/subscriptions/cp/api"
+    },
+    {
+      "type": "text",
+      "id": "subscriptions_portal",
+      "label": "Appstle portal link",
+      "info": "Used for card and address changes.",
+      "default": "/apps/subscriptions"
+    },
+    {
+      "type": "text",
+      "id": "subscriptions_frequencies",
+      "label": "Delivery frequencies (months)",
+      "info": "Comma separated, e.g. 1, 2, 3. With one value, Change frequency is hidden.",
+      "default": "1"
+    },
+    {
       "type": "url",
-      "id": "subscriptions_url",
-      "label": "Subscriptions link",
-      "info": "Leave empty to hide Subscriptions from the menu (until Appstle's portal is set up)."
+      "id": "subscribe_page",
+      "label": "Subscribe and Save page"
+    },
+    {
+      "type": "url",
+      "id": "subscribable_url",
+      "label": "Subscribable products link"
+    },
+    {
+      "type": "text",
+      "id": "savings_text",
+      "label": "Savings banner text",
+      "default": "10% off every delivery, plus free shipping on subscription orders over $100."
+    },
+    {
+      "type": "text",
+      "id": "upsell_eyebrow",
+      "label": "Upsell eyebrow",
+      "default": "Add to your next delivery"
+    },
+    {
+      "type": "text",
+      "id": "upsell_heading",
+      "label": "Upsell heading",
+      "default": "Keep their whole menu on autopilot"
+    },
+    {
+      "type": "textarea",
+      "id": "upsell_text",
+      "label": "Upsell text",
+      "default": "Add gut load, HydroBlu or a calcium supplement to your subscription and save 10% on those too."
+    },
+    {
+      "type": "header",
+      "content": "Wishlist"
     },
     {
       "type": "text",
