@@ -6,22 +6,48 @@
   - Right: the policy text in a rounded stone panel. Heading 2 = Dharma section title, Heading 3 =
     DM Sans sub-heading. Each heading gets an id from its text (e.g. "Refunds & returns policy" =
     #refunds-returns-policy) so links can jump to it.
-  - Text: the page's own content. If that is empty, the matching store policy from Settings >
-    Policies is used (privacy, terms, refund, shipping, picked by the page handle).
+  - Text: by default the store policies from Settings > Policies, picked by the page handle, so
+    James edits each policy in one place:
+      privacy → Privacy policy
+      terms   → Terms of service, then the Purchase options cancellation (subscription) policy
+      subscri → subscription policy
+      shipping + return/refund (e.g. shipping-returns) → Shipping policy, then Return and refund policy
+      shipping → Shipping policy;  refund/return → Return and refund policy
+    The section setting "Text source" can switch to the page's own content instead. The page's
+    content is also used if no store policy matches or the policies are empty.
   - A reading bar under the header shows the current heading and how much has been read.
 {% endcomment %}
 {%- liquid
-  assign body = page.content
-  if body == blank
-    if page.handle contains 'privacy'
-      assign body = shop.privacy_policy.body
-    elsif page.handle contains 'terms'
-      assign body = shop.terms_of_service.body
-    elsif page.handle contains 'refund'
-      assign body = shop.refund_policy.body
-    elsif page.handle contains 'shipping'
+  assign handle = page.handle
+  assign body = ''
+  assign from_policies = false
+  if section.settings.text_source != 'page'
+    if handle contains 'privacy'
+      # Shopify's automated privacy policy uses a big heading for every part: show them as
+      # sub-headings under one "Privacy policy" title, like the other policy pages
+      assign privacy_body = shop.privacy_policy.body | replace: '<h2', '<h3' | replace: '</h2>', '</h3>'
+      if privacy_body != blank
+        assign body = '<h2>Privacy policy</h2>' | append: privacy_body
+      endif
+    elsif handle contains 'terms'
+      assign subscription_body = shop.subscription_policy.body | replace: '/policies/terms-of-service', '#terms-and-conditions'
+      assign body = shop.terms_of_service.body | append: subscription_body
+    elsif handle contains 'subscri'
+      assign body = shop.subscription_policy.body
+    elsif handle contains 'shipping'
       assign body = shop.shipping_policy.body
+      if handle contains 'return' or handle contains 'refund'
+        assign body = body | append: shop.refund_policy.body
+      endif
+    elsif handle contains 'refund' or handle contains 'return'
+      assign body = shop.refund_policy.body
     endif
+    if body != blank
+      assign from_policies = true
+    endif
+  endif
+  if body == blank
+    assign body = page.content
   endif
 -%}
 <div class="apex-policy" data-apex-policy>
@@ -44,7 +70,7 @@
       {%- endif -%}
       <h1 class="apex-policy__title" tabindex="-1">{{ page.title | default: 'Policy' | escape }}</h1>
       {%- capture updated -%}
-        {%- if section.settings.show_date and page.published_at and page.content != blank -%}
+        {%- if section.settings.show_date and page.published_at and from_policies == false and page.content != blank -%}
           Last updated: {{ page.published_at | date: '%-d %B %Y' }}.
         {%- endif %} {{ section.settings.intro | escape -}}
       {%- endcapture -%}
@@ -527,6 +553,17 @@
       "id": "eyebrow",
       "label": "Eyebrow",
       "default": "Policies"
+    },
+    {
+      "type": "select",
+      "id": "text_source",
+      "label": "Text source",
+      "options": [
+        { "value": "policies", "label": "Store policies (Settings > Policies)" },
+        { "value": "page", "label": "The page's own content" }
+      ],
+      "default": "policies",
+      "info": "Store policies are picked by the page handle: privacy, terms (terms + subscription policy), shipping-returns (shipping + refund policy)."
     },
     {
       "type": "checkbox",
