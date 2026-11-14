@@ -1,0 +1,1127 @@
+{% comment %}
+  APEX "Leave a review" page (Figma "APEX Leave a Review Page" and "APEX Review Submitted Page").
+  - Lives on a page (template page.submit-a-review). The product comes from the link:
+    /pages/submit-a-review?product=<handle> (optionally &variant=<id>). With no product in the
+    link, the shopper picks one from the list in the left card.
+  - Every product's summary (image, range, rating) is printed once as JSON, so the page never
+    needs a second request to show the product card.
+  - Sending (setting "Send reviews to"):
+    · email: Shopify's contact form, so each review is emailed to the store's sender email for
+      the team to check and add by hand. Photos can't be sent this way, so the photo field hides.
+    · judgeme: posts to the Judge.me reviews app, which holds reviews for approval and fills
+      in the star ratings on product cards.
+  - After sending, the same page swaps to the "Thanks for your review" view with a preview of the
+    review marked Pending approval (assets/apex-review.js).
+{% endcomment %}
+<script src="{{ 'apex-review.js' | asset_url }}" type="module"></script>
+
+{%- liquid
+  assign mode = section.settings.mode
+  assign show_photos = section.settings.show_photos
+  if mode == 'email'
+    assign show_photos = false
+  endif
+-%}
+
+{%- capture star_svg -%}
+  <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M12 1.8l3.09 6.26 6.91 1-5 4.87 1.18 6.88L12 17.56 5.82 20.8 7 13.93 2 9.06l6.91-1z"/></svg>
+{%- endcapture -%}
+
+<apex-review-form
+  class="apex-review-page"
+  data-mode="{{ mode }}"
+  data-shop-domain="{{ shop.permanent_domain }}"
+  data-judgeme-endpoint="https://judge.me/api/v1/reviews"
+>
+  <div class="apex-container">
+    {%- comment -%} Form view {%- endcomment -%}
+    <div class="apex-review-page__form-view" data-view="form">
+      <div class="apex-review-page__intro">
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="apex-eyebrow apex-review-page__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+        <h1 class="apex-review-page__title">{{ section.settings.title | default: page.title | escape }}</h1>
+        {%- if section.settings.intro != blank -%}
+          <div class="apex-review-page__text">{{ section.settings.intro }}</div>
+        {%- endif -%}
+      </div>
+
+      <div class="apex-review-page__grid">
+        {%- comment -%} Product summary card {%- endcomment -%}
+        <aside class="apex-review-page__card apex-review-product" aria-label="Product you are reviewing">
+          <div class="apex-review-product__image" data-product-image>
+            {%- if section.settings.placeholder_image != blank -%}
+              {{ section.settings.placeholder_image | image_url: width: 700 | image_tag: loading: 'lazy', alt: '' }}
+            {%- endif -%}
+          </div>
+
+          <div class="apex-review-product__info" data-product-info hidden>
+            <p class="apex-review-product__range" data-product-range></p>
+            <h2 class="apex-review-product__title" data-product-title></h2>
+            <p class="apex-review-product__meta" data-product-meta></p>
+            <p class="apex-review-product__rating" data-product-rating hidden>
+              <span class="apex-stars apex-stars--sm" data-product-stars style="--apex-stars: 0%;" aria-hidden="true">
+                <span class="apex-stars__base">{%- for i in (1..5) -%}{{ star_svg }}{%- endfor -%}</span>
+                <span class="apex-stars__fill">{%- for i in (1..5) -%}{{ star_svg }}{%- endfor -%}</span>
+              </span>
+              <span data-product-rating-text></span>
+            </p>
+          </div>
+
+          <div class="apex-review-product__change">
+            <p class="apex-review-product__change-text" data-change-text>{{ section.settings.change_text | escape }}</p>
+            <button type="button" class="apex-review-product__change-link" data-change-toggle aria-expanded="false" aria-controls="ApexReviewProductPicker-{{ section.id }}">
+              {{- section.settings.change_label | escape -}}
+            </button>
+            <label class="apex-field apex-review-product__picker" id="ApexReviewProductPicker-{{ section.id }}" data-picker hidden>
+              <span class="visually-hidden">Choose a product</span>
+              <span class="apex-field__select">
+                <select class="apex-field__input" data-product-select>
+                  <option value="">Choose a product</option>
+                  {%- paginate collections.all.products by 250 -%}
+                    {%- assign sorted = collections.all.products | sort: 'title' -%}
+                    {%- for p in sorted -%}
+                      <option value="{{ p.handle | escape }}">{{ p.title | escape }}</option>
+                    {%- endfor -%}
+                  {%- endpaginate -%}
+                </select>
+              </span>
+            </label>
+          </div>
+        </aside>
+
+        {%- comment -%} Review form card {%- endcomment -%}
+        <div class="apex-review-page__card apex-review-page__form-card">
+          <h2 class="apex-review-page__form-title">{{ section.settings.form_title | escape }}</h2>
+
+          {%- form 'contact', id: 'ApexReviewForm', class: 'apex-review-form' -%}
+            {%- if form.posted_successfully? -%}
+              <span hidden data-posted></span>
+            {%- elsif form.errors -%}
+              <p class="apex-contact__notice apex-contact__notice--error" role="alert">
+                {{ form.errors | default_errors }}
+              </p>
+            {%- endif -%}
+            <p class="apex-review-form__required">Fields marked * are required.</p>
+            <p class="apex-contact__notice apex-contact__notice--error" role="alert" data-error hidden></p>
+
+            {%- comment -%} Hidden fields the email copy needs {%- endcomment -%}
+            <input type="hidden" name="contact[Form]" value="Product review">
+            <input type="hidden" name="contact[Product]" value="" data-field-product>
+            <input type="hidden" name="contact[Product link]" value="" data-field-product-url>
+
+            <fieldset class="apex-review-form__rating">
+              <legend class="apex-field__label">Overall rating *</legend>
+              <div class="apex-review-form__stars-row">
+                <div class="apex-review-form__stars" data-stars>
+                  {%- assign words = 'Poor,Fair,Good,Great,Excellent' | split: ',' -%}
+                  {%- for i in (1..5) -%}
+                    <input class="visually-hidden" type="radio" id="ApexReviewStar{{ i }}-{{ section.id }}" name="contact[Rating]" value="{{ i }}" data-word="{{ words[forloop.index0] | downcase }}" required>
+                    <label for="ApexReviewStar{{ i }}-{{ section.id }}" class="apex-review-form__star" data-star="{{ i }}">
+                      <span class="visually-hidden">{{ i }} out of 5, {{ words[forloop.index0] | downcase }}</span>
+                      {{ star_svg }}
+                    </label>
+                  {%- endfor -%}
+                </div>
+                <span class="apex-review-form__rating-text" data-rating-text aria-live="polite">Choose a rating</span>
+              </div>
+            </fieldset>
+
+            <label class="apex-field">
+              <span class="apex-field__label">Review title *</span>
+              <input class="apex-field__input" type="text" name="contact[Review title]" maxlength="100" placeholder="Sum it up in a few words" required data-field="title">
+            </label>
+
+            <label class="apex-field">
+              <span class="apex-field__label">Your review *</span>
+              <textarea class="apex-field__input apex-field__input--area" name="contact[body]" rows="7" maxlength="5000" placeholder="{{ section.settings.review_placeholder | escape }}" required data-field="body"></textarea>
+            </label>
+
+            <div class="apex-contact__row">
+              <label class="apex-field">
+                <span class="apex-field__label">Species fed</span>
+                <span class="apex-field__select">
+                  <select class="apex-field__input" name="contact[Species fed]" data-field="species">
+                    <option value="">Select species</option>
+                    {%- assign species = section.settings.species | newline_to_br | split: '<br />' -%}
+                    {%- for s in species -%}
+                      {%- assign t = s | strip -%}
+                      {%- if t != blank -%}<option value="{{ t | escape }}">{{ t | escape }}</option>{%- endif -%}
+                    {%- endfor -%}
+                  </select>
+                </span>
+              </label>
+              <label class="apex-field">
+                <span class="apex-field__label">Animal age</span>
+                <span class="apex-field__select">
+                  <select class="apex-field__input" name="contact[Animal age]" data-field="age">
+                    <option value="">Select age</option>
+                    {%- assign ages = section.settings.ages | newline_to_br | split: '<br />' -%}
+                    {%- for a in ages -%}
+                      {%- assign t = a | strip -%}
+                      {%- if t != blank -%}<option value="{{ t | escape }}">{{ t | escape }}</option>{%- endif -%}
+                    {%- endfor -%}
+                  </select>
+                </span>
+              </label>
+            </div>
+
+            <div class="apex-contact__row">
+              <label class="apex-field">
+                <span class="apex-field__label">Name *</span>
+                <input class="apex-field__input" type="text" name="contact[name]" autocomplete="name" maxlength="80" placeholder="Shown as first name and initial" required data-field="name" value="{{ customer.name | escape }}">
+              </label>
+              <label class="apex-field">
+                <span class="apex-field__label">Email *</span>
+                <input class="apex-field__input" type="email" name="contact[email]" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="Never shown publicly" required data-field="email" value="{{ customer.email | escape }}">
+              </label>
+            </div>
+
+            {%- if show_photos -%}
+              <div class="apex-field">
+                <span class="apex-field__label" id="ApexReviewPhotosLabel-{{ section.id }}">Add photos (optional)</span>
+                <label class="apex-review-form__drop" data-drop>
+                  <input class="visually-hidden" type="file" accept="image/jpeg,image/png" multiple data-photos aria-labelledby="ApexReviewPhotosLabel-{{ section.id }}">
+                  <svg class="apex-review-form__drop-icon" aria-hidden="true" focusable="false" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V4M8.5 9.5 14 4l5.5 5.5M4.5 17.5v3a3 3 0 0 0 3 3h13a3 3 0 0 0 3-3v-3"/></svg>
+                  <span class="apex-review-form__drop-text">Drag photos here or <u>browse</u></span>
+                  <span class="apex-review-form__drop-hint">JPG or PNG, up to 5 photos</span>
+                </label>
+                <ul class="apex-review-form__thumbs list-unstyled" data-thumbs role="list"></ul>
+              </div>
+            {%- endif -%}
+
+            <label class="apex-review-form__consent">
+              <input type="checkbox" required data-field="consent">
+              <span class="apex-review-form__tick" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 8.5 3 3 6-7"/></svg>
+              </span>
+              <span>{{ section.settings.consent_text | escape }}</span>
+            </label>
+
+            <div class="apex-review-form__actions">
+              <button type="submit" class="apex-button apex-review-form__submit" data-submit>{{ section.settings.button_label | escape }}</button>
+              {%- if section.settings.footnote != blank -%}
+                <p class="apex-review-form__footnote">{{ section.settings.footnote | escape }}</p>
+              {%- endif -%}
+            </div>
+          {%- endform -%}
+        </div>
+      </div>
+    </div>
+
+    {%- comment -%} Thank-you view (Figma "Review Submitted / Content") {%- endcomment -%}
+    <div class="apex-review-done" data-view="done" hidden tabindex="-1">
+      <span class="apex-review-done__check" aria-hidden="true">
+        <svg viewBox="0 0 68 68" fill="none" stroke="currentColor" stroke-width="2"><circle cx="34" cy="34" r="33"/><path d="m23 35 7.5 7.5L46 27" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <p class="apex-eyebrow apex-review-done__eyebrow">{{ section.settings.done_eyebrow | escape }}</p>
+      <h2 class="apex-review-done__title">{{ section.settings.done_title | escape }}</h2>
+      <p class="apex-review-done__text" data-done-text data-template="{{ section.settings.done_text | escape }}">
+        {{- section.settings.done_text | replace: '[product]', 'this product' | escape -}}
+      </p>
+
+      <article class="apex-review-done__card" data-preview hidden>
+        <div class="apex-review-done__card-top">
+          <span class="apex-stars apex-stars--md" data-preview-stars style="--apex-stars: 0%;" role="img">
+            <span class="apex-stars__base" aria-hidden="true">{%- for i in (1..5) -%}{{ star_svg }}{%- endfor -%}</span>
+            <span class="apex-stars__fill" aria-hidden="true">{%- for i in (1..5) -%}{{ star_svg }}{%- endfor -%}</span>
+          </span>
+          <span class="apex-review-done__badge"><span aria-hidden="true"></span>Pending approval</span>
+        </div>
+        <h3 class="apex-review-done__review-title" data-preview-title></h3>
+        <p class="apex-review-done__review-body" data-preview-body></p>
+        <p class="apex-review-done__review-meta" data-preview-meta></p>
+      </article>
+
+      {%- if section.settings.steps_title != blank -%}
+        <p class="apex-eyebrow apex-review-done__eyebrow apex-review-done__steps-title">{{ section.settings.steps_title | escape }}</p>
+      {%- endif -%}
+      <ol class="apex-review-done__steps list-unstyled" role="list">
+        {%- for i in (1..3) -%}
+          {%- assign t_key = 'step_' | append: i | append: '_title' -%}
+          {%- assign b_key = 'step_' | append: i | append: '_text' -%}
+          {%- if section.settings[t_key] != blank -%}
+            <li class="apex-review-done__step">
+              <span class="apex-review-done__num" aria-hidden="true">{{ i }}</span>
+              <h3 class="apex-review-done__step-title">{{ section.settings[t_key] | escape }}</h3>
+              <p class="apex-review-done__step-text">{{ section.settings[b_key] | escape }}</p>
+            </li>
+          {%- endif -%}
+        {%- endfor -%}
+      </ol>
+
+      <div class="apex-review-done__actions">
+        <a class="apex-button apex-review-done__primary" href="{{ routes.all_products_collection_url }}" data-back-link hidden>{{ section.settings.back_label | escape }}</a>
+        <a class="apex-button apex-review-done__secondary" href="{{ section.settings.shop_link | default: routes.all_products_collection_url }}">{{ section.settings.shop_label | escape }}</a>
+      </div>
+    </div>
+  </div>
+
+  {%- comment -%} Product summaries for the card (every product, printed once) {%- endcomment -%}
+  <script type="application/json" data-products>
+    {
+      {%- paginate collections.all.products by 250 -%}
+        {%- for p in collections.all.products -%}
+          {%- liquid
+            assign rating = p.metafields.reviews.rating.value.rating
+            if rating == blank
+              assign rating_field = p.metafields.custom.rating | default: p.metafields.custom.star_rating
+              assign rating = rating_field.value.rating | default: rating_field.value
+            endif
+            assign count = p.metafields.reviews.rating_count.value | default: 0
+            assign range = p.metafields.custom.shop_category.value | default: p.type
+          -%}
+          {{ p.handle | json }}: {
+            "id": {{ p.id | json }},
+            "title": {{ p.title | json }},
+            "url": {{ p.url | json }},
+            "range": {{ range | json }},
+            "image": {% if p.featured_image %}{{ p.featured_image | image_url: width: 700 | json }}{% else %}null{% endif %},
+            "imageAlt": {{ p.featured_image.alt | default: p.title | json }},
+            "rating": {{ rating | default: 0 | json }},
+            "count": {{ count | json }},
+            "variants": {
+              {%- for v in p.variants -%}
+                {%- unless v.title == 'Default Title' -%}
+                  {%- if forloop.first == false %},{% endif -%}
+                  {{ v.id | json }}: {{ v.options | join: ' · ' | json }}
+                {%- endunless -%}
+              {%- endfor -%}
+            }
+          }{%- unless forloop.last -%},{%- endunless -%}
+        {%- endfor -%}
+      {%- endpaginate -%}
+    }
+  </script>
+</apex-review-form>
+
+{% stylesheet %}
+  /* Figma: content starts 85px under the header; product card 400 wide, form card 796 wide, 48 gap */
+  .apex-review-page {
+    display: block;
+    padding-block: 85px 96px;
+    color: var(--apex-burrow);
+  }
+
+  /* The hidden attribute must win over the display values below (thank-you view, picker, rating) */
+  .apex-review-page [hidden] {
+    display: none !important;
+  }
+
+  .apex-review-page__intro {
+    max-width: 640px;
+  }
+
+  .apex-review-page__eyebrow {
+    margin: 0;
+  }
+
+  .apex-review-page__title,
+  .apex-review-done__title {
+    margin: 24px 0 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: clamp(4rem, 7vw, 6.375rem);
+    line-height: 0.9;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-review-page__text {
+    margin-block-start: 24px;
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-review-page__text > * {
+    margin: 0;
+  }
+
+  .apex-review-page__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 400px) minmax(0, 796px);
+    justify-content: space-between;
+    align-items: start;
+    gap: 48px;
+    margin-block-start: 96px;
+  }
+
+  .apex-review-page__card {
+    background: var(--apex-stone-100);
+    border-radius: var(--apex-radius-xl);
+  }
+
+  /* Product summary card */
+  .apex-review-product {
+    position: sticky;
+    top: 32px;
+    padding: 32px;
+  }
+
+  .apex-review-product__image {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 336 / 280;
+    border-radius: 24px;
+    background: #fff;
+    overflow: hidden;
+  }
+
+  .apex-review-product__image img {
+    width: 82%;
+    height: 84%;
+    object-fit: contain;
+  }
+
+  .apex-review-product__info {
+    margin-block-start: 24px;
+  }
+
+  .apex-review-product__range {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--apex-olive);
+  }
+
+  .apex-review-product__title {
+    margin: 8px 0 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 2.5rem;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-review-product__meta,
+  .apex-review-product__change-text {
+    margin: 8px 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-review-product__meta:empty {
+    display: none;
+  }
+
+  .apex-review-product__rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+  }
+
+  .apex-review-product__change {
+    margin-block-start: 24px;
+    padding-block-start: 24px;
+    border-block-start: 1px solid var(--apex-stone-200);
+  }
+
+  .apex-review-product__change-text {
+    margin: 0;
+  }
+
+  .apex-review-product__change-link {
+    margin-block-start: 4px;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+    color: var(--apex-burrow);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    transition: scale 0.2s ease;
+    transform-origin: left center;
+  }
+
+  .apex-review-product__change-link:hover {
+    scale: 1.06;
+  }
+
+  .apex-review-product__picker {
+    margin-block-start: 12px;
+  }
+
+  /* Stars (shared by the card, the preview and the form) */
+  .apex-stars {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    line-height: 0;
+  }
+
+  .apex-stars__base,
+  .apex-stars__fill {
+    display: inline-flex;
+    gap: 2px;
+  }
+
+  .apex-stars svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+  }
+
+  .apex-stars--md svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .apex-stars__base svg {
+    fill: none;
+    stroke: var(--apex-amber);
+    stroke-width: 1.4;
+  }
+
+  .apex-stars__fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--apex-stars, 0%);
+    overflow: hidden;
+  }
+
+  .apex-stars__fill svg {
+    fill: var(--apex-amber);
+    stroke: var(--apex-amber);
+    stroke-width: 1.4;
+  }
+
+  /* Form card */
+  .apex-review-page__form-card {
+    padding: 48px;
+  }
+
+  .apex-review-page__form-title {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 2.5rem;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--apex-burrow);
+  }
+
+  .apex-review-form {
+    display: grid;
+    gap: 32px;
+    max-width: 700px;
+    margin-block-start: 8px;
+  }
+
+  .apex-review-form__required {
+    margin: 0 0 0;
+    font-size: 0.8125rem;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-review-form [data-error]:not([hidden]) + * {
+    margin-block-start: 0;
+  }
+
+  .apex-review-form__rating {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  .apex-review-form__rating legend {
+    padding: 0;
+  }
+
+  .apex-review-form__stars-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-block-start: 12px;
+  }
+
+  .apex-review-form__stars {
+    display: flex;
+    gap: 6px;
+  }
+
+  .apex-review-form__star {
+    display: inline-flex;
+    cursor: pointer;
+    transition: scale 0.2s ease;
+  }
+
+  .apex-review-form__star svg {
+    width: 32px;
+    height: 32px;
+    fill: none;
+    stroke: var(--apex-amber);
+    stroke-width: 1.3;
+    stroke-linejoin: round;
+  }
+
+  .apex-review-form__star:hover {
+    scale: 1.06;
+  }
+
+  .apex-review-form__star.is-on svg {
+    fill: var(--apex-amber);
+  }
+
+  .apex-review-form__stars input:focus-visible + label {
+    outline: 2px solid var(--apex-olive);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  .apex-review-form__rating-text {
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-review-form .apex-field__input {
+    background: transparent;
+  }
+
+  .apex-review-form .apex-field__input[aria-invalid='true'],
+  .apex-review-form__rating[data-invalid] .apex-review-form__star svg,
+  .apex-review-form__consent[data-invalid] .apex-review-form__tick {
+    border-color: var(--apex-amber);
+    stroke: var(--apex-amber);
+    box-shadow: 0 0 0 1px var(--apex-amber);
+  }
+
+  .apex-review-form__rating[data-invalid] .apex-review-form__star svg {
+    box-shadow: none;
+  }
+
+  /* Photo drop zone */
+  .apex-review-form__drop {
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    padding: 32px 16px;
+    border: 1px dashed var(--apex-dried-moss);
+    border-radius: var(--apex-radius-sm);
+    background: #fff;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  .apex-review-form__drop.is-over {
+    background: var(--apex-sandstone-light);
+  }
+
+  .apex-review-form__drop:focus-within {
+    outline: 2px solid var(--apex-olive);
+    outline-offset: 1px;
+  }
+
+  .apex-review-form__drop-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .apex-review-form__drop-text {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+  }
+
+  .apex-review-form__drop-hint {
+    font-size: 0.625rem;
+    letter-spacing: 0.04em;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-review-form__thumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 0;
+  }
+
+  .apex-review-form__thumbs:empty {
+    display: none;
+  }
+
+  .apex-review-form__thumb {
+    position: relative;
+    width: 72px;
+    height: 72px;
+    border-radius: var(--apex-radius-md);
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .apex-review-form__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .apex-review-form__thumb button {
+    position: absolute;
+    inset-block-start: 4px;
+    inset-inline-end: 4px;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgb(64 68 61 / 0.85);
+    color: #fff;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  /* Consent tick */
+  .apex-review-form__consent {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    cursor: pointer;
+  }
+
+  .apex-review-form__consent input {
+    position: absolute;
+    opacity: 0;
+    width: 24px;
+    height: 24px;
+    margin: 0;
+  }
+
+  .apex-review-form__tick {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin: 2px;
+    border: 1.5px solid var(--apex-dried-moss);
+    border-radius: 5px;
+    color: transparent;
+    transition: background-color 0.15s ease;
+  }
+
+  .apex-review-form__tick svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .apex-review-form__consent input:checked + .apex-review-form__tick {
+    background: var(--apex-dried-moss);
+    color: var(--apex-stone-100);
+  }
+
+  .apex-review-form__consent input:focus-visible + .apex-review-form__tick {
+    outline: 2px solid var(--apex-olive);
+    outline-offset: 2px;
+  }
+
+  .apex-review-form__consent span:last-child {
+    padding-block-start: 2px;
+  }
+
+  .apex-review-form__actions {
+    display: grid;
+    gap: 16px;
+    justify-items: start;
+  }
+
+  .apex-review-form__submit,
+  .apex-review-done__primary {
+    background: var(--apex-dried-moss);
+    border-color: var(--apex-dried-moss);
+    color: var(--apex-stone-100);
+  }
+
+  .apex-review-form__submit[aria-busy='true'] {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  .apex-review-form__footnote {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: var(--apex-dried-moss);
+  }
+
+  /* Thank-you view: 694 wide column, centred */
+  .apex-review-done {
+    display: grid;
+    justify-items: center;
+    max-width: 694px;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .apex-review-done:focus {
+    outline: none;
+  }
+
+  .apex-review-done__check {
+    width: 68px;
+    height: 68px;
+    color: var(--apex-olive);
+  }
+
+  .apex-review-done__check svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .apex-review-done__eyebrow {
+    margin: 32px 0 0;
+  }
+
+  .apex-review-done__title {
+    margin-block-start: 24px;
+    font-size: clamp(3.25rem, 6vw, 4.75rem);
+  }
+
+  .apex-review-done__text {
+    max-width: 620px;
+    margin: 32px 0 0;
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-review-done__card {
+    width: 100%;
+    margin-block-start: 32px;
+    padding: 32px;
+    border-radius: var(--apex-radius-xl);
+    background: var(--apex-stone-100);
+    text-align: start;
+  }
+
+  .apex-review-done__card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .apex-review-done__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: var(--apex-radius-pill);
+    background: var(--apex-stone-200);
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .apex-review-done__badge span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--apex-amber);
+  }
+
+  .apex-review-done__review-title {
+    margin: 20px 0 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 2rem;
+    line-height: 1;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+  }
+
+  .apex-review-done__review-body {
+    margin: 20px 0 0;
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+  }
+
+  .apex-review-done__review-meta {
+    margin: 16px 0 0;
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-review-done__steps-title {
+    margin-block-start: 56px;
+  }
+
+  .apex-review-done__steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    width: 100%;
+    margin: 24px 0 0;
+    text-align: start;
+  }
+
+  .apex-review-done__step {
+    padding: 24px;
+    border: 1px solid var(--apex-dried-moss);
+    border-radius: 20px;
+  }
+
+  .apex-review-done__num {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--apex-burrow);
+    color: var(--apex-stone-100);
+    font-size: 0.8125rem;
+  }
+
+  .apex-review-done__step-title {
+    margin: 20px 0 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+    text-transform: uppercase;
+  }
+
+  .apex-review-done__step-text {
+    margin: 12px 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+  }
+
+  .apex-review-done__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+    margin-block-start: 40px;
+  }
+
+  .apex-review-done__secondary {
+    background: transparent;
+    border-color: var(--apex-dried-moss);
+    color: var(--apex-burrow);
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-review-page__grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 24px;
+      margin-block-start: 48px;
+    }
+
+    .apex-review-product {
+      position: static;
+      display: grid;
+      grid-template-columns: 140px minmax(0, 1fr);
+      column-gap: 20px;
+      padding: 20px;
+      border-radius: 30px;
+    }
+
+    .apex-review-product__image {
+      border-radius: 16px;
+    }
+
+    .apex-review-product__info {
+      margin: 0;
+      align-self: center;
+    }
+
+    .apex-review-product__title {
+      font-size: 1.75rem;
+    }
+
+    .apex-review-product__change {
+      grid-column: 1 / -1;
+      margin-block-start: 20px;
+      padding-block-start: 16px;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-review-page {
+      padding-block: 48px 64px;
+    }
+
+    .apex-review-page__title {
+      font-size: 4rem;
+    }
+
+    .apex-review-product {
+      grid-template-columns: 104px minmax(0, 1fr);
+      column-gap: 16px;
+    }
+
+    .apex-review-page__form-card {
+      padding: 32px 20px;
+      border-radius: 30px;
+    }
+
+    .apex-review-form {
+      gap: 24px;
+    }
+
+    .apex-review-form .apex-contact__row {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .apex-review-form__stars-row {
+      flex-wrap: wrap;
+      gap: 8px 16px;
+    }
+
+    .apex-review-form__submit {
+      width: 100%;
+    }
+
+    .apex-review-done__title {
+      font-size: 3.25rem;
+    }
+
+    .apex-review-done__card {
+      padding: 24px 20px;
+      border-radius: 30px;
+    }
+
+    .apex-review-done__card-top {
+      flex-wrap: wrap;
+    }
+
+    .apex-review-done__steps {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    .apex-review-done__actions {
+      width: 100%;
+      flex-direction: column;
+    }
+
+    .apex-review-done__actions .apex-button {
+      width: 100%;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "APEX leave a review",
+  "tag": "section",
+  "class": "apex-review-form-section",
+  "settings": [
+    {
+      "type": "select",
+      "id": "mode",
+      "label": "Send reviews to",
+      "options": [
+        { "value": "email", "label": "Email (store's sender email)" },
+        { "value": "judgeme", "label": "Judge.me reviews app" }
+      ],
+      "default": "email",
+      "info": "Email: each review arrives like a contact form message, for the team to check and add by hand. Judge.me: install the free Judge.me app first; reviews then wait for approval in the app."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_photos",
+      "label": "Allow photos",
+      "default": false,
+      "info": "Only shows with Judge.me (photo sending is checked once the app is installed). Email can't carry photos."
+    },
+    { "type": "header", "content": "Intro" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Reviews" },
+    { "type": "text", "id": "title", "label": "Title", "default": "Leave a review" },
+    {
+      "type": "richtext",
+      "id": "intro",
+      "label": "Intro",
+      "default": "<p>Tell other keepers how your animals took to it. Every review is checked by our team before it goes live, usually within 2 business days.</p>"
+    },
+    {
+      "type": "image_picker",
+      "id": "placeholder_image",
+      "label": "Image before a product is chosen",
+      "info": "Shows in the product card until the shopper picks a product."
+    },
+    { "type": "text", "id": "change_text", "label": "Change product text", "default": "Reviewing a different product?" },
+    { "type": "text", "id": "change_label", "label": "Change product link", "default": "Change product" },
+    { "type": "header", "content": "Form" },
+    { "type": "text", "id": "form_title", "label": "Form title", "default": "Your review" },
+    {
+      "type": "text",
+      "id": "review_placeholder",
+      "label": "Review box hint",
+      "default": "What did your animal think? Tell us about texture, smell, how it was eaten and value for money."
+    },
+    {
+      "type": "textarea",
+      "id": "species",
+      "label": "Species fed options",
+      "info": "One per line.",
+      "default": "Bearded dragon\nBlue tongue skink\nMonitor\nGecko\nSnake\nTurtle\nFrog or amphibian\nBird\nSmall mammal\nInsects\nOther"
+    },
+    {
+      "type": "textarea",
+      "id": "ages",
+      "label": "Animal age options",
+      "info": "One per line.",
+      "default": "Baby or hatchling\nJuvenile\nSub-adult\nAdult\nSenior"
+    },
+    {
+      "type": "text",
+      "id": "consent_text",
+      "label": "Confirm tick text",
+      "default": "I confirm this review is based on my own experience with this product."
+    },
+    { "type": "text", "id": "button_label", "label": "Button text", "default": "Submit review" },
+    {
+      "type": "text",
+      "id": "footnote",
+      "label": "Note under the button",
+      "default": "Every review is checked by our team before it goes live, usually within 2 business days."
+    },
+    { "type": "header", "content": "Thank-you view" },
+    { "type": "text", "id": "done_eyebrow", "label": "Eyebrow", "default": "Review received" },
+    { "type": "text", "id": "done_title", "label": "Title", "default": "Thanks for your review" },
+    {
+      "type": "textarea",
+      "id": "done_text",
+      "label": "Text",
+      "info": "[product] is replaced with the product name.",
+      "default": "Your review of [product] is pending approval. Our team checks every review before it goes live, usually within 2 business days. We will email you as soon as it is published."
+    },
+    { "type": "text", "id": "steps_title", "label": "Steps heading", "default": "What happens next" },
+    { "type": "text", "id": "step_1_title", "label": "Step 1 title", "default": "We check it" },
+    { "type": "text", "id": "step_1_text", "label": "Step 1 text", "default": "A real person reads every review to keep things fair and helpful." },
+    { "type": "text", "id": "step_2_title", "label": "Step 2 title", "default": "It goes live" },
+    { "type": "text", "id": "step_2_text", "label": "Step 2 text", "default": "Approved reviews appear on the product page with your star rating." },
+    { "type": "text", "id": "step_3_title", "label": "Step 3 title", "default": "We let you know" },
+    { "type": "text", "id": "step_3_text", "label": "Step 3 text", "default": "You get an email when it is published, with a link to see it." },
+    { "type": "text", "id": "back_label", "label": "First button text", "default": "Back to product" },
+    { "type": "text", "id": "shop_label", "label": "Second button text", "default": "Keep shopping" },
+    { "type": "url", "id": "shop_link", "label": "Second button link" }
+  ],
+  "presets": [
+    { "name": "APEX leave a review" }
+  ]
+}
+{% endschema %}

@@ -120,8 +120,18 @@
               <span class="apex-button__label">{{ section.settings.more_label | escape }}</span>
             </a>
           {%- endif -%}
-          {%- if section.settings.leave_label != blank and section.settings.leave_link != blank -%}
-            <a class="apex-button apex-reviews__leave" href="{{ section.settings.leave_link }}">
+          {%- liquid
+            # Leave a review: the review page (or the link set here), told which product this is
+            assign leave_url = section.settings.leave_link | default: '/pages/submit-a-review'
+            if product != blank and leave_url contains 'submit-a-review'
+              assign leave_url = leave_url | split: '?' | first | append: '?product=' | append: product.handle
+              unless product.has_only_default_variant
+                assign leave_url = leave_url | append: '&variant=' | append: product.selected_or_first_available_variant.id
+              endunless
+            endif
+          -%}
+          {%- if section.settings.leave_label != blank -%}
+            <a class="apex-button apex-reviews__leave" href="{{ leave_url }}">
               {{- section.settings.leave_label | escape -}}
             </a>
           {%- endif -%}
@@ -390,7 +400,8 @@
     {
       "type": "url",
       "id": "leave_link",
-      "label": "Second button link"
+      "label": "Second button link",
+      "info": "Leave empty to use the Leave a review page (/pages/submit-a-review), which opens on this product."
     },
     {
       "type": "image_picker",
