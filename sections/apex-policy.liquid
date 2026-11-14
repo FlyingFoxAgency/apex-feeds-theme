@@ -23,7 +23,12 @@
   assign from_policies = false
   if section.settings.text_source != 'page'
     if handle contains 'privacy'
-      assign body = shop.privacy_policy.body
+      # Shopify's automated privacy policy uses a big heading for every part: show them as
+      # sub-headings under one "Privacy policy" title, like the other policy pages
+      assign privacy_body = shop.privacy_policy.body | replace: '<h2', '<h3' | replace: '</h2>', '</h3>'
+      if privacy_body != blank
+        assign body = '<h2>Privacy policy</h2>' | append: privacy_body
+      endif
     elsif handle contains 'terms'
       assign subscription_body = shop.subscription_policy.body | replace: '/policies/terms-of-service', '#terms-and-conditions'
       assign body = shop.terms_of_service.body | append: subscription_body
