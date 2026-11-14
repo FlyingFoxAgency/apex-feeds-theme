@@ -66,8 +66,8 @@
     "type_font_button_secondary": "body",
     "button_text_case_secondary": "uppercase",
     "cart_type": "drawer",
-    "auto_open_cart_drawer": true,
     "cart_price_font": "subheading",
+    "auto_open_cart_drawer": true,
     "show_cart_note": false,
     "show_add_discount_code": true,
     "icon_stroke": "default",
@@ -92,6 +92,7 @@
     "variant_button_radius": 100,
     "variant_button_width": "equal-width-buttons",
     "apex_page_texture": "shopify://shop_images/stone-floor-texture-background_1.jpg",
+    "apex_account_page": "my-account",
     "content_for_index": [],
     "color_palette": {
       "background": "#FFFFFF",
