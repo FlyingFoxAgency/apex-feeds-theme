@@ -188,7 +188,7 @@
         "button_label": "Shop subscribable products",
         "button_link": "/collections/all",
         "button_2_label": "Read the full terms",
-        "button_2_link": "/pages/terms-conditions",
+        "button_2_link": "/pages/terms-conditions#subscribe-save-terms",
         "padding_bottom": 160
       }
     }
