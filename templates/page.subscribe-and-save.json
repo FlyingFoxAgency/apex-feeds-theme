@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
     "hero": {
@@ -12,12 +21,13 @@
         "button_link": "/collections/all",
         "button_2_label": "Manage subscriptions",
         "button_2_link": "",
+        "image": "shopify://shop_images/Nutricore-group-mockup_b39044d0-3e92-4c40-926d-ad7897b0fc1b.png",
         "image_label": "Three jars on the stone panel (cut-out PNG)",
         "image_position": "right",
-        "image_fit": "contain",
+        "image_fit": "cover",
         "badge": "Save 10%",
-        "image_height": 520,
-        "padding_top": 84,
+        "image_height": 460,
+        "padding_top": 96,
         "padding_bottom": 96
       }
     },
@@ -111,6 +121,7 @@
         "eyebrow": "What you could save",
         "title": "One tub every month",
         "text": "<p>Based on a 500g Freeze-Dried Omnivore Buffet™ delivered every month for a year.</p>",
+        "product": "",
         "price": "59.99",
         "deliveries": 12,
         "discount": 10,
