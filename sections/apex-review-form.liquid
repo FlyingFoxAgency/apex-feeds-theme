@@ -303,6 +303,11 @@
     color: var(--apex-burrow);
   }
 
+  /* The hidden attribute must win over the display values below (thank-you view, picker, rating) */
+  .apex-review-page [hidden] {
+    display: none !important;
+  }
+
   .apex-review-page__intro {
     max-width: 640px;
   }
