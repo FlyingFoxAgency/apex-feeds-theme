@@ -367,8 +367,7 @@
   }
 
   .apex-review-product__image {
-    display: grid;
-    place-items: center;
+    position: relative;
     aspect-ratio: 336 / 280;
     border-radius: 24px;
     background: #fff;
@@ -376,6 +375,8 @@
   }
 
   .apex-review-product__image img {
+    position: absolute;
+    inset: 8% 9%;
     width: 82%;
     height: 84%;
     object-fit: contain;
