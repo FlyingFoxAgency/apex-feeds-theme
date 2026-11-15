@@ -94,11 +94,21 @@
         Shopify's account pop-up.
       {%- endcomment -%}
       {%- if settings.apex_account_page != blank -%}
+        {%- liquid
+          # Approved wholesalers go to their wholesale dashboard instead of the retail account.
+          assign apex_account_url = settings.apex_account_page.url
+          capture apex_is_wholesale
+            render 'apex-wholesale-check'
+          endcapture
+          if apex_is_wholesale contains 'true'
+            assign apex_account_url = settings.apex_wholesale_page.url | default: '/pages/wholesale'
+          endif
+        -%}
         <a
           class="apex-account-link"
-          href="{{ settings.apex_account_page.url }}"
-          aria-label="{% if customer %}My account{% else %}Sign in{% endif %}"
-          {% if request.path == settings.apex_account_page.url %}aria-current="page"{% endif %}
+          href="{{ apex_account_url }}"
+          aria-label="{% if apex_is_wholesale contains 'true' %}Wholesale account{% elsif customer %}My account{% else %}Sign in{% endif %}"
+          {% if request.path == apex_account_url %}aria-current="page"{% endif %}
         >
           {{ account_icon }}
         </a>

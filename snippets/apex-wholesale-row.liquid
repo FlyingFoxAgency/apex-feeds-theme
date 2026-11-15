@@ -1,0 +1,75 @@
+{% comment %}
+  One row of the wholesale quick order table (Figma "Quick order" row): product and variant,
+  RRP (struck through), the wholesaler's price ex GST, carton size and a carton stepper.
+  @param {object} variant
+  @param {number} [qty] - cartons to start with (default 0)
+  @param {string} key - unique per table (input ids)
+  @param {string} [contact_email] - for "Ask us" when a product has no wholesale price
+  - Carton size: variant metafield custom.carton_qty, else product metafield custom.carton_qty,
+    else 1 (sold singly). The stepper counts cartons; the cart gets cartons x carton size units.
+{% endcomment %}
+{%- liquid
+  assign product = variant.product
+  capture wp
+    render 'apex-wholesale-price', variant: variant
+  endcapture
+  assign wp = wp | strip
+  assign carton = variant.metafields.custom.carton_qty.value | default: product.metafields.custom.carton_qty.value | default: 1 | plus: 0
+  if carton < 1
+    assign carton = 1
+  endif
+  assign start = qty | default: 0 | plus: 0
+  assign orderable = true
+  if variant.available == false or wp == ''
+    assign orderable = false
+    assign start = 0
+  endif
+  assign row_id = 'ApexWq-' | append: key | append: '-' | append: variant.id
+-%}
+<div
+  class="apex-wq__row"
+  data-wq-row
+  data-variant="{{ variant.id }}"
+  data-carton="{{ carton }}"
+  data-price="{% if wp != '' %}{{ wp }}{% else %}0{% endif %}"
+>
+  <div class="apex-wq__product">
+    <a class="apex-wq__title" href="{{ variant.url }}">{{ product.title | escape }}</a>
+    {%- unless product.has_only_default_variant -%}
+      <span class="apex-wq__variant">{{ variant.title | replace: ' / ', ', ' | escape }}</span>
+    {%- endunless -%}
+  </div>
+  <span class="apex-wq__rrp"><span class="apex-wq__label">RRP</span><s>{{ variant.price | money }}</s></span>
+  <span class="apex-wq__price">
+    <span class="apex-wq__label">Your price</span>
+    {%- if wp != '' -%}{{ wp | plus: 0 | money }}{%- else -%}<span class="apex-wq__muted">On request</span>{%- endif -%}
+  </span>
+  <span class="apex-wq__carton">
+    <span class="apex-wq__label">Carton</span>
+    {%- if carton > 1 -%}{{ carton }} units{%- else -%}Single{%- endif -%}
+  </span>
+  <div class="apex-wq__qty">
+    {%- if orderable -%}
+      <div class="apex-wq__stepper">
+        <button type="button" class="apex-wq__step" data-wq-step="-1" aria-label="One less carton of {{ product.title | escape }}">−</button>
+        <input
+          id="{{ row_id }}"
+          class="apex-wq__input"
+          type="number"
+          inputmode="numeric"
+          min="0"
+          max="999"
+          step="1"
+          value="{{ start }}"
+          data-wq-input
+          aria-label="{% if carton > 1 %}Cartons{% else %}Quantity{% endif %} of {{ product.title | escape }}{% unless product.has_only_default_variant %}, {{ variant.title | escape }}{% endunless %}"
+        >
+        <button type="button" class="apex-wq__step" data-wq-step="1" aria-label="One more carton of {{ product.title | escape }}">+</button>
+      </div>
+    {%- elsif variant.available == false -%}
+      <span class="apex-account__status">Out of stock</span>
+    {%- else -%}
+      <a class="apex-account__link" href="mailto:{{ contact_email | default: shop.email }}?subject={{ 'Wholesale price: ' | append: product.title | url_encode }}">Ask us</a>
+    {%- endif -%}
+  </div>
+</div>

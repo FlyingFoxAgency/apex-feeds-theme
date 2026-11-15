@@ -2188,6 +2188,41 @@
       },
       {
         "type": "header",
+        "content": "Wholesale"
+      },
+      {
+        "type": "page",
+        "id": "apex_wholesale_page",
+        "label": "Wholesale page",
+        "info": "The wholesale login and dashboard page. Defaults to /pages/wholesale. Signed-in wholesalers' person icon goes there."
+      },
+      {
+        "type": "text",
+        "id": "apex_wholesale_tag",
+        "label": "Wholesale customer tag",
+        "default": "wholesale",
+        "info": "Approved wholesalers have this tag on their customer profile."
+      },
+      {
+        "type": "range",
+        "id": "apex_wholesale_fallback_discount",
+        "label": "Fallback discount off RRP",
+        "info": "Only for variants without a wholesale price (metafield custom.wholesale_price). 0 shows 'On request' instead.",
+        "min": 0,
+        "max": 60,
+        "step": 1,
+        "unit": "%",
+        "default": 0
+      },
+      {
+        "type": "checkbox",
+        "id": "apex_wholesale_prices_include_gst",
+        "label": "Retail prices include GST",
+        "info": "Used with the fallback discount: GST comes off the RRP before the discount.",
+        "default": true
+      },
+      {
+        "type": "header",
         "content": "Cart drawer"
       },
       {

@@ -4,6 +4,8 @@
   on sale), Add to cart and Remove. The variant is the one saved with the heart
   (?variant= on the request picks it).
 
+  Approved wholesalers see their wholesale price ex GST with the RRP struck through.
+
   @param {object} product
 {% enddoc %}
 {%- liquid
@@ -35,12 +37,31 @@
   {%- unless product.has_only_default_variant -%}
     <p class="apex-wishlist-item__variant">{{ variant.title | escape | replace: ' / ', '&nbsp;&nbsp;·&nbsp;&nbsp;' }}</p>
   {%- endunless -%}
+  {%- liquid
+    capture is_wholesale
+      render 'apex-wholesale-check'
+    endcapture
+    assign wholesale_price = ''
+    if is_wholesale contains 'true'
+      capture wholesale_price
+        render 'apex-wholesale-price', variant: variant
+      endcapture
+      assign wholesale_price = wholesale_price | strip
+    endif
+  -%}
+  {%- if wholesale_price != '' -%}
+    <p class="apex-wishlist-item__price">
+      <span>{{ wholesale_price | plus: 0 | money }} <span class="apex-wishlist-item__was">ex GST</span></span>
+      <s class="apex-wishlist-item__was">RRP {{ variant.price | money }}</s>
+    </p>
+  {%- else -%}
   <p class="apex-wishlist-item__price">
     <span>{{ variant.price | money }}</span>
     {%- if on_sale -%}
       <s class="apex-wishlist-item__was"><span class="visually-hidden">Was </span>{{ variant.compare_at_price | money }}</s>
     {%- endif -%}
   </p>
+  {%- endif -%}
 
   {%- if variant.available -%}
     <form class="apex-wishlist-item__form" action="{{ routes.cart_add_url }}" method="post" data-wishlist-variant="{{ variant.id }}">

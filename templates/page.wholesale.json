@@ -3,7 +3,11 @@
     "main": {
       "type": "apex-wholesale-login",
       "settings": {}
+    },
+    "dashboard": {
+      "type": "apex-wholesale-account",
+      "settings": {}
     }
   },
-  "order": ["main"]
+  "order": ["main", "dashboard"]
 }

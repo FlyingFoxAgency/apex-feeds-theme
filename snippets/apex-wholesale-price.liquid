@@ -1,0 +1,26 @@
+{% comment %}
+  Prints a variant's wholesale price in cents, excluding GST, or nothing when it has none.
+  @param {object} variant
+  - Uses the variant metafield custom.wholesale_price (Decimal, dollars ex GST, for example 41.99).
+  - Without one, Theme settings > APEX Feeds > Wholesale "Fallback discount" (% off RRP) works it
+    out from the retail price, taking GST off first when retail prices include GST. 0 = no fallback.
+  Use: {%- capture wp -%}{%- render 'apex-wholesale-price', variant: variant -%}{%- endcapture -%}
+{% endcomment %}
+{%- liquid
+  assign wp = variant.metafields.custom.wholesale_price.value
+  if wp != blank
+    assign cents = wp | times: 100 | round
+    echo cents
+  else
+    assign pct = settings.apex_wholesale_fallback_discount | default: 0
+    if pct > 0 and variant.price > 0
+      assign keep = 100 | minus: pct
+      if settings.apex_wholesale_prices_include_gst
+        assign cents = variant.price | times: keep | divided_by: 110.0 | round
+      else
+        assign cents = variant.price | times: keep | divided_by: 100.0 | round
+      endif
+      echo cents
+    endif
+  endif
+-%}
