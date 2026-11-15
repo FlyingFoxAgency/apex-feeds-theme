@@ -2,6 +2,7 @@
   Order status pill for the APEX account pages.
   @param {object} order
   Shopify doesn't tell the theme when a parcel is delivered, so the last state is "Shipped".
+  Unpaid orders (wholesale invoices) show "Awaiting payment" until they're paid.
 {% endcomment %}
 {%- liquid
   assign label = 'Processing'
@@ -12,6 +13,8 @@
   elsif order.financial_status == 'refunded'
     assign label = 'Refunded'
     assign dark = false
+  elsif order.financial_status == 'pending' or order.financial_status == 'partially_paid'
+    assign label = 'Awaiting payment'
   elsif order.fulfillment_status == 'fulfilled'
     assign label = 'Shipped'
     assign dark = false

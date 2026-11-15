@@ -2188,6 +2188,41 @@
       },
       {
         "type": "header",
+        "content": "Wholesale"
+      },
+      {
+        "type": "page",
+        "id": "apex_wholesale_page",
+        "label": "Wholesale page",
+        "info": "The wholesale login and dashboard page. Defaults to /pages/wholesale. Signed-in wholesalers' person icon goes there."
+      },
+      {
+        "type": "text",
+        "id": "apex_wholesale_tag",
+        "label": "Wholesale customer tag",
+        "default": "wholesale",
+        "info": "Approved wholesalers have this tag on their customer profile."
+      },
+      {
+        "type": "range",
+        "id": "apex_wholesale_fallback_discount",
+        "label": "Wholesale discount off RRP",
+        "info": "0 = wholesalers pay full price (only the bulk order discounts in Discounts apply). Only set this if a matching discount is also set up in Discounts, or the dashboard will show prices checkout doesn't charge.",
+        "min": 0,
+        "max": 60,
+        "step": 1,
+        "unit": "%",
+        "default": 0
+      },
+      {
+        "type": "checkbox",
+        "id": "apex_wholesale_prices_include_gst",
+        "label": "Retail prices include GST",
+        "info": "The dashboard shows wholesalers prices without GST, so GST comes off the RRP.",
+        "default": true
+      },
+      {
+        "type": "header",
         "content": "Cart drawer"
       },
       {
