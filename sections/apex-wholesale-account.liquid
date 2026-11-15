@@ -13,11 +13,10 @@
     apply to an order instead: wholesale price (from the $250 minimum), then the bulk discounts
     for wholesale accounts only (5% off over $1,000, 10% over $5,000, ex GST; section settings).
     The progress bar is this cart against the next step.
-  - Prices: Shopify charges them with an automatic "Wholesale price" % discount for the
-    "Wholesale customers" segment (tag wholesale) plus "Bulk order 5% / 10% off" order discounts
-    (min $1,100 / $5,500 inc GST = $1,000 / $5,000 ex GST). The dashboard shows the same %
-    (Theme settings > APEX Feeds > Wholesale), or a variant metafield custom.wholesale_price
-    (Decimal, dollars ex GST) where one is set. Carton size:
+  - Prices: wholesalers pay full price (RRP). Shopify takes off automatic "Bulk order 5% / 10% off"
+    order discounts for the "Wholesale customers" segment (tag wholesale), min $1,100 / $5,500 inc
+    GST = $1,000 / $5,000 ex GST. The dashboard shows prices ex and inc GST (see
+    snippets/apex-wholesale-price for the optional % / metafield overrides). Carton size:
     custom.carton_qty (Integer, variant or product). See snippets/apex-wholesale-price.
   - Payment terms / credit limit come from customer metafields custom.payment_terms and
     custom.credit_limit (only set for accounts James gives credit). Business name and ABN from
@@ -130,8 +129,8 @@
   {%- capture table_head -%}
     <div class="apex-wq__row apex-wq__row--head" aria-hidden="true">
       <span>Product</span>
-      <span>RRP</span>
-      <span>Your price</span>
+      <span>Inc GST</span>
+      <span>Ex GST</span>
       <span>Carton</span>
       <span>Qty</span>
     </div>
@@ -239,9 +238,9 @@
                 </div>
                 <div class="apex-wpanel__cards">
                   <div class="apex-wpanel__card{% if stage == 'minimum' or stage == 'wholesale' %} apex-wpanel__card--current{% endif %}">
-                    <p class="apex-wpanel__card-label">Wholesale{% if stage == 'minimum' or stage == 'wholesale' %}&nbsp;&nbsp;·&nbsp;&nbsp;Current{% endif %}</p>
-                    <p class="apex-wpanel__card-value">{% if settings.apex_wholesale_fallback_discount > 0 %}{{ settings.apex_wholesale_fallback_discount }}% off RRP{% else %}Your fixed price{% endif %}</p>
-                    <p class="apex-wpanel__card-text">Orders from {{ minimum_cents | money_without_trailing_zeros }} ex GST</p>
+                    <p class="apex-wpanel__card-label">Standard order{% if stage == 'minimum' or stage == 'wholesale' %}&nbsp;&nbsp;·&nbsp;&nbsp;Current{% endif %}</p>
+                    <p class="apex-wpanel__card-value">{% if settings.apex_wholesale_fallback_discount > 0 %}{{ settings.apex_wholesale_fallback_discount }}% off RRP{% else %}Full price{% endif %}</p>
+                    <p class="apex-wpanel__card-text">Orders from {{ minimum_cents | money_without_trailing_zeros }}{% if bulk_on %} up to {{ bulk1 | money_without_trailing_zeros }}{% endif %} ex GST</p>
                   </div>
                   {%- if bulk_on -%}
                     <div class="apex-wpanel__card{% if stage == 'bulk1' %} apex-wpanel__card--current{% endif %}">
@@ -336,13 +335,13 @@
                           {%- else -%}
                             {{ 'product-1' | placeholder_svg_tag }}
                           {%- endif -%}
-                          <span class="apex-account__status apex-account__status--dark apex-wrec__pill">Wholesale price</span>
+                          {%- if settings.apex_wholesale_fallback_discount > 0 -%}<span class="apex-account__status apex-account__status--dark apex-wrec__pill">Wholesale price</span>{%- endif -%}
                         </a>
                         <a class="apex-wrec__title" href="{{ product.url }}">{{ product.title | escape }}</a>
                         <p class="apex-wrec__price">
                           {%- if wp != '' -%}
-                            <span>{{ wp | plus: 0 | money }}</span>
-                            <s class="apex-wrec__rrp">RRP {{ v.price | money }}</s>
+                            <span>{{ wp | plus: 0 | money }} <span class="apex-wrec__rrp">ex GST</span></span>
+                            <span class="apex-wrec__rrp">{{ wp | plus: 0 | times: 1.1 | round | money }} inc GST</span>
                           {%- else -%}
                             <span>Price on request</span>
                           {%- endif -%}
@@ -503,7 +502,7 @@
                       <th scope="col">Product</th>
                       <th scope="col">Carton</th>
                       <th scope="col" class="apex-wpl__num">RRP inc GST</th>
-                      <th scope="col" class="apex-wpl__num">Wholesale ex GST</th>
+                      <th scope="col" class="apex-wpl__num">Your price ex GST</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1369,7 +1368,7 @@
       "type": "textarea",
       "id": "pricing_text",
       "label": "Text",
-      "default": "All prices you see while signed in are your wholesale prices, excluding GST. GST and freight are added to your order."
+      "default": "Prices you see while signed in exclude GST. Orders over $1,000 ex GST get 5% off and orders over $5,000 get 10% off, taken off the whole order at checkout. Freight is added to your order."
     },
     {
       "type": "number",

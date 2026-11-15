@@ -4,7 +4,7 @@
   on sale), Add to cart and Remove. The variant is the one saved with the heart
   (?variant= on the request picks it).
 
-  Approved wholesalers see their wholesale price ex GST with the RRP struck through.
+  Approved wholesalers see the price ex GST, with the price inc GST beside it.
 
   @param {object} product
 {% enddoc %}
@@ -52,7 +52,7 @@
   {%- if wholesale_price != '' -%}
     <p class="apex-wishlist-item__price">
       <span>{{ wholesale_price | plus: 0 | money }} <span class="apex-wishlist-item__was">ex GST</span></span>
-      <s class="apex-wishlist-item__was">RRP {{ variant.price | money }}</s>
+      <span class="apex-wishlist-item__was">{{ wholesale_price | plus: 0 | times: 1.1 | round | money }} inc GST</span>
     </p>
   {%- else -%}
   <p class="apex-wishlist-item__price">

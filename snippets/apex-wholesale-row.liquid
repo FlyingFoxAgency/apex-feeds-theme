@@ -1,6 +1,7 @@
 {% comment %}
   One row of the wholesale quick order table (Figma "Quick order" row): product and variant,
-  RRP (struck through), the wholesaler's price ex GST, carton size and a carton stepper.
+  the price inc GST and ex GST (wholesalers pay full price; the bulk order discounts come off
+  the whole order at checkout), carton size and a carton stepper.
   @param {object} variant
   @param {number} [qty] - cartons to start with (default 0)
   @param {string} key - unique per table (input ids)
@@ -39,9 +40,9 @@
       <span class="apex-wq__variant">{{ variant.title | replace: ' / ', ', ' | escape }}</span>
     {%- endunless -%}
   </div>
-  <span class="apex-wq__rrp"><span class="apex-wq__label">RRP</span><s>{{ variant.price | money }}</s></span>
+  <span class="apex-wq__rrp"><span class="apex-wq__label">Inc GST</span>{% if wp != '' %}{{ wp | plus: 0 | times: 1.1 | round | money }}{% endif %}</span>
   <span class="apex-wq__price">
-    <span class="apex-wq__label">Your price</span>
+    <span class="apex-wq__label">Ex GST</span>
     {%- if wp != '' -%}{{ wp | plus: 0 | money }}{%- else -%}<span class="apex-wq__muted">On request</span>{%- endif -%}
   </span>
   <span class="apex-wq__carton">

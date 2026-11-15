@@ -2207,18 +2207,18 @@
         "type": "range",
         "id": "apex_wholesale_fallback_discount",
         "label": "Wholesale discount off RRP",
-        "info": "Must match the 'Wholesale price' automatic discount in Discounts (wholesale customer segment). The dashboard shows prices with this % off. A variant's custom.wholesale_price metafield overrides it, so leave that empty while checkout uses the % discount.",
+        "info": "0 = wholesalers pay full price (only the bulk order discounts in Discounts apply). Only set this if a matching discount is also set up in Discounts, or the dashboard will show prices checkout doesn't charge.",
         "min": 0,
         "max": 60,
         "step": 1,
         "unit": "%",
-        "default": 30
+        "default": 0
       },
       {
         "type": "checkbox",
         "id": "apex_wholesale_prices_include_gst",
         "label": "Retail prices include GST",
-        "info": "Used with the fallback discount: GST comes off the RRP before the discount.",
+        "info": "The dashboard shows wholesalers prices without GST, so GST comes off the RRP.",
         "default": true
       },
       {
