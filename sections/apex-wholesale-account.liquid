@@ -13,7 +13,11 @@
     apply to an order instead: wholesale price (from the $250 minimum), then the bulk discounts
     for wholesale accounts only (5% off over $1,000, 10% over $5,000, ex GST; section settings).
     The progress bar is this cart against the next step.
-  - Prices: variant metafield custom.wholesale_price (Decimal, dollars ex GST). Carton size:
+  - Prices: Shopify charges them with an automatic "Wholesale price" % discount for the
+    "Wholesale customers" segment (tag wholesale) plus "Bulk order 5% / 10% off" order discounts
+    (min $1,100 / $5,500 inc GST = $1,000 / $5,000 ex GST). The dashboard shows the same %
+    (Theme settings > APEX Feeds > Wholesale), or a variant metafield custom.wholesale_price
+    (Decimal, dollars ex GST) where one is set. Carton size:
     custom.carton_qty (Integer, variant or product). See snippets/apex-wholesale-price.
   - Payment terms / credit limit come from customer metafields custom.payment_terms and
     custom.credit_limit (only set for accounts James gives credit). Business name and ABN from
@@ -236,7 +240,7 @@
                 <div class="apex-wpanel__cards">
                   <div class="apex-wpanel__card{% if stage == 'minimum' or stage == 'wholesale' %} apex-wpanel__card--current{% endif %}">
                     <p class="apex-wpanel__card-label">Wholesale{% if stage == 'minimum' or stage == 'wholesale' %}&nbsp;&nbsp;·&nbsp;&nbsp;Current{% endif %}</p>
-                    <p class="apex-wpanel__card-value">Your fixed price</p>
+                    <p class="apex-wpanel__card-value">{% if settings.apex_wholesale_fallback_discount > 0 %}{{ settings.apex_wholesale_fallback_discount }}% off RRP{% else %}Your fixed price{% endif %}</p>
                     <p class="apex-wpanel__card-text">Orders from {{ minimum_cents | money_without_trailing_zeros }} ex GST</p>
                   </div>
                   {%- if bulk_on -%}

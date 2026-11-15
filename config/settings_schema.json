@@ -2206,13 +2206,13 @@
       {
         "type": "range",
         "id": "apex_wholesale_fallback_discount",
-        "label": "Fallback discount off RRP",
-        "info": "Only for variants without a wholesale price (metafield custom.wholesale_price). 0 shows 'On request' instead.",
+        "label": "Wholesale discount off RRP",
+        "info": "Must match the 'Wholesale price' automatic discount in Discounts (wholesale customer segment). The dashboard shows prices with this % off. A variant's custom.wholesale_price metafield overrides it, so leave that empty while checkout uses the % discount.",
         "min": 0,
         "max": 60,
         "step": 1,
         "unit": "%",
-        "default": 0
+        "default": 30
       },
       {
         "type": "checkbox",
