@@ -9,8 +9,10 @@
     terms, wishlist.
 
   Changes from Figma, to fit James's terms:
-  - No pricing tiers: James has one fixed wholesale price. The tier panel shows the wholesale
-    price, RRP and the minimum order, and the progress bar is this cart against the minimum.
+  - No pricing tiers: James has one fixed wholesale price. The tier panel shows the steps that
+    apply to an order instead: wholesale price (from the $250 minimum), then the bulk discounts
+    for wholesale accounts only (5% off over $1,000, 10% over $5,000, ex GST; section settings).
+    The progress bar is this cart against the next step.
   - Prices: variant metafield custom.wholesale_price (Decimal, dollars ex GST). Carton size:
     custom.carton_qty (Integer, variant or product). See snippets/apex-wholesale-price.
   - Payment terms / credit limit come from customer metafields custom.payment_terms and
@@ -54,14 +56,50 @@
       endif
       assign cart_cents = cart_cents | plus: line
     endfor
+
+    # Bulk discounts for wholesale orders (James: 5% over $1,000, 10% over $5,000, ex GST).
+    assign bulk1 = section.settings.bulk_1_from | default: 0 | times: 100
+    assign bulk1_pct = section.settings.bulk_1_percent | default: 0
+    assign bulk2 = section.settings.bulk_2_from | default: 0 | times: 100
+    assign bulk2_pct = section.settings.bulk_2_percent | default: 0
+    assign bulk_on = false
+    if bulk1 > 0 and bulk1_pct > 0
+      assign bulk_on = true
+    endif
+
+    # Which step the cart is on, and the next goal for the bar.
+    assign stage = 'minimum'
+    assign goal = minimum_cents
+    if cart_cents >= minimum_cents
+      assign stage = 'wholesale'
+      if bulk_on
+        assign goal = bulk1
+        if cart_cents >= bulk1
+          assign stage = 'bulk1'
+          assign goal = bulk2
+          if bulk2 == 0 or bulk2_pct == 0 or cart_cents >= bulk2
+            assign stage = 'bulk2'
+            assign goal = cart_cents
+            if bulk2 == 0 or bulk2_pct == 0
+              assign stage = 'bulk1'
+            endif
+          endif
+        endif
+      endif
+    endif
     assign cart_pct = 100
-    if minimum_cents > 0
-      assign cart_pct = cart_cents | times: 100.0 | divided_by: minimum_cents
+    if goal > 0 and cart_cents < goal
+      assign cart_pct = cart_cents | times: 100.0 | divided_by: goal
     endif
-    if cart_pct > 100
-      assign cart_pct = 100
+    assign cart_short = goal | minus: cart_cents
+    assign bulk_json = '[]'
+    if bulk_on
+      assign bulk_json = '[[' | append: bulk1 | append: ',' | append: bulk1_pct | append: ']'
+      if bulk2 > 0 and bulk2_pct > 0
+        assign bulk_json = bulk_json | append: ',[' | append: bulk2 | append: ',' | append: bulk2_pct | append: ']'
+      endif
+      assign bulk_json = bulk_json | append: ']'
     endif
-    assign cart_short = minimum_cents | minus: cart_cents
   -%}
 
   {%- capture icon_logout -%}
@@ -75,7 +113,10 @@
     <div class="apex-wq__footer">
       <p class="apex-wq__terms">Minimum order {{ minimum_cents | money_without_trailing_zeros }}&nbsp;&nbsp;·&nbsp;&nbsp;Prices exclude GST&nbsp;&nbsp;·&nbsp;&nbsp;Ordered in cartons</p>
       <div class="apex-wq__total">
-        <p class="apex-wq__total-text">Order total <span data-wq-total>{{ 0 | money }}</span></p>
+        <p class="apex-wq__total-text">
+          Order total <span data-wq-total>{{ 0 | money }}</span>
+          <span class="apex-wq__discount" data-wq-discount hidden></span>
+        </p>
         <button type="button" class="apex-button apex-account__button--moss" data-wq-submit disabled>Add to cart</button>
       </div>
       <p class="apex-account__small apex-wq__status" data-wq-status role="status"></p>
@@ -157,37 +198,67 @@
                   </div>
                   <div class="apex-wpanel__progress">
                     <p class="apex-wpanel__eyebrow apex-wpanel__eyebrow--small">Your cart</p>
-                    <div class="apex-wpanel__bar" role="progressbar" aria-label="Cart towards the minimum order" aria-valuemin="0" aria-valuemax="{{ minimum }}" aria-valuenow="{{ cart_cents | divided_by: 100 }}">
+                    <div class="apex-wpanel__bar" role="progressbar" aria-label="Your cart towards the next goal" aria-valuemin="0" aria-valuemax="{{ goal | divided_by: 100 }}" aria-valuenow="{{ cart_cents | divided_by: 100 }}">
                       <span style="width: {{ cart_pct | round: 1 }}%;"></span>
                     </div>
-                    <p class="apex-wpanel__amount">{{ cart_cents | money }} of {{ minimum_cents | money_without_trailing_zeros }}</p>
-                    <p class="apex-wpanel__note">
-                      {%- if cart_cents == 0 -%}
-                        Your cart is empty. Orders need {{ minimum_cents | money_without_trailing_zeros }} ex GST before freight.
-                      {%- elsif cart_short > 0 -%}
-                        Add {{ cart_short | money }} more to reach the {{ minimum_cents | money_without_trailing_zeros }} minimum order.
+                    <p class="apex-wpanel__amount">
+                      {%- if stage == 'bulk2' -%}
+                        {{ cart_cents | money }}
                       {%- else -%}
-                        Your cart meets the minimum order. <a href="{{ routes.cart_url }}">Go to cart</a>
+                        {{ cart_cents | money }} of {{ goal | money_without_trailing_zeros }}
                       {%- endif -%}
+                    </p>
+                    <p class="apex-wpanel__note">
+                      {%- case stage -%}
+                        {%- when 'minimum' -%}
+                          {%- if cart_cents == 0 -%}
+                            Your cart is empty. Orders start at {{ minimum_cents | money_without_trailing_zeros }} ex GST, before freight.
+                          {%- else -%}
+                            Add {{ cart_short | money }} more to reach the {{ minimum_cents | money_without_trailing_zeros }} minimum order.
+                          {%- endif -%}
+                        {%- when 'wholesale' -%}
+                          {%- if bulk_on -%}
+                            Your cart meets the minimum order. Spend {{ cart_short | money }} more to get {{ bulk1_pct }}% off this order.
+                          {%- else -%}
+                            Your cart meets the minimum order.
+                          {%- endif -%}
+                          <a href="{{ routes.cart_url }}">Go to cart</a>
+                        {%- when 'bulk1' -%}
+                          You're getting {{ bulk1_pct }}% off this order.
+                          {%- if bulk2 > 0 and bulk2_pct > 0 %} Spend {{ cart_short | money }} more to get {{ bulk2_pct }}% off.{%- endif %}
+                          <a href="{{ routes.cart_url }}">Go to cart</a>
+                        {%- when 'bulk2' -%}
+                          You're getting {{ bulk2_pct }}% off this order. <a href="{{ routes.cart_url }}">Go to cart</a>
+                      {%- endcase -%}
                     </p>
                   </div>
                 </div>
                 <div class="apex-wpanel__cards">
-                  <div class="apex-wpanel__card">
-                    <p class="apex-wpanel__card-label">Retail</p>
-                    <p class="apex-wpanel__card-value">RRP</p>
-                    <p class="apex-wpanel__card-text">What your customers pay</p>
+                  <div class="apex-wpanel__card{% if stage == 'minimum' or stage == 'wholesale' %} apex-wpanel__card--current{% endif %}">
+                    <p class="apex-wpanel__card-label">Wholesale{% if stage == 'minimum' or stage == 'wholesale' %}&nbsp;&nbsp;·&nbsp;&nbsp;Current{% endif %}</p>
+                    <p class="apex-wpanel__card-value">Your fixed price</p>
+                    <p class="apex-wpanel__card-text">Orders from {{ minimum_cents | money_without_trailing_zeros }} ex GST</p>
                   </div>
-                  <div class="apex-wpanel__card apex-wpanel__card--current">
-                    <p class="apex-wpanel__card-label">Wholesale&nbsp;&nbsp;·&nbsp;&nbsp;Your price</p>
-                    <p class="apex-wpanel__card-value">Wholesale price</p>
-                    <p class="apex-wpanel__card-text">Every product, ex GST</p>
-                  </div>
-                  <div class="apex-wpanel__card">
-                    <p class="apex-wpanel__card-label">Minimum order</p>
-                    <p class="apex-wpanel__card-value">{{ minimum_cents | money_without_trailing_zeros }} ex GST</p>
-                    <p class="apex-wpanel__card-text">Freight not included</p>
-                  </div>
+                  {%- if bulk_on -%}
+                    <div class="apex-wpanel__card{% if stage == 'bulk1' %} apex-wpanel__card--current{% endif %}">
+                      <p class="apex-wpanel__card-label">Bulk order{% if stage == 'bulk1' %}&nbsp;&nbsp;·&nbsp;&nbsp;Current{% endif %}</p>
+                      <p class="apex-wpanel__card-value">{{ bulk1_pct }}% off the order</p>
+                      <p class="apex-wpanel__card-text">Orders over {{ bulk1 | money_without_trailing_zeros }} ex GST</p>
+                    </div>
+                    {%- if bulk2 > 0 and bulk2_pct > 0 -%}
+                      <div class="apex-wpanel__card{% if stage == 'bulk2' %} apex-wpanel__card--current{% endif %}">
+                        <p class="apex-wpanel__card-label">Large order{% if stage == 'bulk2' %}&nbsp;&nbsp;·&nbsp;&nbsp;Current{% endif %}</p>
+                        <p class="apex-wpanel__card-value">{{ bulk2_pct }}% off the order</p>
+                        <p class="apex-wpanel__card-text">Orders over {{ bulk2 | money_without_trailing_zeros }} ex GST</p>
+                      </div>
+                    {%- endif -%}
+                  {%- else -%}
+                    <div class="apex-wpanel__card">
+                      <p class="apex-wpanel__card-label">Retail</p>
+                      <p class="apex-wpanel__card-value">RRP</p>
+                      <p class="apex-wpanel__card-text">What your customers pay</p>
+                    </div>
+                  {%- endif -%}
                 </div>
               </div>
 
@@ -195,7 +266,7 @@
                 Quick order: the items from the last order (ready to reorder), else the first products
                 of the quick order collection.
               {%- endcomment -%}
-              <apex-wholesale-order class="apex-account__card apex-account__card--wide apex-wq" data-minimum="{{ minimum_cents }}" data-currency="{{ cart.currency.iso_code }}">
+              <apex-wholesale-order class="apex-account__card apex-account__card--wide apex-wq" data-minimum="{{ minimum_cents }}" data-bulk="{{ bulk_json }}" data-in-cart="{{ cart_cents }}" data-currency="{{ cart.currency.iso_code }}">
                 <div class="apex-account__card-top">
                   <h2 class="apex-account__h3">Quick order</h2>
                   <a class="apex-account__link" href="?view=price-list" data-apex-go="price-list">Download price list</a>
@@ -346,6 +417,9 @@
                     {%- endif -%}
                     <div><dt>Unpaid orders</dt><dd>{% if unpaid_cents > 0 %}{{ unpaid_cents | money }}{% else %}None{% endif %}</dd></div>
                     <div><dt>Minimum order</dt><dd>{{ minimum_cents | money_without_trailing_zeros }} ex GST</dd></div>
+                    {%- if bulk_on -%}
+                      <div><dt>Bulk discount</dt><dd>{{ bulk1_pct }}% over {{ bulk1 | money_without_trailing_zeros }}{% if bulk2 > 0 and bulk2_pct > 0 %}, {{ bulk2_pct }}% over {{ bulk2 | money_without_trailing_zeros }}{% endif %}</dd></div>
+                    {%- endif -%}
                     <div><dt>Your contact</dt><dd><a href="mailto:{{ contact_email }}">{{ contact_email }}</a></dd></div>
                   </dl>
                   {%- if first_unpaid -%}
@@ -359,7 +433,7 @@
 
             {%- comment -%} ============ Quick order (everything) ============ {%- endcomment -%}
             <div class="apex-account__view" data-apex-view="quick-order" hidden>
-              <apex-wholesale-order class="apex-account__card apex-account__card--wide apex-wq" data-minimum="{{ minimum_cents }}" data-currency="{{ cart.currency.iso_code }}">
+              <apex-wholesale-order class="apex-account__card apex-account__card--wide apex-wq" data-minimum="{{ minimum_cents }}" data-bulk="{{ bulk_json }}" data-in-cart="{{ cart_cents }}" data-currency="{{ cart.currency.iso_code }}">
                 <div class="apex-account__card-top">
                   <h2 class="apex-account__h3">All products</h2>
                   <a class="apex-account__link" href="?view=price-list" data-apex-go="price-list">Download price list</a>
@@ -496,6 +570,9 @@
                     <div><dt>Credit limit</dt><dd>{{ credit_limit | times: 100 | round | money }}</dd></div>
                   {%- endif -%}
                   <div><dt>Minimum order</dt><dd>{{ minimum_cents | money_without_trailing_zeros }} ex GST, before freight</dd></div>
+                  {%- if bulk_on -%}
+                    <div><dt>Bulk discounts</dt><dd>{{ bulk1_pct }}% off orders over {{ bulk1 | money_without_trailing_zeros }}{% if bulk2 > 0 and bulk2_pct > 0 %}, {{ bulk2_pct }}% off orders over {{ bulk2 | money_without_trailing_zeros }}{% endif %} (ex GST)</dd></div>
+                  {%- endif -%}
                   <div><dt>Prices</dt><dd>Exclude GST. GST is added to your invoice.</dd></div>
                 </dl>
                 {%- if section.settings.terms_text != blank -%}
@@ -806,6 +883,7 @@
 
   .apex-wq__total-text {
     margin: 0;
+    text-align: right;
     font-size: 0.9375rem;
     font-weight: 600;
     line-height: 1.5rem;
@@ -814,6 +892,16 @@
 
   .apex-wq__total-text span {
     margin-left: 6px;
+  }
+
+  .apex-wq__discount {
+    display: block;
+    margin: 0 !important;
+    font-size: 0.8125rem;
+    font-weight: 400;
+    line-height: 1.25rem;
+    text-align: right;
+    color: var(--apex-olive);
   }
 
   .apex-wq__status {
@@ -1166,6 +1254,12 @@
     class ApexWholesaleOrder extends HTMLElement {
       connectedCallback() {
         this.minimum = Number(this.dataset.minimum || 0);
+        this.inCart = Number(this.dataset.inCart || 0);
+        try {
+          this.bulk = JSON.parse(this.dataset.bulk || '[]').sort((a, b) => a[0] - b[0]);
+        } catch (e) {
+          this.bulk = [];
+        }
         this.money = new Intl.NumberFormat('en-AU', { style: 'currency', currency: this.dataset.currency || 'AUD' });
         this.submit = this.querySelector('[data-wq-submit]');
         this.status = this.querySelector('[data-wq-status]');
@@ -1196,14 +1290,28 @@
       update() {
         const lines = this.lines();
         const total = lines.reduce((sum, line) => sum + line.price * line.quantity, 0);
+        // Bulk discount: counted on everything in the cart once these are added (ex GST).
+        const combined = total + this.inCart;
+        const tier = lines.length ? this.bulk.filter(([from]) => combined >= from).pop() : null;
+        const next = this.bulk.find(([from]) => combined < from);
+        const percent = tier ? tier[1] : 0;
         const totalEl = this.querySelector('[data-wq-total]');
-        if (totalEl) totalEl.textContent = this.money.format(total / 100);
+        if (totalEl) totalEl.textContent = this.money.format((total * (100 - percent)) / 100 / 100);
+        const discountEl = this.querySelector('[data-wq-discount]');
+        if (discountEl) {
+          discountEl.hidden = !percent;
+          discountEl.textContent = percent ? `Includes ${percent}% bulk discount (was ${this.money.format(total / 100)})` : '';
+        }
         if (this.submit) this.submit.disabled = lines.length === 0;
         if (this.status && !this.busy) {
-          this.status.textContent =
-            lines.length && total < this.minimum
-              ? `Add ${this.money.format((this.minimum - total) / 100)} more to reach the minimum order (items already in your cart count too).`
-              : '';
+          let message = '';
+          if (lines.length && combined < this.minimum) {
+            message = `Add ${this.money.format((this.minimum - combined) / 100)} more to reach the minimum order.`;
+          } else if (lines.length && next) {
+            message = `Spend ${this.money.format((next[0] - combined) / 100)} more to get ${next[1]}% off the order.`;
+          }
+          if (message && this.inCart) message += ' Items already in your cart count too.';
+          this.status.textContent = message;
         }
       }
 
@@ -1265,6 +1373,14 @@
       "label": "Minimum order ($ ex GST)",
       "default": 250
     },
+    {
+      "type": "paragraph",
+      "content": "Bulk discounts for wholesale orders (ex GST). Set a percent to 0 to turn a step off. The checkout discount itself is set up in Shopify Discounts."
+    },
+    { "type": "number", "id": "bulk_1_from", "label": "Bulk discount 1 from ($)", "default": 1000 },
+    { "type": "number", "id": "bulk_1_percent", "label": "Bulk discount 1 (%)", "default": 5 },
+    { "type": "number", "id": "bulk_2_from", "label": "Bulk discount 2 from ($)", "default": 5000 },
+    { "type": "number", "id": "bulk_2_percent", "label": "Bulk discount 2 (%)", "default": 10 },
     {
       "type": "header",
       "content": "Quick order and price list"
