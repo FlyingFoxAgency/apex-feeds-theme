@@ -494,9 +494,17 @@
                     <h2 class="apex-account__h3">Wholesale price list</h2>
                     <p class="apex-account__small apex-account__muted apex-wpl__meta">{{ shop.name | escape }}&nbsp;&nbsp;·&nbsp;&nbsp;{{ business_name | escape }}&nbsp;&nbsp;·&nbsp;&nbsp;{{ 'now' | date: '%-d %B %Y' }}</p>
                   </div>
-                  <button type="button" class="apex-button apex-account__button--outline apex-wpl__print" onclick="window.print()">Print or save as PDF</button>
+                  <button
+                    type="button"
+                    class="apex-button apex-account__button--outline apex-wpl__print"
+                    data-apex-print-list
+                    data-shop="{{ shop.name | escape }}"
+                    {% if settings.logo != blank %}data-logo="{{ settings.logo | image_url: width: 480 }}"{% endif %}
+                  >
+                    Print or save as PDF
+                  </button>
                 </div>
-                <table class="apex-wpl__table">
+                <table class="apex-wpl__table" data-apex-print-table>
                   <thead>
                     <tr>
                       <th scope="col">Product</th>
@@ -528,7 +536,7 @@
                     {%- endfor -%}
                   </tbody>
                 </table>
-                <p class="apex-account__small apex-account__muted">{{ section.settings.price_list_note | escape }}</p>
+                <p class="apex-account__small apex-account__muted" data-apex-print-note>{{ section.settings.price_list_note | escape }}</p>
               </div>
             </div>
 
@@ -1142,34 +1150,10 @@
     white-space: nowrap;
   }
 
-  /* Print the price list on its own */
+  /* The price list prints from its own clean page (see printPriceList) */
   @media print {
-    body:has(.apex-wpl:not([hidden])) * {
-      visibility: hidden;
-    }
-
-    body:has(.apex-wpl:not([hidden])) .apex-wpl,
-    body:has(.apex-wpl:not([hidden])) .apex-wpl * {
-      visibility: visible;
-    }
-
-    .apex-wpl {
-      position: absolute;
-      inset: 0 auto auto 0;
-      width: 100%;
-    }
-
-    .apex-wpl .apex-account__card {
-      padding: 0;
-      background: none;
-    }
-
     .apex-wpl__print {
       display: none !important;
-    }
-
-    .apex-wpl__table tr {
-      break-inside: avoid;
     }
   }
 
@@ -1312,6 +1296,9 @@
           this.querySelectorAll('[data-apex-reorder]').forEach((button) => {
             button.addEventListener('click', () => this.reorder(button));
           });
+          this.querySelectorAll('[data-apex-print-list]').forEach((button) => {
+            button.addEventListener('click', () => this.printPriceList(button));
+          });
           this.show(this.viewFromUrl(), false);
         });
       }
@@ -1319,6 +1306,70 @@
       disconnectedCallback() {
         this.removeEventListener('click', this.onClick);
         window.removeEventListener('popstate', this.onPop);
+      }
+
+      /* Prints only the price list: logo, title, details and table on a plain white page. */
+      printPriceList(button) {
+        const view = button.closest('.apex-wpl');
+        const table = view && view.querySelector('[data-apex-print-table]');
+        if (!table) {
+          window.print();
+          return;
+        }
+        const esc = (text) => String(text || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+        const meta = view.querySelector('.apex-wpl__meta');
+        const note = view.querySelector('[data-apex-print-note]');
+        const shop = button.dataset.shop || '';
+        const logo = button.dataset.logo
+          ? `<img class="logo" src="${esc(button.dataset.logo)}" alt="${esc(shop)}">`
+          : `<div class="logo-text">${esc(shop)}</div>`;
+        const css = `
+          @page { size: A4; margin: 16mm 14mm; }
+          * { box-sizing: border-box; }
+          body { margin: 0; font-family: "DM Sans", Arial, Helvetica, sans-serif; color: #1f211d; font-size: 11pt; background: #fff; }
+          header { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; padding-bottom: 12px; border-bottom: 2px solid #40443D; margin-bottom: 18px; }
+          .logo { display: block; height: 44px; width: auto; }
+          .logo-text { font-size: 20pt; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+          h1 { margin: 0; font-size: 18pt; letter-spacing: .03em; text-transform: uppercase; text-align: right; }
+          .meta { margin: 4px 0 0; font-size: 9.5pt; color: #5b5f56; text-align: right; }
+          table { width: 100%; border-collapse: collapse; }
+          thead { display: table-header-group; }
+          th, td { padding: 7px 8px; text-align: left; vertical-align: top; border-bottom: 1px solid #d9d6cf; }
+          thead th { font-size: 8.5pt; text-transform: uppercase; letter-spacing: .06em; color: #5b5f56; border-bottom: 1.5px solid #40443D; }
+          tbody th { font-weight: 600; }
+          tr { break-inside: avoid; }
+          .apex-wpl__variant { display: block; font-weight: 400; font-size: 9.5pt; color: #5b5f56; }
+          .apex-wpl__num { text-align: right; white-space: nowrap; }
+          .note { margin-top: 14px; font-size: 9pt; color: #5b5f56; }
+        `;
+        const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(shop)} wholesale price list</title><style>${css}</style></head><body>
+          <header><div>${logo}</div><div><h1>Wholesale price list</h1>${meta ? `<p class="meta">${meta.innerHTML}</p>` : ''}</div></header>
+          ${table.outerHTML}
+          ${note && note.textContent.trim() ? `<p class="note">${esc(note.textContent.trim())}</p>` : ''}
+        </body></html>`;
+
+        const old = document.getElementById('apex-print-frame');
+        if (old) old.remove();
+        const frame = document.createElement('iframe');
+        frame.id = 'apex-print-frame';
+        frame.setAttribute('aria-hidden', 'true');
+        frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
+        document.body.appendChild(frame);
+        const doc = frame.contentWindow.document;
+        doc.open();
+        doc.write(html);
+        doc.close();
+        const go = () => {
+          frame.contentWindow.focus();
+          frame.contentWindow.print();
+        };
+        const img = doc.querySelector('img');
+        if (img && !img.complete) {
+          img.addEventListener('load', go, { once: true });
+          img.addEventListener('error', go, { once: true });
+        } else {
+          setTimeout(go, 50);
+        }
       }
 
       viewFromUrl() {
