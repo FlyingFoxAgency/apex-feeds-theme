@@ -120,7 +120,7 @@
           Order total <span data-wq-total>{{ 0 | money }}</span>
           <span class="apex-wq__discount" data-wq-discount hidden></span>
         </p>
-        <button type="button" class="apex-button apex-account__button--moss" data-wq-submit disabled>Add to cart</button>
+        <button type="button" class="apex-button apex-button--amber apex-wq__submit" data-wq-submit disabled>Add to cart</button>
       </div>
       <p class="apex-account__small apex-wq__status" data-wq-status role="status"></p>
     </div>
@@ -136,7 +136,7 @@
     </div>
   {%- endcapture -%}
 
-  <apex-account
+  <apex-wholesale-account
     class="apex-account apex-wholesale"
     style="--apex-account-pt: {{ section.settings.padding_top }}px; --apex-account-pb: {{ section.settings.padding_bottom }}px;"
   >
@@ -152,7 +152,7 @@
               {%- if forloop.first -%}
                 <p class="apex-eyebrow">{{ welcome | escape }}</p>
               {%- else -%}
-                <p class="apex-eyebrow"><a href="?view=overview" data-apex-go="overview">{{ section.settings.title | escape }}</a></p>
+                <p class="apex-eyebrow"><a href="?tab=overview" data-apex-go="overview">{{ section.settings.title | escape }}</a></p>
               {%- endif -%}
               <h1 class="apex-account__title">{{ titles[forloop.index0] | escape }}</h1>
             </div>
@@ -163,9 +163,9 @@
           <div class="apex-account__header" data-apex-view="order-{{ order.id }}" hidden>
             <div class="apex-account__titles">
               <p class="apex-eyebrow">
-                <a href="?view=overview" data-apex-go="overview">{{ section.settings.title | escape }}</a>
+                <a href="?tab=overview" data-apex-go="overview">{{ section.settings.title | escape }}</a>
                 <span aria-hidden="true">&nbsp;/&nbsp;</span>
-                <a href="?view=orders" data-apex-go="orders">Order history</a>
+                <a href="?tab=orders" data-apex-go="orders">Order history</a>
               </p>
               <h1 class="apex-account__title">Order {{ order.name | escape }}</h1>
             </div>
@@ -176,13 +176,13 @@
         <div class="apex-account__body">
           <nav class="apex-account__menu" aria-label="Wholesale account">
             <ul class="apex-account__menu-list" role="list">
-              <li><a class="apex-account__menu-item" href="?view=overview" data-apex-go="overview" data-apex-menu="overview">Dashboard</a></li>
-              <li><a class="apex-account__menu-item" href="?view=quick-order" data-apex-go="quick-order" data-apex-menu="quick-order">Quick order</a></li>
-              <li><a class="apex-account__menu-item" href="?view=orders" data-apex-go="orders" data-apex-menu="orders">Order history</a></li>
-              <li><a class="apex-account__menu-item" href="?view=price-list" data-apex-go="price-list" data-apex-menu="price-list">Price list</a></li>
-              <li><a class="apex-account__menu-item" href="?view=business" data-apex-go="business" data-apex-menu="business">Business details</a></li>
-              <li><a class="apex-account__menu-item" href="?view=terms" data-apex-go="terms" data-apex-menu="terms">Terms and agreements</a></li>
-              <li><a class="apex-account__menu-item" href="?view=wishlist" data-apex-go="wishlist" data-apex-menu="wishlist">Wishlist</a></li>
+              <li><a class="apex-account__menu-item" href="?tab=overview" data-apex-go="overview" data-apex-menu="overview">Dashboard</a></li>
+              <li><a class="apex-account__menu-item" href="?tab=quick-order" data-apex-go="quick-order" data-apex-menu="quick-order">Quick order</a></li>
+              <li><a class="apex-account__menu-item" href="?tab=orders" data-apex-go="orders" data-apex-menu="orders">Order history</a></li>
+              <li><a class="apex-account__menu-item" href="?tab=price-list" data-apex-go="price-list" data-apex-menu="price-list">Price list</a></li>
+              <li><a class="apex-account__menu-item" href="?tab=business" data-apex-go="business" data-apex-menu="business">Business details</a></li>
+              <li><a class="apex-account__menu-item" href="?tab=terms" data-apex-go="terms" data-apex-menu="terms">Terms and agreements</a></li>
+              <li><a class="apex-account__menu-item" href="?tab=wishlist" data-apex-go="wishlist" data-apex-menu="wishlist">Wishlist</a></li>
             </ul>
             <hr class="apex-account__rule">
             <a class="apex-account__menu-item apex-account__menu-logout" href="{{ routes.account_logout_url }}">{{ icon_logout }}<span>Log out</span></a>
@@ -269,13 +269,13 @@
                 Quick order: the items from the last order (ready to reorder), else the first products
                 of the quick order collection.
               {%- endcomment -%}
-              <apex-wholesale-order class="apex-account__card apex-account__card--wide apex-wq" data-minimum="{{ minimum_cents }}" data-bulk="{{ bulk_json }}" data-in-cart="{{ cart_cents }}" data-currency="{{ cart.currency.iso_code }}">
+              <apex-wholesale-order class="apex-account__card apex-account__card--wide apex-wq" data-minimum="{{ minimum_cents }}" data-bulk="{{ bulk_json }}" data-in-cart="{{ cart_cents }}" data-money-format="{{ shop.money_format | strip_html | escape }}">
                 <div class="apex-account__card-top">
                   <h2 class="apex-account__h3">Quick order</h2>
-                  <a class="apex-account__link" href="?view=price-list" data-apex-go="price-list">Download price list</a>
+                  <a class="apex-account__link" href="?tab=price-list" data-apex-go="price-list">Download price list</a>
                 </div>
                 {%- if customer.last_order -%}
-                  <p class="apex-account__small apex-account__muted">From your last order, {{ customer.last_order.name | escape }}. Change the quantities or <a class="apex-account__link" href="?view=quick-order" data-apex-go="quick-order">order anything else</a>.</p>
+                  <p class="apex-account__small apex-account__muted">From your last order, {{ customer.last_order.name | escape }}. Change the quantities or <a class="apex-account__link" href="?tab=quick-order" data-apex-go="quick-order">order anything else</a>.</p>
                 {%- endif -%}
                 <div class="apex-wq__table">
                   {{ table_head }}
@@ -404,10 +404,10 @@
                         </li>
                       {%- endfor -%}
                     </ul>
-                    <a class="apex-account__link" href="?view=orders" data-apex-go="orders">View all orders</a>
+                    <a class="apex-account__link" href="?tab=orders" data-apex-go="orders">View all orders</a>
                   {%- else -%}
                     <p class="apex-account__empty">No orders yet. Your first wholesale order will show here.</p>
-                    <a class="apex-account__link" href="?view=quick-order" data-apex-go="quick-order">Start a quick order</a>
+                    <a class="apex-account__link" href="?tab=quick-order" data-apex-go="quick-order">Start a quick order</a>
                   {%- endif -%}
                 </div>
 
@@ -428,7 +428,7 @@
                   {%- if first_unpaid -%}
                     <a class="apex-account__link" href="{{ first_unpaid.order_status_url }}">Pay {{ first_unpaid.name | escape }}</a>
                   {%- else -%}
-                    <a class="apex-account__link" href="?view=terms" data-apex-go="terms">See your terms</a>
+                    <a class="apex-account__link" href="?tab=terms" data-apex-go="terms">See your terms</a>
                   {%- endif -%}
                 </div>
               </div>
@@ -436,10 +436,10 @@
 
             {%- comment -%} ============ Quick order (everything) ============ {%- endcomment -%}
             <div class="apex-account__view" data-apex-view="quick-order" hidden>
-              <apex-wholesale-order class="apex-account__card apex-account__card--wide apex-wq" data-minimum="{{ minimum_cents }}" data-bulk="{{ bulk_json }}" data-in-cart="{{ cart_cents }}" data-currency="{{ cart.currency.iso_code }}">
+              <apex-wholesale-order class="apex-account__card apex-account__card--wide apex-wq" data-minimum="{{ minimum_cents }}" data-bulk="{{ bulk_json }}" data-in-cart="{{ cart_cents }}" data-money-format="{{ shop.money_format | strip_html | escape }}">
                 <div class="apex-account__card-top">
                   <h2 class="apex-account__h3">All products</h2>
-                  <a class="apex-account__link" href="?view=price-list" data-apex-go="price-list">Download price list</a>
+                  <a class="apex-account__link" href="?tab=price-list" data-apex-go="price-list">Download price list</a>
                 </div>
                 <div class="apex-wq__table">
                   {{ table_head }}
@@ -464,18 +464,18 @@
                   {%- if paginate.pages > 1 -%}
                     <nav class="apex-account__pager" aria-label="Order pages">
                       {%- if paginate.previous -%}
-                        <a class="apex-account__link" href="?view=orders&amp;page={{ paginate.current_page | minus: 1 }}">Newer orders</a>
+                        <a class="apex-account__link" href="?tab=orders&amp;page={{ paginate.current_page | minus: 1 }}">Newer orders</a>
                       {%- endif -%}
                       <span class="apex-account__small">Page {{ paginate.current_page }} of {{ paginate.pages }}</span>
                       {%- if paginate.next -%}
-                        <a class="apex-account__link" href="?view=orders&amp;page={{ paginate.current_page | plus: 1 }}">Older orders</a>
+                        <a class="apex-account__link" href="?tab=orders&amp;page={{ paginate.current_page | plus: 1 }}">Older orders</a>
                       {%- endif -%}
                     </nav>
                   {%- endif -%}
                   <p class="apex-account__small apex-account__muted">{{ section.settings.invoice_note | escape }}</p>
                 {%- else -%}
                   <p class="apex-account__empty">You haven't placed any wholesale orders yet.</p>
-                  <a class="apex-account__link" href="?view=quick-order" data-apex-go="quick-order">Start a quick order</a>
+                  <a class="apex-account__link" href="?tab=quick-order" data-apex-go="quick-order">Start a quick order</a>
                 {%- endif -%}
               </div>
             </div>
@@ -609,7 +609,7 @@
                 <div class="apex-wishlist__grid" data-wishlist-grid hidden></div>
                 <div class="apex-wishlist__empty" data-wishlist-empty>
                   <p class="apex-account__empty">{{ section.settings.wishlist_empty | escape }}</p>
-                  <a class="apex-account__link" href="?view=quick-order" data-apex-go="quick-order">Go to quick order</a>
+                  <a class="apex-account__link" href="?tab=quick-order" data-apex-go="quick-order">Go to quick order</a>
                 </div>
               </apex-wishlist-list>
             </div>
@@ -617,7 +617,7 @@
         </div>
       {%- endpaginate -%}
     </div>
-  </apex-account>
+  </apex-wholesale-account>
 {%- endif -%}
 
 {% stylesheet %}
@@ -862,11 +862,10 @@
   }
 
   .apex-wq__footer {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    justify-content: space-between;
-    gap: 16px 24px;
+    gap: 12px 24px;
     width: 100%;
     padding-top: 16px;
   }
@@ -881,34 +880,41 @@
   .apex-wq__total {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 24px;
   }
 
   .apex-wq__total-text {
     margin: 0;
-    text-align: right;
+    min-width: 200px;
     font-size: 0.9375rem;
     font-weight: 600;
     line-height: 1.5rem;
+    text-align: right;
     white-space: nowrap;
   }
 
-  .apex-wq__total-text span {
+  .apex-wq__total-text [data-wq-total] {
     margin-left: 6px;
+    font-variant-numeric: tabular-nums;
   }
 
   .apex-wq__discount {
     display: block;
-    margin: 0 !important;
     font-size: 0.8125rem;
     font-weight: 400;
     line-height: 1.25rem;
-    text-align: right;
     color: var(--apex-olive);
   }
 
+  /* Amber with burrow text (Ell: Add to cart buttons are amber) */
+  .apex-wq__submit {
+    min-width: 160px;
+    color: var(--apex-burrow) !important;
+  }
+
   .apex-wq__status {
-    flex-basis: 100%;
+    grid-column: 1 / -1;
     text-align: right;
   }
 
@@ -1231,10 +1237,20 @@
       margin-right: 4px;
     }
 
-    .apex-wq__footer,
+    .apex-wq__footer {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
     .apex-wq__total {
       flex-direction: column;
       align-items: stretch;
+      gap: 12px;
+    }
+
+    .apex-wq__total-text {
+      min-width: 0;
+      text-align: left;
+      white-space: normal;
     }
 
     .apex-wq__total .apex-button {
@@ -1253,19 +1269,128 @@
 {% endstylesheet %}
 
 {% javascript %}
+  /* Runs once the element's contents are on the page (the script can load before them). */
+  const apexWhenParsed = (el, fn) => {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => fn.call(el), { once: true });
+    else fn.call(el);
+  };
+
+  /* Prices in the store's own money format (shop.money_format). */
+  const APEX_DEFAULT_MONEY = '$' + '{' + '{amount}' + '}';
+  const apexFormatMoney = (cents, format) => {
+    const value = Math.round(cents) / 100;
+    const withSep = (n, dec, thou, decSep) =>
+      n.toFixed(dec).replace(/\B(?=(\d{3})+(?!\d))/g, thou).replace(/\.(\d+)$/, `${decSep}$1`);
+    const fmt = format || APEX_DEFAULT_MONEY;
+    const match = fmt.match(/\{\{\s*(\w+)\s*\}\}/);
+    const key = match ? match[1] : 'amount';
+    let out;
+    switch (key) {
+      case 'amount_no_decimals': out = withSep(value, 0, ',', '.'); break;
+      case 'amount_with_comma_separator': out = withSep(value, 2, '.', ','); break;
+      case 'amount_no_decimals_with_comma_separator': out = withSep(value, 0, '.', ','); break;
+      default: out = withSep(value, 2, ',', '.');
+    }
+    return match ? fmt.replace(match[0], out) : out;
+  };
+
+  /* Wholesale account views: same behaviour as <apex-account>, using ?tab= so Shopify doesn't
+     read the address as a template name. */
+  if (!customElements.get('apex-wholesale-account')) {
+    class ApexWholesaleAccount extends HTMLElement {
+      connectedCallback() {
+        this.onClick = this.onClick.bind(this);
+        this.onPop = () => this.show(this.viewFromUrl(), false);
+        this.addEventListener('click', this.onClick);
+        window.addEventListener('popstate', this.onPop);
+        apexWhenParsed(this, function () {
+          this.querySelectorAll('[data-apex-reorder]').forEach((button) => {
+            button.addEventListener('click', () => this.reorder(button));
+          });
+          this.show(this.viewFromUrl(), false);
+        });
+      }
+
+      disconnectedCallback() {
+        this.removeEventListener('click', this.onClick);
+        window.removeEventListener('popstate', this.onPop);
+      }
+
+      viewFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('order')) return `order-${params.get('order')}`;
+        return params.get('tab') || params.get('view') || 'overview';
+      }
+
+      show(view, scroll) {
+        if (!this.querySelector(`[data-apex-view="${CSS.escape(view)}"]`)) view = 'overview';
+        this.querySelectorAll('[data-apex-view]').forEach((el) => {
+          el.hidden = el.dataset.apexView !== view;
+        });
+        const menuKey = view.startsWith('order-') ? 'orders' : view;
+        this.querySelectorAll('[data-apex-menu]').forEach((el) => {
+          if (el.dataset.apexMenu === menuKey) el.setAttribute('aria-current', 'page');
+          else el.removeAttribute('aria-current');
+        });
+        if (scroll) this.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      }
+
+      onClick(event) {
+        const link = event.target.closest('a[data-apex-go]');
+        if (!link || event.metaKey || event.ctrlKey || event.shiftKey) return;
+        const view = link.dataset.apexGo;
+        if (!this.querySelector(`[data-apex-view="${CSS.escape(view)}"]`)) return;
+        event.preventDefault();
+        const url = new URL(window.location.href);
+        url.search = '';
+        if (view.startsWith('order-')) url.searchParams.set('order', view.slice(6));
+        else if (view !== 'overview') url.searchParams.set('tab', view);
+        history.pushState({}, '', url);
+        this.show(view, true);
+      }
+
+      async reorder(button) {
+        let items = [];
+        try {
+          items = JSON.parse(button.dataset.apexReorder || '[]');
+        } catch (e) {
+          items = [];
+        }
+        if (!items.length) return;
+        button.disabled = true;
+        const status = button.parentElement.querySelector('[data-apex-reorder-status]');
+        try {
+          const root = (window.Shopify && window.Shopify.routes && window.Shopify.routes.root) || '/';
+          const res = await fetch(`${root}cart/add.js`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ items }),
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.description || data.message || 'Some items could not be added.');
+          }
+          window.location.href = `${root}cart`;
+        } catch (error) {
+          button.disabled = false;
+          if (status) status.textContent = error.message;
+        }
+      }
+    }
+    customElements.define('apex-wholesale-account', ApexWholesaleAccount);
+  }
+
   if (!customElements.get('apex-wholesale-order')) {
     class ApexWholesaleOrder extends HTMLElement {
       connectedCallback() {
         this.minimum = Number(this.dataset.minimum || 0);
         this.inCart = Number(this.dataset.inCart || 0);
+        this.moneyFormat = this.dataset.moneyFormat || APEX_DEFAULT_MONEY;
         try {
           this.bulk = JSON.parse(this.dataset.bulk || '[]').sort((a, b) => a[0] - b[0]);
         } catch (e) {
           this.bulk = [];
         }
-        this.money = new Intl.NumberFormat('en-AU', { style: 'currency', currency: this.dataset.currency || 'AUD' });
-        this.submit = this.querySelector('[data-wq-submit]');
-        this.status = this.querySelector('[data-wq-status]');
         this.addEventListener('click', (event) => {
           const step = event.target.closest('[data-wq-step]');
           if (step) {
@@ -1276,7 +1401,19 @@
           if (event.target.closest('[data-wq-submit]')) this.addToCart();
         });
         this.addEventListener('input', () => this.update());
-        this.update();
+        apexWhenParsed(this, this.update);
+      }
+
+      get submit() {
+        return this.querySelector('[data-wq-submit]');
+      }
+
+      get status() {
+        return this.querySelector('[data-wq-status]');
+      }
+
+      money(cents) {
+        return apexFormatMoney(cents, this.moneyFormat);
       }
 
       lines() {
@@ -1293,27 +1430,29 @@
       update() {
         const lines = this.lines();
         const total = lines.reduce((sum, line) => sum + line.price * line.quantity, 0);
-        // Bulk discount: counted on everything in the cart once these are added (ex GST).
+        // Bulk discount: Shopify counts everything in the cart, so items already there count too (ex GST).
         const combined = total + this.inCart;
-        const tier = lines.length ? this.bulk.filter(([from]) => combined >= from).pop() : null;
-        const next = this.bulk.find(([from]) => combined < from);
+        const tier = lines.length ? this.bulk.filter(([from]) => combined > from).pop() : null;
+        const next = this.bulk.find(([from]) => combined <= from);
         const percent = tier ? tier[1] : 0;
         const totalEl = this.querySelector('[data-wq-total]');
-        if (totalEl) totalEl.textContent = this.money.format((total * (100 - percent)) / 100 / 100);
+        if (totalEl) totalEl.textContent = this.money((total * (100 - percent)) / 100);
         const discountEl = this.querySelector('[data-wq-discount]');
         if (discountEl) {
           discountEl.hidden = !percent;
-          discountEl.textContent = percent ? `Includes ${percent}% bulk discount (was ${this.money.format(total / 100)})` : '';
+          let note = percent ? `Includes ${percent}% bulk discount (was ${this.money(total)})` : '';
+          if (percent && this.inCart) note += `, counting the ${this.money(this.inCart)} already in your cart`;
+          discountEl.textContent = note;
         }
         if (this.submit) this.submit.disabled = lines.length === 0;
         if (this.status && !this.busy) {
           let message = '';
           if (lines.length && combined < this.minimum) {
-            message = `Add ${this.money.format((this.minimum - combined) / 100)} more to reach the minimum order.`;
+            message = `Add ${this.money(this.minimum - combined)} more to reach the minimum order.`;
           } else if (lines.length && next) {
-            message = `Spend ${this.money.format((next[0] - combined) / 100)} more to get ${next[1]}% off the order.`;
+            message = `Spend ${this.money(next[0] - combined)} more to get ${next[1]}% off the order.`;
           }
-          if (message && this.inCart) message += ' Items already in your cart count too.';
+          if (message && this.inCart) message += ` This counts the ${this.money(this.inCart)} already in your cart.`;
           this.status.textContent = message;
         }
       }
