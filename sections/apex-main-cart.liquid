@@ -9,6 +9,13 @@
 {% endcomment %}
 {%- liquid
   assign threshold_cents = section.settings.free_shipping_threshold | times: 100
+  # Wholesale accounts don't get free shipping, so they don't see the progress bar
+  capture apex_is_wholesale
+    render 'apex-wholesale-check'
+  endcapture
+  if apex_is_wholesale contains 'true'
+    assign threshold_cents = 0
+  endif
   assign remaining = threshold_cents | minus: cart.total_price
   if threshold_cents > 0
     assign progress = cart.total_price | times: 100 | divided_by: threshold_cents
