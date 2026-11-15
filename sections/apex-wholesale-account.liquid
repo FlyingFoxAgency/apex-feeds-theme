@@ -697,8 +697,13 @@
   }
 
   .apex-wpanel__note a {
-    color: inherit;
+    color: inherit !important;
     font-weight: 700;
+    transition: color 0.2s var(--ease-out-cubic, ease-out);
+  }
+
+  .apex-wpanel__note a:is(:hover, :focus-visible) {
+    color: var(--apex-amber) !important;
   }
 
   .apex-wpanel__cards {
