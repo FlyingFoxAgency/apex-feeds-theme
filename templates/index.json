@@ -28,58 +28,10 @@
             "pattern_position_custom": true,
             "pattern_position": 62
           }
-        },
-        "slide_2": {
-          "type": "slide",
-          "settings": {
-            "eyebrow": "Premium animal supplements",
-            "title": "Nutrition\nyou can see",
-            "text": "<p>Welcome to Burger Bliss, where we take your cravings to a whole new level!</p>",
-            "button_label": "Shop NutriCore range",
-            "button_link": "",
-            "button_2_label": "Explore",
-            "button_2_link": "",
-            "background_color": "",
-            "pattern_position_custom": false,
-            "pattern_position": 67
-          }
-        },
-        "slide_3": {
-          "type": "slide",
-          "settings": {
-            "eyebrow": "Premium animal supplements",
-            "title": "Nutrition\nyou can see",
-            "text": "<p>Welcome to Burger Bliss, where we take your cravings to a whole new level!</p>",
-            "button_label": "Shop NutriCore range",
-            "button_link": "",
-            "button_2_label": "Explore",
-            "button_2_link": "",
-            "background_color": "",
-            "pattern_position_custom": false,
-            "pattern_position": 67
-          }
-        },
-        "slide_4": {
-          "type": "slide",
-          "settings": {
-            "eyebrow": "Premium animal supplements",
-            "title": "Nutrition\nyou can see",
-            "text": "<p>Welcome to Burger Bliss, where we take your cravings to a whole new level!</p>",
-            "button_label": "Shop NutriCore range",
-            "button_link": "",
-            "button_2_label": "Explore",
-            "button_2_link": "",
-            "background_color": "",
-            "pattern_position_custom": false,
-            "pattern_position": 67
-          }
         }
       },
       "block_order": [
-        "slide_1",
-        "slide_2",
-        "slide_3",
-        "slide_4"
+        "slide_1"
       ],
       "settings": {
         "indicator_label": "Featured",
@@ -172,7 +124,12 @@
         "title_link": "",
         "show_buttons": false,
         "band": false,
-        "decoration_side": "left"
+        "decoration_side": "left",
+        "decoration_front": false,
+        "decoration_custom": false,
+        "decoration_width": 340,
+        "decoration_top": -80,
+        "decoration_side_offset": 60
       }
     },
     "apex_story": {
