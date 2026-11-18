@@ -1,0 +1,89 @@
+{% doc %}
+  Wholesale minimum order notice. Prints the notice only when the signed-in customer is an approved
+  wholesaler (see apex-wholesale-check) and the cart is below the minimum set in
+  Theme settings > APEX Feeds > Wholesale (ex GST, 0 = off). Otherwise prints nothing, so callers
+  capture it and disable Checkout when it isn't blank:
+
+  @param {string} [id] - id for the notice, so Checkout can point at it with aria-describedby
+
+  @example
+  {%- capture wholesale_minimum -%}{%- render 'apex-wholesale-minimum', id: 'ApexCartMinimum' -%}{%- endcapture -%}
+  <button {% if wholesale_minimum != blank %}disabled aria-describedby="ApexCartMinimum"{% endif %}>Checkout</button>
+
+  The minimum is measured the same way as the wholesale dashboard's minimum order bar: the cart's
+  item subtotal (what checkout charges, after item discounts) without GST.
+  This only guards the theme's Checkout buttons. Shopify checkout itself can't be blocked without
+  an app (Shopify Functions), so a hand-typed checkout link still gets through.
+{% enddoc %}
+{%- liquid
+  assign show = false
+  assign minimum = settings.apex_wholesale_minimum | default: 250
+  if minimum > 0 and cart.item_count > 0
+    capture is_wholesale
+      render 'apex-wholesale-check'
+    endcapture
+    assign is_wholesale = is_wholesale | strip
+    if is_wholesale == 'true'
+      # Minimum is ex GST. Cart prices include GST when the store's prices do.
+      assign minimum_cents = minimum | times: 100
+      if settings.apex_wholesale_prices_include_gst
+        assign cart_ex_gst = cart.items_subtotal_price | divided_by: 1.1 | round
+        assign minimum_in_cart = minimum_cents | times: 1.1 | round
+      else
+        assign cart_ex_gst = cart.items_subtotal_price
+        assign minimum_in_cart = minimum_cents
+      endif
+      if cart_ex_gst < minimum_cents
+        assign show = true
+        # Shown in the cart's own prices so it matches the totals beside it.
+        assign short = minimum_in_cart | minus: cart.items_subtotal_price
+        if short < 1
+          assign short = 1
+        endif
+      endif
+    endif
+  endif
+-%}
+{%- if show -%}
+<div class="apex-wmin" role="status"{% if id != blank %} id="{{ id }}"{% endif %}>
+  <p class="apex-wmin__title">
+    Wholesale orders have a {{ minimum_cents | money_without_trailing_zeros }} minimum
+  </p>
+  <p class="apex-wmin__text">
+    Add {{ short | money }} more to check out.
+    {%- if settings.apex_wholesale_prices_include_gst %} The minimum is {{ minimum_cents | money_without_trailing_zeros }} excluding GST ({{ minimum_in_cart | money_without_trailing_zeros }} including GST).{% endif %}
+  </p>
+</div>
+{%- endif -%}
+
+{% stylesheet %}
+  .apex-wmin {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px;
+    border: 1px solid var(--apex-dried-moss);
+    border-radius: var(--apex-radius-md);
+    color: var(--apex-burrow);
+  }
+
+  .apex-wmin__title {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+  }
+
+  .apex-wmin__text {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+  }
+
+  /* Checkout held back until the minimum is reached */
+  .apex-button[data-wholesale-minimum][disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    scale: 1;
+  }
+{% endstylesheet %}

@@ -2204,6 +2204,13 @@
         "info": "Approved wholesalers have this tag on their customer profile."
       },
       {
+        "type": "number",
+        "id": "apex_wholesale_minimum",
+        "label": "Wholesale minimum order ($ ex GST)",
+        "default": 250,
+        "info": "Below this, wholesalers can't check out from the cart or cart drawer, and the wholesale dashboard shows it. Express checkout buttons (Shop Pay, Buy it now) are hidden for wholesalers. 0 = no minimum."
+      },
+      {
         "type": "range",
         "id": "apex_wholesale_fallback_discount",
         "label": "Wholesale discount off RRP",

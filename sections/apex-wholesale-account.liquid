@@ -34,7 +34,7 @@
 -%}
 {%- if is_wholesale == 'true' -%}
   {%- liquid
-    assign minimum = section.settings.minimum_order | default: 250
+    assign minimum = settings.apex_wholesale_minimum | default: 250
     assign minimum_cents = minimum | times: 100
     assign contact_email = section.settings.contact_email | default: shop.email
     assign profile_url = routes.account_addresses_url
@@ -1566,10 +1566,8 @@
       "default": "Prices you see while signed in exclude GST. Orders over $1,000 ex GST get 5% off and orders over $5,000 get 10% off, taken off the whole order at checkout. Freight is added to your order."
     },
     {
-      "type": "number",
-      "id": "minimum_order",
-      "label": "Minimum order ($ ex GST)",
-      "default": 250
+      "type": "paragraph",
+      "content": "The minimum order is set in Theme settings > APEX Feeds > Wholesale."
     },
     {
       "type": "paragraph",
