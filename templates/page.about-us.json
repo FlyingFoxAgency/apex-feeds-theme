@@ -167,7 +167,7 @@
         "button_label": "Shop all products",
         "button_link": "",
         "button_2_label": "Become a stockist",
-        "button_2_link": "",
+        "button_2_link": "shopify://pages/wholesale-application",
         "padding_bottom": 160
       }
     }
