@@ -10,8 +10,8 @@
   {%- capture wholesale_minimum -%}{%- render 'apex-wholesale-minimum', id: 'ApexCartMinimum' -%}{%- endcapture -%}
   <button {% if wholesale_minimum != blank %}disabled aria-describedby="ApexCartMinimum"{% endif %}>Checkout</button>
 
-  The minimum is measured the same way as the wholesale dashboard's minimum order bar: the cart's
-  item subtotal (what checkout charges, after item discounts) without GST.
+  The minimum includes GST and is measured on the cart's item subtotal (what checkout charges, after
+  item discounts, before order discounts and freight).
   This only guards the theme's Checkout buttons. Shopify checkout itself can't be blocked without
   an app (Shopify Functions), so a hand-typed checkout link still gets through.
 {% enddoc %}
@@ -24,22 +24,11 @@
     endcapture
     assign is_wholesale = is_wholesale | strip
     if is_wholesale == 'true'
-      # Minimum is ex GST. Cart prices include GST when the store's prices do.
+      # Minimum includes GST, compared with the cart's item subtotal (after item discounts).
       assign minimum_cents = minimum | times: 100
-      if settings.apex_wholesale_prices_include_gst
-        assign cart_ex_gst = cart.items_subtotal_price | divided_by: 1.1 | round
-        assign minimum_in_cart = minimum_cents | times: 1.1 | round
-      else
-        assign cart_ex_gst = cart.items_subtotal_price
-        assign minimum_in_cart = minimum_cents
-      endif
-      if cart_ex_gst < minimum_cents
+      if cart.items_subtotal_price < minimum_cents
         assign show = true
-        # Shown in the cart's own prices so it matches the totals beside it.
-        assign short = minimum_in_cart | minus: cart.items_subtotal_price
-        if short < 1
-          assign short = 1
-        endif
+        assign short = minimum_cents | minus: cart.items_subtotal_price
       endif
     endif
   endif
@@ -51,7 +40,6 @@
   </p>
   <p class="apex-wmin__text">
     Add {{ short | money }} more to check out.
-    {%- if settings.apex_wholesale_prices_include_gst %} The minimum is {{ minimum_cents | money_without_trailing_zeros }} excluding GST ({{ minimum_in_cart | money_without_trailing_zeros }} including GST).{% endif %}
   </p>
 </div>
 {%- endif -%}

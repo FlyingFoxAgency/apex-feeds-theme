@@ -10,7 +10,7 @@
 
   Changes from Figma, to fit James's terms:
   - No pricing tiers: James has one fixed wholesale price. The tier panel shows the steps that
-    apply to an order instead: wholesale price (from the $250 minimum), then the bulk discounts
+    apply to an order instead: wholesale price (from the $250 inc GST minimum), then the bulk discounts
     for wholesale accounts only (5% off over $1,000, 10% over $5,000, ex GST; section settings).
     The progress bar is this cart against the next step.
   - Prices: wholesalers pay full price (RRP). Shopify takes off automatic "Bulk order 5% / 10% off"
@@ -35,7 +35,14 @@
 {%- if is_wholesale == 'true' -%}
   {%- liquid
     assign minimum = settings.apex_wholesale_minimum | default: 250
+    # The minimum includes GST (Theme settings > APEX Feeds > Wholesale). The dashboard works in
+    # ex GST prices, so its bars and checks compare against minimum_ex_cents.
     assign minimum_cents = minimum | times: 100
+    if settings.apex_wholesale_prices_include_gst
+      assign minimum_ex_cents = minimum_cents | divided_by: 1.1 | round
+    else
+      assign minimum_ex_cents = minimum_cents
+    endif
     assign contact_email = section.settings.contact_email | default: shop.email
     assign profile_url = routes.account_addresses_url
     assign order_collection = section.settings.quick_order_collection | default: collections.all
@@ -72,8 +79,8 @@
 
     # Which step the cart is on, and the next goal for the bar.
     assign stage = 'minimum'
-    assign goal = minimum_cents
-    if cart_cents >= minimum_cents
+    assign goal = minimum_ex_cents
+    if cart_cents >= minimum_ex_cents
       assign stage = 'wholesale'
       if bulk_on
         assign goal = bulk1
@@ -114,7 +121,7 @@
 
   {%- capture order_footer -%}
     <div class="apex-wq__footer">
-      <p class="apex-wq__terms">Minimum order {{ minimum_cents | money_without_trailing_zeros }}&nbsp;&nbsp;·&nbsp;&nbsp;Prices exclude GST&nbsp;&nbsp;·&nbsp;&nbsp;Ordered in cartons</p>
+      <p class="apex-wq__terms">Minimum order {{ minimum_cents | money_without_trailing_zeros }} inc GST&nbsp;&nbsp;·&nbsp;&nbsp;Prices exclude GST&nbsp;&nbsp;·&nbsp;&nbsp;Ordered in cartons</p>
       <div class="apex-wq__total">
         <p class="apex-wq__total-text">
           Order total <span data-wq-total>{{ 0 | money }}</span>
@@ -215,9 +222,9 @@
                       {%- case stage -%}
                         {%- when 'minimum' -%}
                           {%- if cart_cents == 0 -%}
-                            Your cart is empty. Orders start at {{ minimum_cents | money_without_trailing_zeros }} ex GST, before freight.
+                            Your cart is empty. Orders start at {{ minimum_cents | money_without_trailing_zeros }} inc GST, before freight.
                           {%- else -%}
-                            Add {{ cart_short | money }} more to reach the {{ minimum_cents | money_without_trailing_zeros }} minimum order.
+                            Add {{ cart_short | money }} ex GST more to reach the {{ minimum_cents | money_without_trailing_zeros }} (inc GST) minimum order.
                           {%- endif -%}
                         {%- when 'wholesale' -%}
                           {%- if bulk_on -%}
@@ -240,7 +247,7 @@
                   <div class="apex-wpanel__card{% if stage == 'minimum' or stage == 'wholesale' %} apex-wpanel__card--current{% endif %}">
                     <p class="apex-wpanel__card-label">Standard order{% if stage == 'minimum' or stage == 'wholesale' %}&nbsp;&nbsp;·&nbsp;&nbsp;Current{% endif %}</p>
                     <p class="apex-wpanel__card-value">{% if settings.apex_wholesale_fallback_discount > 0 %}{{ settings.apex_wholesale_fallback_discount }}% off RRP{% else %}Full price{% endif %}</p>
-                    <p class="apex-wpanel__card-text">Orders from {{ minimum_cents | money_without_trailing_zeros }}{% if bulk_on %} up to {{ bulk1 | money_without_trailing_zeros }}{% endif %} ex GST</p>
+                    <p class="apex-wpanel__card-text">Orders from {{ minimum_cents | money_without_trailing_zeros }} inc GST{% if bulk_on %} up to {{ bulk1 | money_without_trailing_zeros }} ex GST{% endif %}</p>
                   </div>
                   {%- if bulk_on -%}
                     <div class="apex-wpanel__card{% if stage == 'bulk1' %} apex-wpanel__card--current{% endif %}">
@@ -269,7 +276,7 @@
                 Quick order: the items from the last order (ready to reorder), else the first products
                 of the quick order collection.
               {%- endcomment -%}
-              <apex-wholesale-order class="apex-account__card apex-account__card--wide apex-wq" data-minimum="{{ minimum_cents }}" data-bulk="{{ bulk_json }}" data-in-cart="{{ cart_cents }}" data-money-format="{{ shop.money_format | strip_html | escape }}">
+              <apex-wholesale-order class="apex-account__card apex-account__card--wide apex-wq" data-minimum="{{ minimum_ex_cents }}" data-bulk="{{ bulk_json }}" data-in-cart="{{ cart_cents }}" data-money-format="{{ shop.money_format | strip_html | escape }}">
                 <div class="apex-account__card-top">
                   <h2 class="apex-account__h3">Quick order</h2>
                   <a class="apex-account__link" href="?tab=price-list" data-apex-go="price-list">Download price list</a>
@@ -419,7 +426,7 @@
                       <div><dt>Credit limit</dt><dd>{{ credit_limit | times: 100 | round | money }}</dd></div>
                     {%- endif -%}
                     <div><dt>Unpaid orders</dt><dd>{% if unpaid_cents > 0 %}{{ unpaid_cents | money }}{% else %}None{% endif %}</dd></div>
-                    <div><dt>Minimum order</dt><dd>{{ minimum_cents | money_without_trailing_zeros }} ex GST</dd></div>
+                    <div><dt>Minimum order</dt><dd>{{ minimum_cents | money_without_trailing_zeros }} inc GST</dd></div>
                     {%- if bulk_on -%}
                       <div><dt>Bulk discount</dt><dd>{{ bulk1_pct }}% over {{ bulk1 | money_without_trailing_zeros }}{% if bulk2 > 0 and bulk2_pct > 0 %}, {{ bulk2_pct }}% over {{ bulk2 | money_without_trailing_zeros }}{% endif %}</dd></div>
                     {%- endif -%}
@@ -436,7 +443,7 @@
 
             {%- comment -%} ============ Quick order (everything) ============ {%- endcomment -%}
             <div class="apex-account__view" data-apex-view="quick-order" hidden>
-              <apex-wholesale-order class="apex-account__card apex-account__card--wide apex-wq" data-minimum="{{ minimum_cents }}" data-bulk="{{ bulk_json }}" data-in-cart="{{ cart_cents }}" data-money-format="{{ shop.money_format | strip_html | escape }}">
+              <apex-wholesale-order class="apex-account__card apex-account__card--wide apex-wq" data-minimum="{{ minimum_ex_cents }}" data-bulk="{{ bulk_json }}" data-in-cart="{{ cart_cents }}" data-money-format="{{ shop.money_format | strip_html | escape }}">
                 <div class="apex-account__card-top">
                   <h2 class="apex-account__h3">All products</h2>
                   <a class="apex-account__link" href="?tab=price-list" data-apex-go="price-list">Download price list</a>
@@ -580,7 +587,7 @@
                   {%- if credit_limit != blank -%}
                     <div><dt>Credit limit</dt><dd>{{ credit_limit | times: 100 | round | money }}</dd></div>
                   {%- endif -%}
-                  <div><dt>Minimum order</dt><dd>{{ minimum_cents | money_without_trailing_zeros }} ex GST, before freight</dd></div>
+                  <div><dt>Minimum order</dt><dd>{{ minimum_cents | money_without_trailing_zeros }} inc GST, before freight</dd></div>
                   {%- if bulk_on -%}
                     <div><dt>Bulk discounts</dt><dd>{{ bulk1_pct }}% off orders over {{ bulk1 | money_without_trailing_zeros }}{% if bulk2 > 0 and bulk2_pct > 0 %}, {{ bulk2_pct }}% off orders over {{ bulk2 | money_without_trailing_zeros }}{% endif %} (ex GST)</dd></div>
                   {%- endif -%}
@@ -1504,7 +1511,7 @@
         if (this.status && !this.busy) {
           let message = '';
           if (lines.length && combined < this.minimum) {
-            message = `Add ${this.money(this.minimum - combined)} more to reach the minimum order.`;
+            message = `Add ${this.money(this.minimum - combined)} ex GST more to reach the minimum order.`;
           } else if (lines.length && next) {
             message = `Spend ${this.money(next[0] - combined)} more to get ${next[1]}% off the order.`;
           }
