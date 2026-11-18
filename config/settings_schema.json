@@ -2206,9 +2206,9 @@
       {
         "type": "number",
         "id": "apex_wholesale_minimum",
-        "label": "Wholesale minimum order ($ inc GST)",
+        "label": "Wholesale minimum order ($ ex GST)",
         "default": 250,
-        "info": "Below this, wholesalers can't check out from the cart or cart drawer, and the wholesale dashboard shows it. Express checkout buttons (Shop Pay, Buy it now) are hidden for wholesalers. 0 = no minimum."
+        "info": "Excludes GST, as in the Retailer Agreement: 250 means $250 + GST. Freight doesn't count. Below this, wholesalers can't check out from the cart or cart drawer, and the wholesale dashboard shows it. Express checkout buttons (Shop Pay, Buy it now) are hidden for wholesalers. 0 = no minimum."
       },
       {
         "type": "range",
