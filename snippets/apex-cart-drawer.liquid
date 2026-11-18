@@ -5,7 +5,8 @@
   - Header: "Your cart (N)" in Dharma and a round close button.
   - Free shipping progress bar (Theme settings > APEX Feeds > Cart drawer).
   - Line items: image, category, title, options, quantity pill, line price, Remove.
-  - Footer: subtotal, a note, amber Checkout and an outlined View cart button.
+  - Footer: subtotal, a note, amber Checkout and an outlined View cart button. Wholesalers below
+    the minimum order see apex-wholesale-minimum and a disabled Checkout.
   Quantity and Remove update the cart in place (/cart/change.js) and re-render the drawer.
 
   @example
@@ -124,8 +125,21 @@
       {%- if settings.apex_cart_drawer_note != blank -%}
         <p class="apex-drawer__note">{{ settings.apex_cart_drawer_note | escape }}</p>
       {%- endif -%}
+      {%- capture wholesale_minimum -%}{%- render 'apex-wholesale-minimum', id: 'ApexDrawerMinimum' -%}{%- endcapture -%}
+      {{- wholesale_minimum -}}
       <form action="{{ routes.cart_url }}" method="post" class="apex-drawer__actions">
-        <button type="submit" name="checkout" class="apex-button apex-drawer__checkout">Checkout</button>
+        <button
+          type="submit"
+          name="checkout"
+          class="apex-button apex-drawer__checkout"
+          data-wholesale-minimum
+          {% if wholesale_minimum != blank %}
+            disabled
+            aria-describedby="ApexDrawerMinimum"
+          {% endif %}
+        >
+          Checkout
+        </button>
         <a class="apex-button apex-drawer__view" href="{{ routes.cart_url }}">View cart</a>
       </form>
     </div>
@@ -376,6 +390,10 @@
     font-size: 1.25rem;
     font-weight: 600;
     line-height: 1.5rem;
+  }
+
+  .apex-drawer__footer .apex-wmin {
+    margin-block-start: 16px;
   }
 
   .apex-drawer__note {

@@ -268,7 +268,9 @@
     </span>
   </button>
 
-  {% if additional_checkout_buttons and settings.show_accelerated_checkout_buttons %}
+  {%- comment -%} APEX: no express checkout for wholesalers (minimum order is checked in the cart) {%- endcomment -%}
+  {%- capture is_wholesale -%}{%- render 'apex-wholesale-check' -%}{%- endcapture -%}
+  {% if additional_checkout_buttons and settings.show_accelerated_checkout_buttons and is_wholesale == blank %}
     <div
       class="
         additional-checkout-buttons
