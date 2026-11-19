@@ -441,7 +441,7 @@
                 <div class="apex-account__card-top">
                   <div>
                     <h2 class="apex-account__h3">Wholesale price list</h2>
-                    <p class="apex-account__small apex-account__muted apex-wpl__meta">{{ shop.name | escape }}&nbsp;&nbsp;·&nbsp;&nbsp;{{ business_name | escape }}&nbsp;&nbsp;·&nbsp;&nbsp;{{ 'now' | date: '%-d %B %Y' }}</p>
+                    <p class="apex-account__small apex-account__muted apex-wpl__meta">{{ settings.apex_legal_name | default: shop.name | escape }}{% if settings.apex_abn != blank %} (ABN {{ settings.apex_abn | escape }}){% endif %}&nbsp;&nbsp;·&nbsp;&nbsp;{{ business_name | escape }}&nbsp;&nbsp;·&nbsp;&nbsp;{{ 'now' | date: '%-d %B %Y' }}</p>
                   </div>
                   <button
                     type="button"

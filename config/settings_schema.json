@@ -2123,6 +2123,24 @@
     "settings": [
       {
         "type": "header",
+        "content": "Legal business details"
+      },
+      {
+        "type": "text",
+        "id": "apex_legal_name",
+        "label": "Legal business name",
+        "default": "APEX FEEDS AUST PTY LTD",
+        "info": "Shown in the footer copyright line and on the printed wholesale price list. Marketing copy keeps the store name (Apex Feeds)."
+      },
+      {
+        "type": "text",
+        "id": "apex_abn",
+        "label": "ABN",
+        "default": "37 678 568 501",
+        "info": "Leave empty to hide."
+      },
+      {
+        "type": "header",
         "content": "Page background"
       },
       {
