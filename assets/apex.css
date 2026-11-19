@@ -1062,6 +1062,25 @@ apex-wishlist-button {
   text-align: end;
 }
 
+/* Cards: the GST label sits under the price, so the price column stays narrow and long
+   titles keep their two lines */
+.apex-product-card__price .apex-price__main {
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.apex-product-card__price .apex-price__tax {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.apex-product-card__price .apex-price__rrp {
+  max-width: 9rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  white-space: normal;
+}
+
 .apex-price__main {
   display: inline-flex;
   flex-wrap: wrap;
