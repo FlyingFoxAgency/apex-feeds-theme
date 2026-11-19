@@ -1,0 +1,23 @@
+{% comment %}
+  Prints "true" when a product is enquiry-only (James, 19 Nov 2026): frozen products
+  (custom.food_type "Frozen", setting in Theme settings > APEX Feeds > Bulk enquiry products) or
+  products tagged "enquiry-only".
+  - Retail shoppers: enquire for bulk pricing through the contact form.
+  - Wholesalers: order by email, freight quoted per order (Retailer Agreement 7.5; Ell, 19 Nov).
+  snippets/apex-enquiry-panel shows the right one.
+  @param {object} product
+  Use: {%- capture enquiry_only -%}{%- render 'apex-enquiry-only', product: product -%}{%- endcapture -%}
+{% endcomment %}
+{%- liquid
+  assign food_type = product.metafields.custom.food_type.value | join: ',' | downcase
+  assign is_enquiry = false
+  if settings.apex_enquiry_frozen and food_type contains 'frozen'
+    assign is_enquiry = true
+  endif
+  if product.tags contains 'enquiry-only'
+    assign is_enquiry = true
+  endif
+  if is_enquiry
+    echo 'true'
+  endif
+-%}

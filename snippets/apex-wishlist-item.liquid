@@ -56,7 +56,7 @@
     </p>
   {%- else -%}
   <p class="apex-wishlist-item__price">
-    <span>{{ variant.price | money }}</span>
+    <span>{{ variant.price | money }} <span class="apex-wishlist-item__was">inc GST</span></span>
     {%- if on_sale -%}
       <s class="apex-wishlist-item__was"><span class="visually-hidden">Was </span>{{ variant.compare_at_price | money }}</s>
     {%- endif -%}

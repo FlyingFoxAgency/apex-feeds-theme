@@ -75,6 +75,15 @@
 -%}
 
 <div ref="priceContainer">
+  {%- comment -%} APEX: wholesalers see their wholesale price (ex GST) with the RRP under it {%- endcomment -%}
+  {%- capture apex_is_wholesale -%}{%- render 'apex-wholesale-check' -%}{%- endcapture -%}
+  {%- if apex_is_wholesale contains 'true' and product_resource != blank -%}
+    {%- if is_product_card -%}
+      {%- render 'apex-price', product: product_resource -%}
+    {%- else -%}
+      {%- render 'apex-price', product: product_resource, variant: selected_variant -%}
+    {%- endif -%}
+  {%- else -%}
   {% if has_volume_pricing %}
     {% comment %} Volume pricing display {% endcomment %}
     {% if show_compare_price %}
@@ -115,6 +124,9 @@
       >
     {% endif %}
   {% endif %}
+  {%- comment -%} APEX: GST label next to every price {%- endcomment -%}
+  <span class="apex-price__tax">{% if settings.apex_wholesale_prices_include_gst %}inc GST{% else %}ex GST{% endif %}</span>
+  {%- endif -%}
   {%- if selected_variant.unit_price and show_unit_price %}
     {%- liquid
       if use_currency

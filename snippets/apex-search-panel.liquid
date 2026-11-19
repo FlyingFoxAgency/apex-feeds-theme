@@ -14,6 +14,8 @@
   data-suggest-url="{{ routes.predictive_search_url }}.json"
   data-search-url="{{ routes.search_url }}"
   data-money-format="{{ shop.money_format | escape }}"
+  {%- capture apex_is_wholesale -%}{%- render 'apex-wholesale-check' -%}{%- endcapture %}
+  data-wholesale="{% if apex_is_wholesale contains 'true' %}true{% endif %}"
   hidden
 >
   <div class="apex-search__scrim" data-close></div>
@@ -211,7 +213,9 @@
       this.productList.innerHTML = products
         .map((p) => {
           const varies = p.price_min && p.price_max && Number(p.price_min) !== Number(p.price_max);
-          const price = varies ? `From ${this.money(p.price_min)}` : this.money(p.price);
+          // GST label next to every price; wholesalers see it as the RRP (their price is on the product page)
+          let price = varies ? `From ${this.money(p.price_min)}` : this.money(p.price);
+          price = this.dataset.wholesale ? `RRP ${price} <span class="apex-price__tax">inc GST</span>` : `${price} <span class="apex-price__tax">inc GST</span>`;
           const img = p.featured_image?.url || p.image;
           const media = img
             ? `<img src="${img}${img.includes('?') ? '&' : '?'}width=420" alt="${this.escape(p.featured_image?.alt || p.title)}" loading="lazy" width="207" height="180">`

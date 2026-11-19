@@ -42,6 +42,11 @@
     assign subscribe_first = true
   endif
 -%}
+{%- capture apex_enquiry_only -%}{%- render 'apex-enquiry-only', product: product -%}{%- endcapture -%}
+{%- if apex_enquiry_only contains 'true' -%}
+  {%- assign has_plans = false -%}
+  {%- assign preview = false -%}
+{%- endif -%}
 {%- if has_plans or preview -%}
   <apex-purchase-options
     class="apex-purchase"
@@ -71,7 +76,7 @@
           >
           <span class="apex-purchase__row">
             <span class="apex-purchase__label">One-time purchase</span>
-            <span class="apex-purchase__price">{{ variant.price | money }}</span>
+            <span class="apex-purchase__price">{{ variant.price | money }} <span class="apex-price__tax">inc GST</span></span>
           </span>
         </label>
       {%- endunless -%}
@@ -94,7 +99,7 @@
             {%- if sub_price < variant.price -%}
               <s class="apex-purchase__was">{{ variant.price | money }}</s>
             {%- endif %}
-            <span data-sub-price>{{ sub_price | money }}</span>
+            <span data-sub-price>{{ sub_price | money }}</span> <span class="apex-price__tax">inc GST</span>
           </span>
         </span>
       </label>

@@ -1,11 +1,12 @@
 {% comment %}
   Prints the price a wholesaler pays for a variant, in cents, excluding GST.
   @param {object} variant
-  - Wholesalers pay full price (RRP); only the bulk order discounts (5% over $1,000, 10% over
-    $5,000, set up in Shopify Discounts) come off. So by default this is the RRP without GST.
-  - Theme settings > APEX Feeds > Wholesale "Wholesale discount off RRP" takes a % off first
-    (0 = none), and a variant metafield custom.wholesale_price (Decimal, ex GST) overrides both.
-    Only use those if checkout charges the same.
+  - Wholesalers pay one fixed wholesale price per item, ex GST, with no volume discounts (James,
+    19 Nov 2026).
+  - The variant metafield custom.wholesale_price (Decimal, ex GST) is the price; it has to match
+    the Dollarlabs B2B price list that charges it at checkout. Without it, Theme settings > APEX
+    Feeds > Wholesale "Wholesale discount off RRP" takes a % off RRP. With neither, this prints
+    nothing: no wholesale price is set (shown as "On request" / RRP only).
   Use: {%- capture wp -%}{%- render 'apex-wholesale-price', variant: variant -%}{%- endcapture -%}
 {% endcomment %}
 {%- liquid
@@ -15,12 +16,14 @@
     echo cents
   else
     assign pct = settings.apex_wholesale_fallback_discount | default: 0
-    assign keep = 100 | minus: pct
-    if settings.apex_wholesale_prices_include_gst
-      assign cents = variant.price | times: keep | divided_by: 110.0 | round
-    else
-      assign cents = variant.price | times: keep | divided_by: 100.0 | round
+    if pct > 0
+      assign keep = 100 | minus: pct
+      if settings.apex_wholesale_prices_include_gst
+        assign cents = variant.price | times: keep | divided_by: 110.0 | round
+      else
+        assign cents = variant.price | times: keep | divided_by: 100.0 | round
+      endif
+      echo cents
     endif
-    echo cents
   endif
 -%}

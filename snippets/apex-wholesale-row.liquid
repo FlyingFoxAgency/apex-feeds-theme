@@ -1,7 +1,7 @@
 {% comment %}
   One row of the wholesale quick order table (Figma "Quick order" row): product and variant,
-  the price inc GST and ex GST (wholesalers pay full price; the bulk order discounts come off
-  the whole order at checkout), carton size and a carton stepper.
+  the wholesale price ex GST and inc GST (one fixed price per item, no volume discounts),
+  carton size and a carton stepper.
   @param {object} variant
   @param {number} [qty] - cartons to start with (default 0)
   @param {string} key - unique per table (input ids)
@@ -24,6 +24,14 @@
   if variant.available == false or wp == ''
     assign orderable = false
     assign start = 0
+  endif
+  capture enquiry_only
+    render 'apex-enquiry-only', product: product
+  endcapture
+  if enquiry_only contains 'true'
+    assign orderable = false
+    assign start = 0
+    assign order_email = settings.apex_enquiry_ws_email | default: contact_email | default: shop.email | strip
   endif
   assign row_id = 'ApexWq-' | append: key | append: '-' | append: variant.id
 -%}
@@ -67,6 +75,8 @@
         >
         <button type="button" class="apex-wq__step" data-wq-step="1" aria-label="One more carton of {{ product.title | escape }}">+</button>
       </div>
+    {%- elsif enquiry_only contains 'true' -%}
+      <a class="apex-account__link" href="mailto:{{ order_email }}?subject={{ 'Frozen wholesale order: ' | append: product.title | url_encode }}">Email to order</a>
     {%- elsif variant.available == false -%}
       <span class="apex-account__status">Out of stock</span>
     {%- else -%}
