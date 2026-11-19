@@ -114,7 +114,7 @@
                 {%- if item.original_line_price > item.final_line_price -%}
                   <s>{{ item.original_line_price | money }}</s>
                 {%- endif -%}
-                {{ item.final_line_price | money }}
+                {{ item.final_line_price | money }} <span class="apex-price__tax">inc GST</span>
               </p>
             </div>
           </div>
@@ -127,7 +127,7 @@
     <div class="apex-drawer__footer">
       <div class="apex-drawer__subtotal">
         <span>Subtotal</span>
-        <span>{{ cart.total_price | money_with_currency }}</span>
+        <span>{{ cart.total_price | money_with_currency }} <span class="apex-price__tax">inc GST</span></span>
       </div>
       {%- if settings.apex_cart_drawer_note != blank -%}
         <p class="apex-drawer__note">{{ settings.apex_cart_drawer_note | escape }}</p>

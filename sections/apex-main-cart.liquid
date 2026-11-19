@@ -117,7 +117,7 @@
                   {%- if item.original_line_price > item.final_line_price -%}
                     <s class="apex-cart__price-was">{{ item.original_line_price | money }}</s>
                   {%- endif -%}
-                  <span>{{ item.final_line_price | money }}</span>
+                  <span>{{ item.final_line_price | money }} <span class="apex-price__tax">inc GST</span></span>
                   {%- for allocation in item.line_level_discount_allocations -%}
                     <span class="apex-cart__discount">{{ allocation.discount_application.title | escape }} (−{{ allocation.amount | money }})</span>
                   {%- endfor -%}
@@ -156,7 +156,7 @@
           <dl class="apex-cart__totals">
             <div class="apex-cart__row">
               <dt>Subtotal</dt>
-              <dd>{{ cart.items_subtotal_price | money }}</dd>
+              <dd>{{ cart.items_subtotal_price | money }} <span class="apex-price__tax">inc GST</span></dd>
             </div>
             {%- for discount in cart.cart_level_discount_applications -%}
               <div class="apex-cart__row">
@@ -170,8 +170,16 @@
             </div>
             <div class="apex-cart__row apex-cart__row--total">
               <dt>Total</dt>
-              <dd>{{ cart.total_price | money_with_currency }}</dd>
+              <dd>{{ cart.total_price | money_with_currency }} <span class="apex-price__tax">inc GST</span></dd>
             </div>
+            {%- comment -%} Wholesalers work in ex GST prices {%- endcomment -%}
+            {%- capture apex_cart_wholesale -%}{%- render 'apex-wholesale-check' -%}{%- endcapture -%}
+            {%- if apex_cart_wholesale contains 'true' -%}
+              <div class="apex-cart__row">
+                <dt>Total ex GST</dt>
+                <dd>{{ cart.total_price | divided_by: 1.1 | round | money }}</dd>
+              </div>
+            {%- endif -%}
           </dl>
 
           {%- if section.settings.note_title != blank or section.settings.note_text != blank -%}

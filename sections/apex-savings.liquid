@@ -51,11 +51,11 @@
         <dl class="apex-savings__table">
           <div class="apex-savings__row">
             <dt>{{ section.settings.label_one_off | replace: '[count]', count_text | escape }}</dt>
-            <dd>{{ one_off_total | money }}</dd>
+            <dd>{{ one_off_total | money }} <span class="apex-price__tax">inc GST</span></dd>
           </div>
           <div class="apex-savings__row">
             <dt>{{ section.settings.label_subscribe | replace: '[count]', count_text | escape }}</dt>
-            <dd>{{ subscribe_total | money }}</dd>
+            <dd>{{ subscribe_total | money }} <span class="apex-price__tax">inc GST</span></dd>
           </div>
           {%- if bonus > 0 -%}
             <div class="apex-savings__row">
@@ -65,7 +65,7 @@
           {%- endif -%}
           <div class="apex-savings__row apex-savings__row--total">
             <dt>{{ section.settings.label_total | escape }}</dt>
-            <dd>{{ saving | money }}</dd>
+            <dd>{{ saving | money }} <span class="apex-price__tax">inc GST</span></dd>
           </div>
         </dl>
       {%- endif -%}
