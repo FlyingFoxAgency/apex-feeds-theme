@@ -2188,6 +2188,26 @@
       },
       {
         "type": "header",
+        "content": "Bulk enquiry products"
+      },
+      {
+        "type": "checkbox",
+        "id": "apex_enquiry_frozen",
+        "label": "Frozen products are enquiry-only for retail",
+        "default": true,
+        "info": "Products with Food type (format) = Frozen, and any product tagged enquiry-only, show an enquiry button instead of Add to cart. Signed-in wholesalers can still order them."
+      },
+      { "type": "text", "id": "apex_enquiry_title", "label": "Heading", "default": "Bulk orders only" },
+      {
+        "type": "textarea",
+        "id": "apex_enquiry_text",
+        "label": "Text",
+        "default": "Our frozen range is sold in bulk and shipped by arrangement. Send us an enquiry and we'll come back to you with bulk pricing and delivery details."
+      },
+      { "type": "text", "id": "apex_enquiry_button", "label": "Button label", "default": "Enquire for bulk pricing" },
+      { "type": "page", "id": "apex_enquiry_page", "label": "Enquiry page", "info": "Defaults to /pages/contact. The product name is filled into the message." },
+      {
+        "type": "header",
         "content": "Wholesale"
       },
       {

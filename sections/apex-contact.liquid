@@ -542,6 +542,23 @@
   }
 {% endstylesheet %}
 
+<script>
+  // Bulk enquiry links (snippets/apex-enquiry-panel) arrive with ?enquiry=<product>: start the
+  // message with it, and pick a matching enquiry type if there is one.
+  (() => {
+    const enquiry = new URLSearchParams(location.search).get('enquiry');
+    const form = document.getElementById('ApexContactForm');
+    if (!enquiry || !form) return;
+    const body = form.querySelector('[name="contact[body]"]');
+    if (body && !body.value) body.value = `${enquiry}\n\nQuantity and delivery suburb: `;
+    const type = form.querySelector('[name="contact[Enquiry type]"]');
+    if (type) {
+      const match = [...type.options].find((o) => /bulk|frozen/i.test(o.text));
+      if (match) type.value = match.value;
+    }
+  })();
+</script>
+
 {% schema %}
 {
   "name": "APEX contact",
@@ -568,7 +585,7 @@
       "type": "textarea",
       "id": "enquiry_types",
       "label": "Enquiry types",
-      "default": "Order enquiry\nProduct question\nShipping & delivery\nWholesale\nAccount help\nOther",
+      "default": "Order enquiry\nProduct question\nBulk order (frozen)\nShipping & delivery\nWholesale\nAccount help\nOther",
       "info": "One per line."
     },
     { "type": "text", "id": "button_label", "label": "Button label", "default": "Send enquiry" },

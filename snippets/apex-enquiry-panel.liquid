@@ -1,0 +1,21 @@
+{% comment %}
+  Replaces quantity + Add to cart on enquiry-only products (snippets/apex-enquiry-only): a short
+  note and a button to the contact page with the product filled in. Text in Theme settings >
+  APEX Feeds > Bulk enquiry products.
+  @param {object} product
+{% endcomment %}
+{%- liquid
+  assign contact_url = settings.apex_enquiry_page.url | default: '/pages/contact'
+  assign enquiry = 'Bulk order enquiry: ' | append: product.title
+-%}
+<div class="apex-enquiry">
+  {%- if settings.apex_enquiry_title != blank -%}
+    <p class="apex-enquiry__title">{{ settings.apex_enquiry_title | escape }}</p>
+  {%- endif -%}
+  {%- if settings.apex_enquiry_text != blank -%}
+    <p class="apex-enquiry__text">{{ settings.apex_enquiry_text | escape }}</p>
+  {%- endif -%}
+  <a class="apex-button apex-button--amber apex-enquiry__button" href="{{ contact_url }}?enquiry={{ enquiry | url_encode }}#ApexContactForm">
+    {{- settings.apex_enquiry_button | default: 'Enquire for bulk pricing' | escape -}}
+  </a>
+</div>

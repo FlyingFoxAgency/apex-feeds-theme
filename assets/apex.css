@@ -1113,3 +1113,34 @@ apex-wishlist-button {
   font-size: 0.875em;
   opacity: 0.6;
 }
+
+/* Enquiry-only products (frozen, retail): replaces quantity + Add to cart */
+.apex-enquiry {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 20px;
+  border: 1px solid var(--apex-stone-300, #d9d4cc);
+  border-radius: 12px;
+  background-color: var(--apex-stone-100, #faf9f7);
+  width: 100%;
+}
+
+.apex-enquiry__title {
+  margin: 0;
+  font-weight: 700;
+  color: var(--apex-burrow);
+}
+
+.apex-enquiry__text {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+}
+
+.apex-enquiry__button {
+  margin-block-start: 8px;
+  width: 100%;
+  justify-content: center;
+}
