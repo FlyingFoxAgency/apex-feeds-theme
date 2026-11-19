@@ -22,14 +22,24 @@
   assign handle = page.handle
   assign body = ''
   assign from_policies = false
+  assign locked = false
   if section.settings.text_source == 'retailer_agreement'
     # James's Retailer Agreement lives in the theme (too long for a page): snippets
-    # apex-retailer-agreement-1 to -3
-    capture body
-      render 'apex-retailer-agreement-1'
-      render 'apex-retailer-agreement-2'
-      render 'apex-retailer-agreement-3'
+    # apex-retailer-agreement-1 to -3. Only signed-in wholesalers see it (Ell, 19 Nov 2026);
+    # everyone else gets a sign-in card. The theme editor always shows it.
+    capture is_wholesale
+      render 'apex-wholesale-check'
     endcapture
+    if is_wholesale contains 'true' or request.design_mode
+      capture body
+        render 'apex-retailer-agreement-1'
+        render 'apex-retailer-agreement-2'
+        render 'apex-retailer-agreement-3'
+      endcapture
+    else
+      assign locked = true
+      assign body = 'locked'
+    endif
     assign from_policies = true
   elsif section.settings.text_source != 'page'
     if handle contains 'privacy'
@@ -61,7 +71,7 @@
   endif
 -%}
 <div class="apex-policy" data-apex-policy>
-  {%- if section.settings.show_progress -%}
+  {%- if section.settings.show_progress and locked == false -%}
     <div class="apex-policy__progress" aria-hidden="true">
       <div class="apex-container">
         <div class="apex-policy__track"><span class="apex-policy__fill" data-progress-fill></span></div>
@@ -90,7 +100,7 @@
     </div>
 
     <div class="apex-policy__grid">
-      {%- if section.blocks.size > 0 -%}
+      {%- if section.blocks.size > 0 and locked == false -%}
         <nav class="apex-policy__nav" aria-label="{{ section.settings.nav_title | default: 'Policies' | escape }}">
           {%- if section.settings.nav_title != blank -%}
             <p class="apex-policy__nav-title">{{ section.settings.nav_title | escape }}</p>
@@ -125,7 +135,17 @@
       {%- endif -%}
 
       <div class="apex-policy__panel">
-        {%- if body != blank -%}
+        {%- if locked -%}
+          {%- assign wholesale_url = settings.apex_wholesale_page.url | default: '/pages/wholesale' -%}
+          <div class="apex-policy__body rte apex-policy__locked">
+            <h2>{{ section.settings.locked_heading | escape }}</h2>
+            <p>{{ section.settings.locked_text | escape }}</p>
+            <p class="apex-policy__locked-actions">
+              <a class="apex-button apex-button--amber" href="{{ wholesale_url }}">{% if customer %}Go to your wholesale account{% else %}Wholesale sign in{% endif %}</a>
+              <a href="/pages/wholesale-application">Apply for a wholesale account</a>
+            </p>
+          </div>
+        {%- elsif body != blank -%}
           <div class="apex-policy__body rte" data-policy-body>{{ body }}</div>
         {%- else -%}
           <p class="apex-policy__empty">
@@ -518,6 +538,18 @@
     text-underline-offset: 2px;
   }
 
+  .apex-policy__locked-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 24px;
+    margin-block-start: 24px;
+  }
+
+  .apex-policy__locked-actions .apex-button {
+    text-decoration: none;
+  }
+
   .apex-policy__empty {
     margin: 0;
     color: var(--apex-dried-moss);
@@ -646,6 +678,19 @@
       "id": "nav_title",
       "label": "Links card title",
       "default": "Policies"
+    },
+    {
+      "type": "text",
+      "id": "locked_heading",
+      "label": "Wholesale only: heading",
+      "default": "For wholesale accounts",
+      "info": "With Text source = Retailer Agreement, only signed-in wholesalers see the text. Everyone else sees this."
+    },
+    {
+      "type": "text",
+      "id": "locked_text",
+      "label": "Wholesale only: text",
+      "default": "The Retailer Agreement is available to approved Apex Feeds stockists. Sign in with your wholesale account to read it."
     },
     {
       "type": "text",
