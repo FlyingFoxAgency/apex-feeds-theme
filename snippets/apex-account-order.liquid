@@ -153,7 +153,7 @@
     {%- if order.total_refunded_amount > 0 -%}
       <div><dt>Refunded</dt><dd>-{{ order.total_refunded_amount | money }}</dd></div>
     {%- endif -%}
-    <div class="apex-account__total-row"><dt>Total</dt><dd>{{ order.total_price | money }}</dd></div>
+    <div class="apex-account__total-row"><dt>Total{% if order.taxes_included %} (inc GST){% endif %}</dt><dd>{{ order.total_price | money }}</dd></div>
   </dl>
 </div>
 

@@ -87,10 +87,7 @@
       <div class="apex-product-card__row">
         <h3 class="apex-product-card__title">{{ product.title | escape }}</h3>
         <p class="apex-product-card__price">
-          {%- if product.price_varies -%}
-            <span class="visually-hidden">From</span>
-          {%- endif -%}
-          {{ product.price | money }}
+          {%- render 'apex-price', product: product -%}
         </p>
       </div>
       <p class="apex-product-card__note">{{ note | escape }}</p>

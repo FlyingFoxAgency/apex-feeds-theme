@@ -1,0 +1,79 @@
+{% comment %}
+  APEX price with its GST label (Ell, 19 Nov 2026: "inc GST" / "ex GST" next to every price).
+  - Retail shoppers: the price, then "inc GST" (retail prices include GST).
+  - Signed-in wholesalers: their wholesale price with "ex GST", and "RRP $X inc GST" under it,
+    small and muted (not crossed out: it isn't a sale, and the two aren't on the same GST basis).
+    No wholesale price set for the item: just "RRP $X inc GST".
+  @param {object} product
+  @param {object} [variant] - a variant's price; without it, the product's lowest price (cards)
+  @param {boolean} [stack] - put the label/RRP on its own line (default true)
+  Use: {%- render 'apex-price', product: product, variant: variant -%}
+{% endcomment %}
+{%- liquid
+  capture apex_is_wholesale
+    render 'apex-wholesale-check'
+  endcapture
+  assign tax_label = 'inc GST'
+  unless settings.apex_wholesale_prices_include_gst
+    assign tax_label = 'ex GST'
+  endunless
+
+  if variant
+    assign rrp = variant.price
+    assign was = variant.compare_at_price
+  else
+    assign rrp = product.price
+    assign was = product.compare_at_price
+  endif
+
+  assign wholesale_cents = ''
+  if apex_is_wholesale contains 'true'
+    if variant
+      capture wholesale_cents
+        render 'apex-wholesale-price', variant: variant
+      endcapture
+      assign wholesale_cents = wholesale_cents | strip
+    else
+      for v in product.variants
+        capture wp
+          render 'apex-wholesale-price', variant: v
+        endcapture
+        assign wp = wp | strip
+        if wp != ''
+          assign wp = wp | plus: 0
+          if wholesale_cents == '' or wp < wholesale_cents
+            assign wholesale_cents = wp
+          endif
+        endif
+      endfor
+    endif
+  endif
+  assign from = false
+  if variant == blank and product.price_varies
+    assign from = true
+  endif
+-%}
+<span class="apex-price{% if stack != false %} apex-price--stack{% endif %}">
+  {%- if apex_is_wholesale contains 'true' -%}
+    {%- if wholesale_cents != '' -%}
+      <span class="apex-price__main">
+        {%- if from %}<span class="apex-price__from">From </span>{% endif -%}
+        <span class="apex-price__amount">{{ wholesale_cents | plus: 0 | money }}</span>
+        <span class="apex-price__tax">ex GST</span>
+      </span>
+      <span class="apex-price__rrp">RRP {{ rrp | money }} {{ tax_label }}</span>
+    {%- else -%}
+      <span class="apex-price__main">
+        <span class="apex-price__amount">RRP {{ rrp | money }}</span>
+        <span class="apex-price__tax">{{ tax_label }}</span>
+      </span>
+    {%- endif -%}
+  {%- else -%}
+    <span class="apex-price__main">
+      {%- if from %}<span class="visually-hidden">From </span>{% endif -%}
+      <span class="apex-price__amount">{{ rrp | money }}</span>
+      {%- if was > rrp %} <s class="apex-price__was"><span class="visually-hidden">Was </span>{{ was | money }}</s>{% endif %}
+      <span class="apex-price__tax">{{ tax_label }}</span>
+    </span>
+  {%- endif -%}
+</span>
