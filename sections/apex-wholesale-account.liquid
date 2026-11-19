@@ -303,7 +303,10 @@
                             {%- endif -%}
                           </p>
                         {%- endif -%}
-                        {%- if v.available and wp != '' -%}
+                        {%- capture wrec_enquiry -%}{%- render 'apex-enquiry-only', product: product -%}{%- endcapture -%}
+                        {%- if wrec_enquiry contains 'true' -%}
+                          <a class="apex-button apex-account__button--outline apex-wrec__button" href="mailto:{{ settings.apex_enquiry_ws_email | default: contact_email | strip }}?subject={{ 'Frozen wholesale order: ' | append: product.title | url_encode }}">Email to order</a>
+                        {%- elsif v.available and wp != '' -%}
                           <form class="apex-wrec__form" action="{{ routes.cart_add_url }}" method="post">
                             <input type="hidden" name="id" value="{{ v.id }}">
                             <input type="hidden" name="quantity" value="{{ carton }}">

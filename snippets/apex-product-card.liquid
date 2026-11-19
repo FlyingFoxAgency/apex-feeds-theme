@@ -102,6 +102,12 @@
     {%- liquid
       if enquiry_only contains 'true'
         assign cart_label = settings.apex_enquiry_button | default: 'Enquire for bulk pricing'
+        capture card_ws
+          render 'apex-wholesale-check'
+        endcapture
+        if card_ws contains 'true'
+          assign cart_label = 'Order by email'
+        endif
       elsif product.available == false
         assign cart_label = 'Sold out'
       elsif single_variant

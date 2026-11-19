@@ -1144,3 +1144,8 @@ apex-wishlist-button {
   width: 100%;
   justify-content: center;
 }
+
+.apex-enquiry__email a {
+  color: inherit;
+  text-decoration: underline;
+}

@@ -1,8 +1,10 @@
 {% comment %}
-  Prints "true" when a product can't be bought by this shopper and is enquiry-only (James,
-  19 Nov 2026): frozen products (custom.food_type "Frozen") or products tagged "enquiry-only",
-  for everyone except signed-in wholesalers. Frozen stock is mainly for wholesale; retail
-  customers enquire for bulk pricing and no single frozen items are shipped.
+  Prints "true" when a product is enquiry-only (James, 19 Nov 2026): frozen products
+  (custom.food_type "Frozen", setting in Theme settings > APEX Feeds > Bulk enquiry products) or
+  products tagged "enquiry-only".
+  - Retail shoppers: enquire for bulk pricing through the contact form.
+  - Wholesalers: order by email, freight quoted per order (Retailer Agreement 7.5; Ell, 19 Nov).
+  snippets/apex-enquiry-panel shows the right one.
   @param {object} product
   Use: {%- capture enquiry_only -%}{%- render 'apex-enquiry-only', product: product -%}{%- endcapture -%}
 {% endcomment %}
@@ -16,11 +18,6 @@
     assign is_enquiry = true
   endif
   if is_enquiry
-    capture apex_ws
-      render 'apex-wholesale-check'
-    endcapture
-    unless apex_ws contains 'true'
-      echo 'true'
-    endunless
+    echo 'true'
   endif
 -%}

@@ -1,21 +1,47 @@
 {% comment %}
-  Replaces quantity + Add to cart on enquiry-only products (snippets/apex-enquiry-only): a short
-  note and a button to the contact page with the product filled in. Text in Theme settings >
-  APEX Feeds > Bulk enquiry products.
+  Replaces quantity + Add to cart on enquiry-only products (snippets/apex-enquiry-only).
+  - Retail: a note and a button to the contact page with the product filled in.
+  - Wholesalers: frozen orders are placed by email and freight is quoted per order (Retailer
+    Agreement 7.5), so the button opens an email to the wholesale order address.
+  Text in Theme settings > APEX Feeds > Bulk enquiry products.
   @param {object} product
 {% endcomment %}
-{%- liquid
-  assign contact_url = settings.apex_enquiry_page.url | default: '/pages/contact'
-  assign enquiry = 'Bulk order enquiry: ' | append: product.title
--%}
-<div class="apex-enquiry">
-  {%- if settings.apex_enquiry_title != blank -%}
-    <p class="apex-enquiry__title">{{ settings.apex_enquiry_title | escape }}</p>
-  {%- endif -%}
-  {%- if settings.apex_enquiry_text != blank -%}
-    <p class="apex-enquiry__text">{{ settings.apex_enquiry_text | escape }}</p>
-  {%- endif -%}
-  <a class="apex-button apex-button--amber apex-enquiry__button" href="{{ contact_url }}?enquiry={{ enquiry | url_encode }}#ApexContactForm">
-    {{- settings.apex_enquiry_button | default: 'Enquire for bulk pricing' | escape -}}
-  </a>
-</div>
+{%- capture apex_ws -%}{%- render 'apex-wholesale-check' -%}{%- endcapture -%}
+{%- if apex_ws contains 'true' -%}
+  {%- liquid
+    assign order_email = settings.apex_enquiry_ws_email | default: shop.email | strip
+    assign subject = 'Frozen wholesale order: ' | append: product.title
+    assign body = 'Business name: ' | append: customer.default_address.company | append: '
+Product: ' | append: product.title | append: '
+Quantity: 
+Delivery address: '
+  -%}
+  <div class="apex-enquiry">
+    {%- if settings.apex_enquiry_ws_title != blank -%}
+      <p class="apex-enquiry__title">{{ settings.apex_enquiry_ws_title | escape }}</p>
+    {%- endif -%}
+    {%- if settings.apex_enquiry_ws_text != blank -%}
+      <p class="apex-enquiry__text">{{ settings.apex_enquiry_ws_text | escape }}</p>
+    {%- endif -%}
+    <a class="apex-button apex-button--amber apex-enquiry__button" href="mailto:{{ order_email }}?subject={{ subject | url_encode }}&amp;body={{ body | url_encode }}">
+      {{- settings.apex_enquiry_ws_button | default: 'Email your order' | escape -}}
+    </a>
+    <p class="apex-enquiry__text apex-enquiry__email">Or email <a href="mailto:{{ order_email }}">{{ order_email }}</a></p>
+  </div>
+{%- else -%}
+  {%- liquid
+    assign contact_url = settings.apex_enquiry_page.url | default: '/pages/contact'
+    assign enquiry = 'Bulk order enquiry: ' | append: product.title
+  -%}
+  <div class="apex-enquiry">
+    {%- if settings.apex_enquiry_title != blank -%}
+      <p class="apex-enquiry__title">{{ settings.apex_enquiry_title | escape }}</p>
+    {%- endif -%}
+    {%- if settings.apex_enquiry_text != blank -%}
+      <p class="apex-enquiry__text">{{ settings.apex_enquiry_text | escape }}</p>
+    {%- endif -%}
+    <a class="apex-button apex-button--amber apex-enquiry__button" href="{{ contact_url }}?enquiry={{ enquiry | url_encode }}#ApexContactForm">
+      {{- settings.apex_enquiry_button | default: 'Enquire for bulk pricing' | escape -}}
+    </a>
+  </div>
+{%- endif -%}
