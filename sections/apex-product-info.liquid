@@ -78,6 +78,10 @@
         <h2 class="apex-section-title apex-info__heading">{{ section.settings.title | escape }}</h2>
       {%- endif -%}
       <apex-variant-content class="apex-info__list" data-section-id="{{ section.id }}" data-key="info">{{ rows }}</apex-variant-content>
+      {%- comment -%} Per-product toggle: product metafield custom.hide_ingredients_disclaimer (True or false) {%- endcomment -%}
+      {%- if section.settings.disclaimer != blank and product.metafields.custom.hide_ingredients_disclaimer.value != true -%}
+        <p class="apex-info__disclaimer">{{ section.settings.disclaimer | escape | newline_to_br }}</p>
+      {%- endif -%}
     </div>
   </div>
 {%- endif -%}
@@ -232,6 +236,16 @@
     }
   }
 
+  /* Ingredients disclaimer (James, 19 Nov 2026): ends every product listing */
+  .apex-info__disclaimer {
+    margin-block-start: 24px;
+    max-width: 60rem;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    font-style: normal;
+    opacity: 0.8;
+  }
+
   @keyframes apex-info-open {
     from {
       opacity: 0;
@@ -297,6 +311,13 @@
       "id": "title",
       "label": "Title",
       "default": "Product information"
+    },
+    {
+      "type": "textarea",
+      "id": "disclaimer",
+      "label": "Disclaimer under the rows",
+      "info": "Shown on every product. Leave empty to hide everywhere. To hide it on one product, turn on the product metafield \"Hide ingredients disclaimer\".",
+      "default": "Ingredients may vary between batches depending on the seasonal availability of raw materials. Please refer to the label on your pack for the ingredients and nutritional information for that batch."
     },
     {
       "type": "range",

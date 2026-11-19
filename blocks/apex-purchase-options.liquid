@@ -42,6 +42,11 @@
     assign subscribe_first = true
   endif
 -%}
+{%- capture apex_enquiry_only -%}{%- render 'apex-enquiry-only', product: product -%}{%- endcapture -%}
+{%- if apex_enquiry_only contains 'true' -%}
+  {%- assign has_plans = false -%}
+  {%- assign preview = false -%}
+{%- endif -%}
 {%- if has_plans or preview -%}
   <apex-purchase-options
     class="apex-purchase"

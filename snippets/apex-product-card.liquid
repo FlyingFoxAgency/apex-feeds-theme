@@ -98,8 +98,17 @@
   {%- render 'apex-wishlist-button', product: product, class: 'apex-product-card__wishlist' -%}
 
   {%- if show_buttons -%}
+    {%- capture enquiry_only -%}{%- render 'apex-enquiry-only', product: product -%}{%- endcapture -%}
     {%- liquid
-      if product.available == false
+      if enquiry_only contains 'true'
+        assign cart_label = settings.apex_enquiry_button | default: 'Enquire for bulk pricing'
+        capture card_ws
+          render 'apex-wholesale-check'
+        endcapture
+        if card_ws contains 'true'
+          assign cart_label = 'Order by email'
+        endif
+      elsif product.available == false
         assign cart_label = 'Sold out'
       elsif single_variant
         assign cart_label = 'Add to cart'
@@ -108,7 +117,9 @@
       endif
     -%}
     <div class="apex-product-card__actions">
-      {%- if product.available and single_variant -%}
+      {%- if enquiry_only contains 'true' -%}
+        <a class="apex-product-card__cart" href="{{ product.url }}">{{ cart_label | escape }}</a>
+      {%- elsif product.available and single_variant -%}
         <form class="apex-product-card__form" action="{{ routes.cart_add_url }}" method="post">
           <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
           <input type="hidden" name="quantity" value="1">
@@ -121,7 +132,8 @@
       {%- endif -%}
     </div>
 
-    {%- if product.available -%}
+    {%- assign enquiry_only = enquiry_only | strip -%}
+    {%- if product.available and enquiry_only != 'true' -%}
       <div class="apex-product-card__hover" aria-hidden="true">
         {%- if single_variant -%}
           <form action="{{ routes.cart_add_url }}" method="post">

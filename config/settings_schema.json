@@ -2188,6 +2188,43 @@
       },
       {
         "type": "header",
+        "content": "Bulk enquiry products"
+      },
+      {
+        "type": "checkbox",
+        "id": "apex_enquiry_frozen",
+        "label": "Frozen products are enquiry-only",
+        "default": true,
+        "info": "Products with Food type (format) = Frozen, and any product tagged enquiry-only, show an enquiry panel instead of Add to cart. Retail shoppers enquire through the contact form; wholesalers order by email (Retailer Agreement 7.5)."
+      },
+      {
+        "type": "paragraph",
+        "content": "Retail shoppers"
+      },
+      { "type": "text", "id": "apex_enquiry_title", "label": "Heading", "default": "Bulk orders only" },
+      {
+        "type": "textarea",
+        "id": "apex_enquiry_text",
+        "label": "Text",
+        "default": "Our frozen range is sold in bulk and shipped by arrangement. Send us an enquiry and we'll come back to you with bulk pricing and delivery details."
+      },
+      { "type": "text", "id": "apex_enquiry_button", "label": "Button label", "default": "Enquire for bulk pricing" },
+      { "type": "page", "id": "apex_enquiry_page", "label": "Enquiry page", "info": "Defaults to /pages/contact. The product name is filled into the message." },
+      {
+        "type": "paragraph",
+        "content": "Signed-in wholesalers"
+      },
+      { "type": "text", "id": "apex_enquiry_ws_title", "label": "Wholesale heading", "default": "Frozen orders by email" },
+      {
+        "type": "textarea",
+        "id": "apex_enquiry_ws_text",
+        "label": "Wholesale text",
+        "default": "Frozen wholesale orders are placed directly by email. We'll confirm stock and quote freight for your order before it's dispatched."
+      },
+      { "type": "text", "id": "apex_enquiry_ws_button", "label": "Wholesale button label", "default": "Email your order" },
+      { "type": "text", "id": "apex_enquiry_ws_email", "label": "Wholesale order email", "default": "sales@apexfeeds.com.au" },
+      {
+        "type": "header",
         "content": "Wholesale"
       },
       {
