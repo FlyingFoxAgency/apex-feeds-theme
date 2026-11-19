@@ -13,7 +13,8 @@
       subscri → subscription policy
       shipping + return/refund (e.g. shipping-returns) → Shipping policy, then Return and refund policy
       shipping → Shipping policy;  refund/return → Return and refund policy
-    The section setting "Text source" can switch to the page's own content instead. The page's
+    The section setting "Text source" can switch to the page's own content instead, or to the
+    Retailer Agreement for wholesalers (snippets/apex-retailer-agreement-*). The page's
     content is also used if no store policy matches or the policies are empty.
   - A reading bar under the header shows the current heading and how much has been read.
 {% endcomment %}
@@ -21,7 +22,16 @@
   assign handle = page.handle
   assign body = ''
   assign from_policies = false
-  if section.settings.text_source != 'page'
+  if section.settings.text_source == 'retailer_agreement'
+    # James's Retailer Agreement lives in the theme (too long for a page): snippets
+    # apex-retailer-agreement-1 to -3
+    capture body
+      render 'apex-retailer-agreement-1'
+      render 'apex-retailer-agreement-2'
+      render 'apex-retailer-agreement-3'
+    endcapture
+    assign from_policies = true
+  elsif section.settings.text_source != 'page'
     if handle contains 'privacy'
       # Shopify's automated privacy policy uses a big heading for every part: show them as
       # sub-headings under one "Privacy policy" title, like the other policy pages
@@ -451,6 +461,45 @@
     text-transform: none;
   }
 
+  /* Clause headings (Retailer Agreement: 4.1, 4.2 ...) */
+  .apex-policy__body h4 {
+    margin-block: 32px 8px;
+    scroll-margin-top: 96px;
+    color: var(--apex-burrow);
+    font-family: var(--font-body--family);
+    font-weight: 600;
+    font-size: 1.125rem;
+    line-height: 1.5rem;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  /* Contents list at the top of a long document */
+  .apex-policy__body .apex-toc {
+    margin-block-end: 40px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .apex-policy__body .apex-toc > li + li {
+    margin-block-start: 16px;
+  }
+
+  .apex-policy__body .apex-toc > li > a {
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .apex-policy__body .apex-toc ul {
+    margin-block-start: 8px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .apex-policy__body .apex-toc ul li + li {
+    margin-block-start: 4px;
+  }
+
   .apex-policy__body > :is(h2, h3):first-child {
     margin-block-start: 0;
   }
@@ -560,7 +609,8 @@
       "label": "Text source",
       "options": [
         { "value": "policies", "label": "Store policies (Settings > Policies)" },
-        { "value": "page", "label": "The page's own content" }
+        { "value": "page", "label": "The page's own content" },
+        { "value": "retailer_agreement", "label": "Retailer Agreement (wholesale)" }
       ],
       "default": "policies",
       "info": "Store policies are picked by the page handle: privacy, terms (terms + subscription policy), shipping-returns (shipping + refund policy)."

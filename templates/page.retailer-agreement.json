@@ -1,0 +1,29 @@
+{
+  "sections": {
+    "main": {
+      "type": "apex-policy",
+      "blocks": {
+        "part_a": { "type": "link", "settings": { "label": "A. Agreement", "link": "/pages/retailer-agreement#part-a" } },
+        "part_b": { "type": "link", "settings": { "label": "B. Wholesale trading", "link": "/pages/retailer-agreement#part-b" } },
+        "part_c": { "type": "link", "settings": { "label": "C. Brand standards", "link": "/pages/retailer-agreement#part-c" } },
+        "part_d": { "type": "link", "settings": { "label": "D. Product handling", "link": "/pages/retailer-agreement#part-d" } },
+        "part_e": { "type": "link", "settings": { "label": "E. Returns & quality", "link": "/pages/retailer-agreement#part-e" } },
+        "part_f": { "type": "link", "settings": { "label": "F. Quality control", "link": "/pages/retailer-agreement#part-f" } },
+        "part_g": { "type": "link", "settings": { "label": "G. Agreement management", "link": "/pages/retailer-agreement#part-g" } },
+        "part_h": { "type": "link", "settings": { "label": "H. Formal terms", "link": "/pages/retailer-agreement#part-h" } }
+      },
+      "block_order": ["part_a", "part_b", "part_c", "part_d", "part_e", "part_f", "part_g", "part_h"],
+      "settings": {
+        "eyebrow": "Wholesale",
+        "text_source": "retailer_agreement",
+        "show_date": false,
+        "intro": "The Authorised Retailer Agreement & Brand Standards: how Apex Feeds wholesale accounts order, store, sell and advertise our products. The same for every stockist.",
+        "show_progress": true,
+        "show_back_to_top": true,
+        "nav_title": "Contents",
+        "empty_text": "The Retailer Agreement is being updated. Please contact us for a copy."
+      }
+    }
+  },
+  "order": ["main"]
+}

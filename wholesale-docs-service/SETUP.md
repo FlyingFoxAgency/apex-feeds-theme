@@ -61,6 +61,8 @@ Leave it blank to go back to asking for links.
 
 ## Uploading a signed agreement (James)
 
+> **Not needed any more (19 Nov 2026).** James decided the Retailer Agreement isn't signed per account: every wholesaler reads the same document at /pages/retailer-agreement. The upload form still works if he ever wants to keep a document against a customer.
+
 On `/admin`, under **Upload a signed wholesale agreement**:
 
 1. **Customer ID**: open the customer in Shopify admin; it's the number at the end of the page address.
@@ -72,6 +74,8 @@ On `/admin`, under **Upload a signed wholesale agreement**:
 Files uploaded together show as one agreement, on `/admin` and in the wholesaler's dashboard.
 
 ## Phase 2: wholesalers see their own agreements
+
+> **Shelved (19 Nov 2026).** The theme no longer shows per-wholesaler agreements, so the APEX Docs app isn't needed. Kept here in case that changes.
 
 The wholesale dashboard (/pages/wholesale > Terms and agreements) asks
 `/apps/apex-docs/agreements` for the signed-in wholesaler's agreements. Shopify forwards that

@@ -2214,7 +2214,7 @@
         "type": "range",
         "id": "apex_wholesale_fallback_discount",
         "label": "Wholesale discount off RRP",
-        "info": "0 = wholesalers pay full price (only the bulk order discounts in Discounts apply). Only set this if a matching discount is also set up in Discounts, or the dashboard will show prices checkout doesn't charge.",
+        "info": "Used when a variant has no wholesale price of its own (custom.wholesale_price, ex GST). Checkout must charge the same: set up a matching discount for the wholesale customers, or the dashboard will show prices checkout doesn't charge.",
         "min": 0,
         "max": 60,
         "step": 1,

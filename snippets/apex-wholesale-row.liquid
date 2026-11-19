@@ -1,7 +1,7 @@
 {% comment %}
   One row of the wholesale quick order table (Figma "Quick order" row): product and variant,
-  the price inc GST and ex GST (wholesalers pay full price; the bulk order discounts come off
-  the whole order at checkout), carton size and a carton stepper.
+  the wholesale price ex GST and inc GST (one fixed price per item, no volume discounts),
+  carton size and a carton stepper.
   @param {object} variant
   @param {number} [qty] - cartons to start with (default 0)
   @param {string} key - unique per table (input ids)
