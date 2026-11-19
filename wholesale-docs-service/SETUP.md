@@ -59,16 +59,53 @@ Leave it blank to go back to asking for links.
 
 ---
 
-## Later: agreements in the wholesaler's account dashboard
+## Uploading a signed agreement (James)
 
-This needs a Shopify app (created in the Shopify Dev Dashboard) with a customer account extension.
-The service is already built for it: `/ext/agreements` (account extension) and `/proxy/agreements`
-(storefront app proxy) only return the logged-in customer's own agreements. Two extra secrets are added then:
+On `/admin`, under **Upload a signed wholesale agreement**:
 
-- `SHOPIFY_API_SECRET`: the app's client secret (Worker > Variables and Secrets > **Secret**)
-- `DOWNLOAD_SECRET`: any long random string (Secret)
+1. **Customer ID**: open the customer in Shopify admin; it's the number at the end of the page address.
+2. **Title shown to the customer**, e.g. "Wholesale agreement 2026".
+3. **Date signed** (optional). The wholesaler sees "Signed on <date>".
+4. **Files**: select the full agreement PDF and the photo/scan of the signed page together
+   (hold Ctrl or Cmd to pick more than one). PDF, JPG, PNG or WEBP; up to 6 files, 10 MB each.
 
-and the text variable `SHOPIFY_API_KEY` (the app's client ID).
+Files uploaded together show as one agreement, on `/admin` and in the wholesaler's dashboard.
+
+## Phase 2: wholesalers see their own agreements
+
+The wholesale dashboard (/pages/wholesale > Terms and agreements) asks
+`/apps/apex-docs/agreements` for the signed-in wholesaler's agreements. Shopify forwards that
+address to this service and signs it with the customer's ID, so each wholesaler only ever gets
+their own files, as 10-minute links. This needs one small private app, **APEX Docs**, with an
+app proxy and nothing else. It's free (Shopify charges nothing for a private app, and it stays
+on Cloudflare's free plan).
+
+Installing apps on this store needs the store owner's ID verification first (same block as Appstle).
+
+1. **Create the app.** On dev.shopify.com (signed in as the store owner, or a collaborator with
+   app development rights), **Apps** > **Create app** > name it `APEX Docs`.
+2. **Push its settings.** On a computer with the Shopify CLI, in the `shopify-app` folder:
+   `shopify app config link` (pick APEX Docs; it fills in `client_id`), then `shopify app deploy`.
+   This sets the app proxy: `apps` / `apex-docs` > `https://apex-wholesale-docs.apexfeeds.workers.dev/proxy`.
+3. **Install it** on the store from the app's page in the Dev Dashboard (**Install app**, choose
+   the APEX Feeds store).
+4. **Give the service its secrets** (Worker > Settings > Variables and Secrets):
+   - `SHOPIFY_API_SECRET` = the app's **Client secret** (Dev Dashboard > APEX Docs > Settings) as a **Secret**
+   - `DOWNLOAD_SECRET` = any long random string, as a **Secret**
+   - `SHOPIFY_SHOP` = `apex-feeds-dev.myshopify.com` (Text)
+   - `SHOPIFY_API_KEY` = the app's **Client ID** (Text)
+5. **Paste the latest `src/index.js`** into the Worker's code editor and **Deploy**.
+6. **Test it:** signed in as a wholesale-tagged customer, open
+   `https://apex-feeds-dev.myshopify.com/apps/apex-docs/agreements`. It should show
+   `{"ok":true,"agreements":[...]}`. Signed out it says "Please log in to see your agreements".
+7. **Switch it on in the theme:** theme editor > Wholesale page > APEX wholesale account section >
+   tick **Show signed agreements**. Save.
+
+If step 3 fails with a 500 error (a known Dev Dashboard issue for proxy-only apps), create the
+app again with a new name and retry, or tell Claude.
+
+`/ext/agreements` is also built, for a customer account extension (Shopify's own account pages).
+The theme dashboard doesn't need it.
 
 ## Good to know
 
@@ -79,4 +116,4 @@ and the text variable `SHOPIFY_API_KEY` (the app's client ID).
 - **Never outgrowing the free plan:** new uploads are refused once the folder holds 8 GB (R2's free allowance is 10 GB),
   and after 200 uploaded files in one day. Applicants then see a message asking them to email their documents.
   Change these with the optional Worker text variables `STORAGE_LIMIT_GB` and `DAILY_UPLOAD_LIMIT`.
-- **Tests:** `npm install` then `npm test` runs 36 local checks (signatures, wrong customers, tampered links, file types).
+- **Tests:** `npm install` then `npm test` runs 40 local checks (signatures, wrong customers, tampered links, file types).

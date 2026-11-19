@@ -1,0 +1,26 @@
+# APEX Docs: a private Shopify app whose only job is the app proxy that lets the wholesale
+# dashboard (/pages/wholesale) list a signed-in wholesaler's own agreements from the documents
+# service. No admin access scopes beyond the proxy, no embedded admin page, no billing.
+#
+# client_id is filled in by `shopify app config link` (step 2 in SETUP.md, "Phase 2").
+
+client_id = ""
+name = "APEX Docs"
+application_url = "https://apex-wholesale-docs.apexfeeds.workers.dev/"
+embedded = false
+
+[access_scopes]
+scopes = "write_app_proxy"
+
+[auth]
+redirect_urls = [ "https://apex-wholesale-docs.apexfeeds.workers.dev/" ]
+
+[app_proxy]
+# Shopify serves https://<store>/apps/apex-docs/agreements from <url>/agreements and signs each
+# request with the signed-in customer's ID.
+url = "https://apex-wholesale-docs.apexfeeds.workers.dev/proxy"
+subpath = "apex-docs"
+prefix = "apps"
+
+[webhooks]
+api_version = "2026-10"
