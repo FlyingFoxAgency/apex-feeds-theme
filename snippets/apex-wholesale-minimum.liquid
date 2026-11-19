@@ -10,8 +10,9 @@
   {%- capture wholesale_minimum -%}{%- render 'apex-wholesale-minimum', id: 'ApexCartMinimum' -%}{%- endcapture -%}
   <button {% if wholesale_minimum != blank %}disabled aria-describedby="ApexCartMinimum"{% endif %}>Checkout</button>
 
-  The minimum includes GST and is measured on the cart's item subtotal (what checkout charges, after
-  item discounts, before order discounts and freight).
+  The minimum excludes GST (James's Retailer Agreement: $250 + GST, freight not counted). It is
+  measured on the cart's item subtotal (after item discounts, before order discounts and freight);
+  when retail prices include GST, GST is added to the minimum before comparing.
   This only guards the theme's Checkout buttons. Shopify checkout itself can't be blocked without
   an app (Shopify Functions), so a hand-typed checkout link still gets through.
 {% enddoc %}
@@ -24,11 +25,16 @@
     endcapture
     assign is_wholesale = is_wholesale | strip
     if is_wholesale == 'true'
-      # Minimum includes GST, compared with the cart's item subtotal (after item discounts).
+      # Minimum excludes GST. Cart prices include GST, so compare against the minimum plus GST.
       assign minimum_cents = minimum | times: 100
-      if cart.items_subtotal_price < minimum_cents
+      if settings.apex_wholesale_prices_include_gst
+        assign minimum_inc_cents = minimum_cents | times: 1.1 | round
+      else
+        assign minimum_inc_cents = minimum_cents
+      endif
+      if cart.items_subtotal_price < minimum_inc_cents
         assign show = true
-        assign short = minimum_cents | minus: cart.items_subtotal_price
+        assign short = minimum_inc_cents | minus: cart.items_subtotal_price
       endif
     endif
   endif
@@ -36,10 +42,10 @@
 {%- if show -%}
 <div class="apex-wmin" role="status"{% if id != blank %} id="{{ id }}"{% endif %}>
   <p class="apex-wmin__title">
-    Wholesale orders have a {{ minimum_cents | money_without_trailing_zeros }} minimum
+    Wholesale orders have a {{ minimum_cents | money_without_trailing_zeros }} + GST minimum
   </p>
   <p class="apex-wmin__text">
-    Add {{ short | money }} more to check out.
+    Add {{ short | money }}{% if settings.apex_wholesale_prices_include_gst %} (inc GST){% endif %} more to check out.
   </p>
 </div>
 {%- endif -%}

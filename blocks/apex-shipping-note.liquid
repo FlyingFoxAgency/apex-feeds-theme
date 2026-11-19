@@ -4,6 +4,10 @@
   product's own custom.shipping_note (multi-line text) replaces the second line.
 {% endcomment %}
 {%- assign detail = closest.product.metafields.custom.shipping_note.value | default: block.settings.detail -%}
+{%- capture apex_is_wholesale -%}{%- render 'apex-wholesale-check' -%}{%- endcapture -%}
+{%- if apex_is_wholesale contains 'true' and block.settings.wholesale_detail != blank -%}
+  {%- assign detail = block.settings.wholesale_detail -%}
+{%- endif -%}
 <div class="apex-shipping-note" {{ block.shopify_attributes }}>
   <span class="apex-shipping-note__icon" aria-hidden="true">
     <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h11v9H2zM13 9h4l4 4v2h-8z"/><circle cx="6" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>
@@ -56,7 +60,8 @@
   "tag": null,
   "settings": [
     { "type": "text", "id": "heading", "label": "Heading", "default": "Currently shipping to QLD, NSW, ACT and VIC" },
-    { "type": "textarea", "id": "detail", "label": "Detail", "default": "Dispatched in 1 to 2 business days. Free shipping on orders over $150.", "info": "A product's own custom.shipping_note metafield replaces this." }
+    { "type": "textarea", "id": "detail", "label": "Detail", "default": "Dispatched in 1 to 2 business days. Free shipping on orders over $150.", "info": "A product's own custom.shipping_note metafield replaces this." },
+    { "type": "textarea", "id": "wholesale_detail", "label": "Detail for wholesale accounts", "default": "Dispatched in 1 to 2 business days. Shipping is charged on all wholesale orders.", "info": "Shown instead to signed-in wholesale accounts, which don't get free shipping." }
   ],
   "presets": [{ "name": "APEX shipping note" }]
 }

@@ -2206,15 +2206,15 @@
       {
         "type": "number",
         "id": "apex_wholesale_minimum",
-        "label": "Wholesale minimum order ($ inc GST)",
+        "label": "Wholesale minimum order ($ ex GST)",
         "default": 250,
-        "info": "Below this, wholesalers can't check out from the cart or cart drawer, and the wholesale dashboard shows it. Express checkout buttons (Shop Pay, Buy it now) are hidden for wholesalers. 0 = no minimum."
+        "info": "Excludes GST, as in the Retailer Agreement: 250 means $250 + GST. Freight doesn't count. Below this, wholesalers can't check out from the cart or cart drawer, and the wholesale dashboard shows it. Express checkout buttons (Shop Pay, Buy it now) are hidden for wholesalers. 0 = no minimum."
       },
       {
         "type": "range",
         "id": "apex_wholesale_fallback_discount",
         "label": "Wholesale discount off RRP",
-        "info": "0 = wholesalers pay full price (only the bulk order discounts in Discounts apply). Only set this if a matching discount is also set up in Discounts, or the dashboard will show prices checkout doesn't charge.",
+        "info": "Used when a variant has no wholesale price of its own (custom.wholesale_price, ex GST). Checkout must charge the same: set up a matching discount for the wholesale customers, or the dashboard will show prices checkout doesn't charge.",
         "min": 0,
         "max": 60,
         "step": 1,

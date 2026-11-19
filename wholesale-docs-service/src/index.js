@@ -5,7 +5,8 @@
 //                                Only accepted from the store's own web addresses (ALLOWED_ORIGINS).
 //   GET  /admin                  James's page: recent applications, agreements, upload an agreement.
 //   GET  /admin/file?key=        Open one stored file.
-//   POST /admin/agreements       Upload a signed agreement for a customer.
+//   POST /admin/agreements       Upload a signed agreement for a customer: up to 6 files in one go
+//                                (the full PDF plus photos or scans of the signed pages).
 //   POST /admin/delete           Delete one stored file.
 //                                Every /admin route is behind Cloudflare Access and also checks
 //                                the Access token itself (ACCESS_TEAM_DOMAIN + ACCESS_AUD).
@@ -24,6 +25,10 @@ const DEFAULT_STORAGE_LIMIT_GB = 8;
 const DEFAULT_DAILY_UPLOAD_LIMIT = 200;
 const DOWNLOAD_LINK_SECONDS = 10 * 60;
 const PROXY_MAX_AGE_SECONDS = 5 * 60;
+const MAX_FILES_PER_AGREEMENT = 6;
+// Signed agreements: PDF, or a photo/scan of the signed page. HEIC is left out because most
+// browsers can't show it to the wholesaler.
+const AGREEMENT_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
 
 const FILE_TYPES = {
   'application/pdf': { ext: 'pdf', magic: (b) => ascii(b, 0, 4) === '%PDF' },
@@ -128,14 +133,15 @@ async function handleUpload(request, env) {
   return json({ ok: true, key, name: cleanText(file.name, 120), size: checked.bytes.byteLength, link: `${publicUrl(env)}/admin/file?key=${encodeURIComponent(key)}` });
 }
 
-async function checkFile(file, onlyPdf = false) {
+async function checkFile(file, allowed = null) {
   if (!file || typeof file === 'string') throw new HttpError(400, 'No file received');
-  if (file.size === 0) throw new HttpError(400, 'That file is empty');
-  if (file.size > MAX_BYTES) throw new HttpError(413, 'Files must be 10 MB or smaller');
+  const name = file.name ? `"${cleanText(file.name, 60)}"` : 'That file';
+  if (file.size === 0) throw new HttpError(400, `${name} is empty`);
+  if (file.size > MAX_BYTES) throw new HttpError(413, `${name} is over 10 MB. Files must be 10 MB or smaller`);
   const bytes = new Uint8Array(await file.arrayBuffer());
   const type = Object.keys(FILE_TYPES).find((t) => FILE_TYPES[t].magic(bytes));
-  if (!type || (onlyPdf && type !== 'application/pdf')) {
-    throw new HttpError(415, onlyPdf ? 'Agreements must be PDF files' : 'Please upload a PDF, JPG, PNG, WEBP or HEIC file');
+  if (!type || (allowed && !allowed.includes(type))) {
+    throw new HttpError(415, allowed ? `${name} isn't a PDF, JPG, PNG or WEBP file` : 'Please upload a PDF, JPG, PNG, WEBP or HEIC file');
   }
   return { bytes, type, ext: FILE_TYPES[type].ext };
 }
@@ -196,7 +202,15 @@ async function adminPage(env, admin, url) {
     byCustomer.get(customer).push(object);
   }
   const agreementRows = [...byCustomer.entries()]
-    .map(([customer, objects]) => `<tr><td><code>${esc(customer)}</code></td><td>${objects.map((o) => fileLink(o, true)).join('')}</td></tr>`)
+    .map(([customer, objects]) => {
+      const groups = groupAgreementFiles(objects)
+        .map((g) => {
+          const head = `<div class="group-head"><strong>${esc(g.title)}</strong>${g.signedOn ? ` <span class="muted">· signed ${esc(g.signedOn)}</span>` : ''}</div>`;
+          return `<div class="group">${head}${g.files.map((o) => fileLink(o, true)).join('')}</div>`;
+        })
+        .join('');
+      return `<tr><td><code>${esc(customer)}</code></td><td>${groups}</td></tr>`;
+    })
     .join('');
 
   const notice = url.searchParams.get('done');
@@ -214,6 +228,7 @@ form.inline{display:inline}button{font:inherit;border:1px solid var(--moss);back
 button.link{background:none;color:#a33;border:0;padding:0;text-decoration:underline;font-size:13px}
 label{display:block;font-weight:600;font-size:14px;margin:12px 0 4px}input{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;width:100%;max-width:420px}
 .ok{background:#e6f2e2;border-radius:12px;padding:10px 14px;margin:16px 0}
+.group+.group{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
 </style></head><body><main>
 <h1>APEX Feeds documents</h1><p class="muted">Signed in as ${esc(admin.email)}. Files here are private: only people allowed through Cloudflare Access can open them.</p>
 ${notice ? `<p class="ok">${esc(notice)}</p>` : ''}
@@ -222,7 +237,10 @@ ${notice ? `<p class="ok">${esc(notice)}</p>` : ''}
 <label for="customer">Customer ID</label><input id="customer" name="customer" inputmode="numeric" pattern="[0-9]{4,20}" required placeholder="e.g. 8471234567890">
 <p class="muted">Open the customer in Shopify admin. The ID is the number at the end of the page address.</p>
 <label for="title">Title shown to the customer</label><input id="title" name="title" maxlength="80" placeholder="Wholesale agreement 2026">
-<label for="file">Signed agreement (PDF, up to 10 MB)</label><input id="file" name="file" type="file" accept="application/pdf" required>
+<label for="signed">Date signed</label><input id="signed" name="signed" type="date">
+<p class="muted">Optional. The customer sees "Signed" and this date on their account.</p>
+<label for="file">Signed agreement files</label><input id="file" name="file" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" multiple required>
+<p class="muted">Pick the full agreement PDF and the photo or scan of the signed page together (hold Ctrl or Cmd to select more than one). PDF, JPG, PNG or WEBP, up to ${MAX_FILES_PER_AGREEMENT} files, 10 MB each.</p>
 <p><button type="submit">Upload agreement</button></p></form></div>
 <h2>Agreements by customer</h2>
 ${agreementRows ? `<table><thead><tr><th>Customer ID</th><th>Files</th></tr></thead><tbody>${agreementRows}</tbody></table>` : '<p class="muted">No agreements uploaded yet.</p>'}
@@ -235,7 +253,7 @@ ${appRows ? `<table><thead><tr><th>Date</th><th>Reference</th><th>Files</th></tr
 
 function fileLink(object, deletable = false) {
   const meta = object.customMetadata || {};
-  const name = meta.title || meta.label || object.key.split('/').pop();
+  const name = (object.key.startsWith('agreements/') ? meta.label : meta.title || meta.label) || meta.title || object.key.split('/').pop();
   const href = `/admin/file?key=${encodeURIComponent(object.key)}`;
   const del = deletable
     ? `<form class="inline" method="post" action="/admin/delete" onsubmit="return confirm('Delete this file for good?')"><input type="hidden" name="key" value="${esc(object.key)}"><button class="link" type="submit">Delete</button></form>`
@@ -247,16 +265,57 @@ async function adminUploadAgreement(request, env) {
   const form = await readForm(request);
   const customer = String(form.get('customer') || '').trim();
   if (!/^\d{4,20}$/.test(customer)) throw new HttpError(400, 'Customer ID should be the number from the customer page address');
-  const file = form.get('file');
-  const checked = await checkFile(file, true);
-  await guardStorage(env, await bucketUsage(env), checked.bytes.byteLength);
+  const files = form.getAll('file').filter((f) => f && typeof f !== 'string' && f.size > 0);
+  if (!files.length) throw new HttpError(400, 'No file received');
+  if (files.length > MAX_FILES_PER_AGREEMENT) throw new HttpError(400, `Upload up to ${MAX_FILES_PER_AGREEMENT} files per agreement`);
+  // Check every file before storing any, so a bad file doesn't leave half an agreement behind.
+  const checked = [];
+  for (const file of files) checked.push({ file, ...(await checkFile(file, AGREEMENT_TYPES)) });
+  await guardStorage(env, await bucketUsage(env), checked.reduce((sum, c) => sum + c.bytes.byteLength, 0));
+
   const title = cleanText(form.get('title'), 80) || 'Wholesale agreement';
-  const key = `agreements/${customer}/${Date.now()}-${safeName(file.name, 'pdf')}`;
-  await env.DOCS.put(key, checked.bytes, {
-    httpMetadata: { contentType: 'application/pdf' },
-    customMetadata: { title, originalName: cleanText(file.name, 120), uploadedAt: new Date().toISOString() },
-  });
-  return redirect(`/admin?done=${encodeURIComponent(`Uploaded "${title}" for customer ${customer}.`)}`);
+  const signedRaw = String(form.get('signed') || '').trim();
+  const signedOn = /^\d{4}-\d{2}-\d{2}$/.test(signedRaw) && !Number.isNaN(Date.parse(signedRaw)) ? signedRaw : '';
+  const stamp = String(Date.now());
+  const uploadedAt = new Date().toISOString();
+  let pdfs = 0;
+  let images = 0;
+  for (const [i, c] of checked.entries()) {
+    const isPdf = c.type === 'application/pdf';
+    const n = isPdf ? ++pdfs : ++images;
+    const label = isPdf ? (n > 1 ? `Agreement (PDF ${n})` : 'Agreement (PDF)') : n > 1 ? `Signed page ${n}` : 'Signed page';
+    const key = `agreements/${customer}/${stamp}-${String(i + 1).padStart(2, '0')}-${safeName(c.file.name, c.ext)}`;
+    await env.DOCS.put(key, c.bytes, {
+      httpMetadata: { contentType: c.type },
+      customMetadata: { title, label, signedOn, group: stamp, originalName: cleanText(c.file.name, 120), uploadedAt },
+    });
+  }
+  const count = checked.length === 1 ? '1 file' : `${checked.length} files`;
+  return redirect(`/admin?done=${encodeURIComponent(`Uploaded "${title}" (${count}) for customer ${customer}.`)}`);
+}
+
+// One agreement = the files uploaded together. Keys are agreements/<customer>/<stamp>-..., so the
+// stamp groups them (older single-PDF uploads are a group of one). Newest first.
+function groupAgreementFiles(objects) {
+  const groups = new Map();
+  for (const o of objects) {
+    const stamp = o.key.split('/')[2].split('-')[0];
+    if (!groups.has(stamp)) groups.set(stamp, []);
+    groups.get(stamp).push(o);
+  }
+  return [...groups.entries()]
+    .sort((a, b) => Number(b[0]) - Number(a[0]))
+    .map(([stamp, files]) => {
+      files.sort((a, b) => (a.key < b.key ? -1 : 1));
+      const meta = files[0].customMetadata || {};
+      return {
+        stamp,
+        title: meta.title || 'Wholesale agreement',
+        signedOn: meta.signedOn || '',
+        uploadedAt: meta.uploadedAt || files[0].uploaded,
+        files,
+      };
+    });
 }
 
 async function adminDelete(request, env) {
@@ -270,22 +329,33 @@ async function adminDelete(request, env) {
 // ---------------------------------------------------------------- agreements for the logged-in customer
 
 async function listAgreements(env, customerId, url) {
+  if (!env.DOWNLOAD_SECRET) throw new HttpError(503, 'Agreements are not switched on yet');
   const objects = await listAll(env, `agreements/${customerId}/`);
-  const now = Math.floor(Date.now() / 1000);
+  const exp = Math.floor(Date.now() / 1000) + DOWNLOAD_LINK_SECONDS;
   const base = publicUrl(env) || url.origin;
+  const link = async (o) => `${base}/d/${encodeURIComponent(o.key)}?exp=${exp}&sig=${await hmacHex(env.DOWNLOAD_SECRET, `${o.key}|${exp}`)}`;
   return Promise.all(
-    objects
-      .sort((a, b) => (a.key < b.key ? 1 : -1))
-      .map(async (o) => {
-        const exp = now + DOWNLOAD_LINK_SECONDS;
-        const sig = await hmacHex(env.DOWNLOAD_SECRET, `${o.key}|${exp}`);
-        return {
-          title: o.customMetadata?.title || 'Wholesale agreement',
-          uploadedAt: o.customMetadata?.uploadedAt || o.uploaded,
+    groupAgreementFiles(objects).map(async (g) => {
+      const files = await Promise.all(
+        g.files.map(async (o) => ({
+          label: o.customMetadata?.label || 'Agreement (PDF)',
+          type: o.httpMetadata?.contentType || 'application/pdf',
           size: o.size,
-          url: `${base}/d/${encodeURIComponent(o.key)}?exp=${exp}&sig=${sig}`,
-        };
-      })
+          url: await link(o),
+        }))
+      );
+      return {
+        title: g.title,
+        signed: true,
+        signedOn: g.signedOn || null,
+        uploadedAt: g.uploadedAt,
+        expiresAt: exp,
+        files,
+        // First file, kept for older callers.
+        size: files[0].size,
+        url: files[0].url,
+      };
+    })
   );
 }
 
@@ -410,7 +480,7 @@ async function listAll(env, prefix) {
   const out = [];
   let cursor;
   do {
-    const page = await env.DOCS.list({ prefix, cursor, include: ['customMetadata'] });
+    const page = await env.DOCS.list({ prefix, cursor, include: ['customMetadata', 'httpMetadata'] });
     out.push(...page.objects);
     cursor = page.truncated ? page.cursor : undefined;
   } while (cursor && out.length < 5000);

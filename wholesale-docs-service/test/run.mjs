@@ -84,10 +84,14 @@ check('wrong Access audience refused', r.status === 401);
 r = await go(`/admin/file?key=${encodeURIComponent(key)}`, { headers: { 'Cf-Access-Jwt-Assertion': good.slice(0, -4) + 'AAAA' } }); check('tampered Access token refused', r.status === 401);
 r = await go('/admin', { headers: admin }); let html = await r.text(); check('admin page lists application', r.status === 200 && html.includes('abc12345xyz'));
 
-let f = new FormData(); f.set('customer', '8471234567890'); f.set('title', 'Wholesale agreement 2026'); f.set('file', pdf, 'Signed agreement.pdf');
-r = await go('/admin/agreements', { method: 'POST', body: f, headers: { ...admin, Origin: base }, redirect: 'manual' }); check('admin uploads agreement', r.status === 303);
-f = new FormData(); f.set('customer', '8471234567890'); f.set('file', png, 'a.png');
-r = await go('/admin/agreements', { method: 'POST', body: f, headers: admin }); check('agreement must be pdf', r.status === 415);
+let f = new FormData(); f.set('customer', '8471234567890'); f.set('title', 'Wholesale agreement 2026'); f.set('signed', '2026-11-18');
+f.append('file', pdf, 'Signed agreement.pdf'); f.append('file', png, 'Signed page.png');
+r = await go('/admin/agreements', { method: 'POST', body: f, headers: { ...admin, Origin: base }, redirect: 'manual' }); check('admin uploads agreement PDF + photo together', r.status === 303);
+r = await go('/admin', { headers: admin }); html = await r.text(); check('admin page groups the agreement files', html.includes('Agreement (PDF)') && html.includes('Signed page') && html.includes('signed 2026-11-18'));
+f = new FormData(); f.set('customer', '8471234567890'); f.append('file', pdf, 'ok.pdf'); f.append('file', fake, 'not-really.pdf');
+r = await go('/admin/agreements', { method: 'POST', body: f, headers: admin }); check('agreement with a fake file refused', r.status === 415);
+f = new FormData(); f.set('customer', '8471234567890'); for (let i = 0; i < 7; i++) f.append('file', pdf, `p${i}.pdf`);
+r = await go('/admin/agreements', { method: 'POST', body: f, headers: admin }); check('more than 6 files refused', r.status === 400);
 f = new FormData(); f.set('customer', '1234567'); f.set('file', pdf, 'a.pdf');
 r = await go('/admin/agreements', { method: 'POST', body: f, headers: { ...admin, Origin: 'https://evil.example' } }); check('cross-site admin post refused', r.status === 403);
 
@@ -96,6 +100,9 @@ const now = Math.floor(Date.now() / 1000);
 const q = (cust, extra = {}) => proxyQuery({ shop: 'apex-feeds-dev.myshopify.com', path_prefix: '/apps/apex-docs', timestamp: String(now), logged_in_customer_id: cust, ...extra });
 r = await go(`/proxy/agreements?${q('8471234567890')}`); body = await r.json();
 check('customer sees own agreement', r.status === 200 && body.agreements.length === 1 && body.agreements[0].title === 'Wholesale agreement 2026', JSON.stringify(body));
+const ag = body.agreements[0];
+check('agreement is marked signed with its date and both files', ag.signed === true && ag.signedOn === '2026-11-18' && ag.files.length === 2 && ag.files[0].type === 'application/pdf' && ag.files[1].type === 'image/png' && ag.files[1].label === 'Signed page', JSON.stringify(ag));
+r = await go(ag.files[1].url.replace('https://docs.example.com', '')); check('signed page photo opens by link', r.status === 200 && r.headers.get('Content-Type') === 'image/png');
 const link = body.agreements[0].url.replace('https://docs.example.com', '');
 r = await go(link); check('signed download link works', r.status === 200 && r.headers.get('Content-Type') === 'application/pdf');
 r = await go(link.replace(/sig=[0-9a-f]{4}/, 'sig=0000')); check('tampered download link refused', r.status === 403);
