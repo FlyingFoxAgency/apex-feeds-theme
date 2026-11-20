@@ -157,7 +157,7 @@
               "type": "apex-purchase-options",
               "settings": {
                 "default_option": "once",
-                "perks": "<ul><li><strong>30% Off Your First Subscription’s RRP</strong></li><li><strong>Save 15% every recurring delivery</strong></li><li>No commitment – cancel anytime.</li></ul>",
+                "perks": "<ul><li><strong>Save 10% off RRP on every delivery</strong></li><li><strong>Delivered every month</strong></li><li>Free shipping on subscription orders over $100</li><li>Cancel anytime after your first 2 deliveries</li></ul>",
                 "details_label": "Subscription details",
                 "details_link": "",
                 "editor_preview": true
