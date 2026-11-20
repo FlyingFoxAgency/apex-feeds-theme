@@ -33,8 +33,8 @@
   endif
 
   if preview
-    assign sub_price = variant.price | times: 0.85 | round
-    assign save_label = 'Save 15%'
+    assign sub_price = variant.price | times: 0.9 | round
+    assign save_label = 'Save 10%'
   endif
 
   assign subscribe_first = false
@@ -390,7 +390,7 @@
       "type": "richtext",
       "id": "perks",
       "label": "Subscription perks",
-      "default": "<ul><li><strong>30% Off Your First Subscription’s RRP</strong></li><li><strong>Save 15% every recurring delivery</strong></li><li>No commitment – cancel anytime.</li></ul>"
+      "default": "<ul><li><strong>Save 10% off RRP on every delivery</strong></li><li><strong>Delivered every month</strong></li><li>Free shipping on subscription orders over $100</li><li>Cancel anytime after your first 2 deliveries</li></ul>"
     },
     {
       "type": "text",
