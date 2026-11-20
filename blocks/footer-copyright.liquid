@@ -13,7 +13,12 @@
 >
   <span class="footer-utilities__text">
     &copy; {{ 'now' | date: '%Y' }}
-    {{ shop.name | link_to: routes.root_url -}}
+    {% if settings.apex_legal_name != blank -%}
+      {{- settings.apex_legal_name | escape | link_to: routes.root_url -}}
+      {%- if settings.apex_abn != blank %}&nbsp;&nbsp;·&nbsp;&nbsp;ABN {{ settings.apex_abn | escape }}{% endif -%}
+    {%- else -%}
+      {{- shop.name | link_to: routes.root_url -}}
+    {%- endif -%}
     {%- if block_settings.show_powered_by -%}
       . {{ powered_by_link }}
     {%- endif -%}

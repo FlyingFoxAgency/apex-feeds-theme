@@ -1,0 +1,17 @@
+{% comment %}
+  Prints "true" when the signed-in customer is an approved wholesaler (has the tag set in
+  Theme settings > APEX Feeds > Wholesale, default "wholesale"), otherwise prints nothing.
+  Use: {%- capture is_wholesale -%}{%- render 'apex-wholesale-check' -%}{%- endcapture -%}
+{% endcomment %}
+{%- liquid
+  if customer
+    assign wholesale_tag = settings.apex_wholesale_tag | default: 'wholesale' | strip | downcase
+    for tag in customer.tags
+      assign t = tag | strip | downcase
+      if t == wholesale_tag
+        echo 'true'
+        break
+      endif
+    endfor
+  endif
+-%}

@@ -16,8 +16,11 @@
   endif
 %}
 
+{%- comment -%} APEX: wholesalers check out through the cart, where the minimum order applies {%- endcomment -%}
+{%- capture is_wholesale -%}{%- render 'apex-wholesale-check' -%}{%- endcapture -%}
+
 {% capture accelerated_checkout_button %}
-  {% if product != blank and form_obj != blank %}
+  {% if product != blank and form_obj != blank and is_wholesale == blank %}
     {{ form_obj | payment_button }}
   {% endif %}
 {% endcapture %}

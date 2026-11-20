@@ -1042,3 +1042,110 @@ apex-wishlist-button {
     animation: none;
   }
 }
+
+/* Prices: GST label next to every price, and the wholesale price with the RRP under it
+   (snippets/apex-price.liquid, snippets/price.liquid) */
+.apex-price {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.35em;
+}
+
+.apex-price--stack {
+  flex-direction: column;
+  align-items: inherit;
+}
+
+.apex-product-card__price .apex-price--stack {
+  align-items: flex-end;
+  text-align: end;
+}
+
+/* Cards: the GST label sits under the price, so the price column stays narrow and long
+   titles keep their two lines */
+.apex-product-card__price .apex-price__main {
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.apex-product-card__price .apex-price__tax {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.apex-product-card__price .apex-price__rrp {
+  max-width: 9rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  white-space: normal;
+}
+
+.apex-price__main {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.35em;
+}
+
+.apex-price__tax {
+  font-family: var(--font-body--family);
+  font-size: 0.75em;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+  opacity: 0.7;
+}
+
+.apex-price__rrp {
+  font-family: var(--font-body--family);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.25rem;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+  opacity: 0.7;
+}
+
+.apex-price__was {
+  font-size: 0.875em;
+  opacity: 0.6;
+}
+
+/* Enquiry-only products (frozen, retail): replaces quantity + Add to cart */
+.apex-enquiry {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 20px;
+  border: 1px solid var(--apex-stone-300, #d9d4cc);
+  border-radius: 12px;
+  background-color: var(--apex-stone-100, #faf9f7);
+  width: 100%;
+}
+
+.apex-enquiry__title {
+  margin: 0;
+  font-weight: 700;
+  color: var(--apex-burrow);
+}
+
+.apex-enquiry__text {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+}
+
+.apex-enquiry__button {
+  margin-block-start: 8px;
+  width: 100%;
+  justify-content: center;
+}
+
+.apex-enquiry__email a {
+  color: inherit;
+  text-decoration: underline;
+}

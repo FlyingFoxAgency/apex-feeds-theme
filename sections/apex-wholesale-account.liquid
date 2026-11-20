@@ -1,0 +1,1601 @@
+{% comment %}
+  APEX wholesale account (Figma "APEX Wholesale Dashboard Page"). Lives on /pages/wholesale under
+  the wholesale login section: signed-in approved wholesalers (customer tag set in Theme settings >
+  APEX Feeds > Wholesale) see this dashboard and the login section hides itself. Everyone else
+  sees the login and this section prints nothing.
+
+  Views (one page, the side menu switches them without reloading, same script as my account):
+    overview (Dashboard), quick-order, orders, order-<id> (?order=<id>), price-list, business,
+    terms, wishlist.
+
+  Changes from Figma, to fit James's terms:
+  - No pricing tiers or volume discounts (James, 19 Nov 2026): wholesalers pay one fixed wholesale
+    price per item, ex GST, and freight is charged on every order (no free shipping). The pricing
+    panel shows the $250 + GST minimum and the progress bar is this cart against it.
+  - Prices: the wholesale price per variant (custom.wholesale_price, ex GST, or the % off RRP in
+    Theme settings; see snippets/apex-wholesale-price). Checkout has to charge the same. Carton size:
+    custom.carton_qty (Integer, variant or product). See snippets/apex-wholesale-price.
+  - Payment terms / credit limit come from customer metafields custom.payment_terms and
+    custom.credit_limit (only set for accounts James gives credit). Business name and ABN from
+    custom.business_name and custom.abn (or the default address's company).
+  - Shopify gives the theme no invoices; tax invoices are the order emails, and unpaid orders link
+    to Shopify's order page to pay.
+  - Retailer Agreement: one document for every wholesaler, not signed per account (James). The
+    Terms view links to its web page (/pages/retailer-agreement, template page.retailer-agreement).
+{% endcomment %}
+{%- liquid
+  capture is_wholesale
+    render 'apex-wholesale-check'
+  endcapture
+  assign is_wholesale = is_wholesale | strip
+-%}
+{%- if is_wholesale == 'true' -%}
+  {%- liquid
+    assign minimum = settings.apex_wholesale_minimum | default: 250
+    # The minimum excludes GST (Theme settings > APEX Feeds > Wholesale; James's Retailer Agreement:
+    # $250 + GST). The dashboard works in ex GST prices, so it compares against it directly.
+    assign minimum_cents = minimum | times: 100
+    assign minimum_ex_cents = minimum_cents
+    assign contact_email = section.settings.contact_email | default: shop.email
+    assign profile_url = routes.account_addresses_url
+    assign order_collection = section.settings.quick_order_collection | default: collections.all
+    assign business_name = customer.metafields.custom.business_name.value | default: customer.default_address.company | default: customer.name | default: customer.email
+    assign payment_terms = customer.metafields.custom.payment_terms.value | default: section.settings.default_terms
+    assign credit_limit = customer.metafields.custom.credit_limit.value
+    assign abn = customer.metafields.custom.abn.value
+    assign welcome = 'Welcome back, ' | append: business_name
+
+    # This cart at wholesale prices (ex GST), for the minimum order bar.
+    assign cart_cents = 0
+    for item in cart.items
+      capture wp
+        render 'apex-wholesale-price', variant: item.variant
+      endcapture
+      assign wp = wp | strip
+      if wp != ''
+        assign line = wp | plus: 0 | times: item.quantity
+      else
+        assign line = item.final_line_price | divided_by: 1.1 | round
+      endif
+      assign cart_cents = cart_cents | plus: line
+    endfor
+
+    # Where the cart is against the minimum order, for the bar.
+    assign stage = 'minimum'
+    if cart_cents >= minimum_ex_cents
+      assign stage = 'wholesale'
+    endif
+    assign goal = minimum_ex_cents
+    assign cart_pct = 100
+    if goal > 0 and cart_cents < goal
+      assign cart_pct = cart_cents | times: 100.0 | divided_by: goal
+    endif
+    assign cart_short = goal | minus: cart_cents
+  -%}
+
+  {%- capture icon_logout -%}
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+      <path d="M8 3.5H3.5v13H8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M7.5 10h9M13.5 6.75 16.75 10l-3.25 3.25" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  {%- endcapture -%}
+
+  {%- capture order_footer -%}
+    <div class="apex-wq__footer">
+      <p class="apex-wq__terms">Minimum order {{ minimum_cents | money_without_trailing_zeros }} + GST&nbsp;&nbsp;·&nbsp;&nbsp;Prices exclude GST&nbsp;&nbsp;·&nbsp;&nbsp;Ordered in cartons</p>
+      <div class="apex-wq__total">
+        <p class="apex-wq__total-text">
+          Order total <span data-wq-total>{{ 0 | money }}</span>
+          <span class="apex-wq__discount" data-wq-discount hidden></span>
+        </p>
+        <button type="button" class="apex-button apex-button--amber apex-wq__submit" data-wq-submit disabled>Add to cart</button>
+      </div>
+      <p class="apex-account__small apex-wq__status" data-wq-status role="status"></p>
+    </div>
+  {%- endcapture -%}
+
+  {%- capture table_head -%}
+    <div class="apex-wq__row apex-wq__row--head" aria-hidden="true">
+      <span>Product</span>
+      <span>Inc GST</span>
+      <span>Ex GST</span>
+      <span>Carton</span>
+      <span>Qty</span>
+    </div>
+  {%- endcapture -%}
+
+  <apex-wholesale-account
+    class="apex-account apex-wholesale"
+    style="--apex-account-pt: {{ section.settings.padding_top }}px; --apex-account-pb: {{ section.settings.padding_bottom }}px;"
+  >
+    <div class="apex-container">
+      {%- paginate customer.orders by 20 -%}
+        {%- liquid
+          assign views = 'overview,quick-order,orders,price-list,business,terms,wishlist' | split: ','
+          assign titles = section.settings.title | append: '|Quick order|Order history|Price list|Business details|Terms and agreements|Wishlist' | split: '|'
+        -%}
+        {%- for view in views -%}
+          <div class="apex-account__header" data-apex-view="{{ view }}"{% unless forloop.first %} hidden{% endunless %}>
+            <div class="apex-account__titles">
+              {%- if forloop.first -%}
+                <p class="apex-eyebrow">{{ welcome | escape }}</p>
+              {%- else -%}
+                <p class="apex-eyebrow"><a href="?tab=overview" data-apex-go="overview">{{ section.settings.title | escape }}</a></p>
+              {%- endif -%}
+              <h1 class="apex-account__title">{{ titles[forloop.index0] | escape }}</h1>
+            </div>
+            <a class="apex-account__logout" href="{{ routes.account_logout_url }}">{{ icon_logout }}<span>Log out</span></a>
+          </div>
+        {%- endfor -%}
+        {%- for order in customer.orders -%}
+          <div class="apex-account__header" data-apex-view="order-{{ order.id }}" hidden>
+            <div class="apex-account__titles">
+              <p class="apex-eyebrow">
+                <a href="?tab=overview" data-apex-go="overview">{{ section.settings.title | escape }}</a>
+                <span aria-hidden="true">&nbsp;/&nbsp;</span>
+                <a href="?tab=orders" data-apex-go="orders">Order history</a>
+              </p>
+              <h1 class="apex-account__title">Order {{ order.name | escape }}</h1>
+            </div>
+            <a class="apex-account__logout" href="{{ routes.account_logout_url }}">{{ icon_logout }}<span>Log out</span></a>
+          </div>
+        {%- endfor -%}
+
+        <div class="apex-account__body">
+          <nav class="apex-account__menu" aria-label="Wholesale account">
+            <ul class="apex-account__menu-list" role="list">
+              <li><a class="apex-account__menu-item" href="?tab=overview" data-apex-go="overview" data-apex-menu="overview">Dashboard</a></li>
+              <li><a class="apex-account__menu-item" href="?tab=quick-order" data-apex-go="quick-order" data-apex-menu="quick-order">Quick order</a></li>
+              <li><a class="apex-account__menu-item" href="?tab=orders" data-apex-go="orders" data-apex-menu="orders">Order history</a></li>
+              <li><a class="apex-account__menu-item" href="?tab=price-list" data-apex-go="price-list" data-apex-menu="price-list">Price list</a></li>
+              <li><a class="apex-account__menu-item" href="?tab=business" data-apex-go="business" data-apex-menu="business">Business details</a></li>
+              <li><a class="apex-account__menu-item" href="?tab=terms" data-apex-go="terms" data-apex-menu="terms">Terms and agreements</a></li>
+              <li><a class="apex-account__menu-item" href="?tab=wishlist" data-apex-go="wishlist" data-apex-menu="wishlist">Wishlist</a></li>
+            </ul>
+            <hr class="apex-account__rule">
+            <a class="apex-account__menu-item apex-account__menu-logout" href="{{ routes.account_logout_url }}">{{ icon_logout }}<span>Log out</span></a>
+          </nav>
+
+          <div class="apex-account__main">
+            {%- comment -%} ============ Dashboard ============ {%- endcomment -%}
+            <div class="apex-account__view" data-apex-view="overview">
+              {%- comment -%} Pricing panel (Figma "Pricing tier") {%- endcomment -%}
+              <div class="apex-account__card apex-account__card--wide apex-account__card--dark apex-wpanel">
+                <div class="apex-wpanel__top">
+                  <div class="apex-wpanel__intro">
+                    <p class="apex-wpanel__eyebrow">{{ section.settings.pricing_eyebrow | escape }}</p>
+                    <h2 class="apex-wpanel__title">{{ section.settings.pricing_title | escape }}</h2>
+                    <p class="apex-wpanel__text">{{ section.settings.pricing_text | escape }}</p>
+                  </div>
+                  <div class="apex-wpanel__progress">
+                    <p class="apex-wpanel__eyebrow apex-wpanel__eyebrow--small">Your cart</p>
+                    <div class="apex-wpanel__bar" role="progressbar" aria-label="Your cart towards the minimum order" aria-valuemin="0" aria-valuemax="{{ goal | divided_by: 100 }}" aria-valuenow="{{ cart_cents | divided_by: 100 }}">
+                      <span style="width: {{ cart_pct | round: 1 }}%;"></span>
+                    </div>
+                    <p class="apex-wpanel__amount">
+                      {%- if stage == 'wholesale' -%}
+                        {{ cart_cents | money }} ex GST
+                      {%- else -%}
+                        {{ cart_cents | money }} of {{ goal | money_without_trailing_zeros }} ex GST
+                      {%- endif -%}
+                    </p>
+                    <p class="apex-wpanel__note">
+                      {%- case stage -%}
+                        {%- when 'minimum' -%}
+                          {%- if cart_cents == 0 -%}
+                            Your cart is empty. Orders start at {{ minimum_cents | money_without_trailing_zeros }} + GST, before freight.
+                          {%- else -%}
+                            Add {{ cart_short | money }} ex GST more to reach the {{ minimum_cents | money_without_trailing_zeros }} + GST minimum order.
+                          {%- endif -%}
+                        {%- when 'wholesale' -%}
+                          Your cart meets the minimum order. Freight is added at checkout.
+                          <a href="{{ routes.cart_url }}">Go to cart</a>
+                      {%- endcase -%}
+                    </p>
+                  </div>
+                </div>
+                <div class="apex-wpanel__cards">
+                  <div class="apex-wpanel__card apex-wpanel__card--current">
+                    <p class="apex-wpanel__card-label">Wholesale&nbsp;&nbsp;·&nbsp;&nbsp;Your price</p>
+                    <p class="apex-wpanel__card-value">Wholesale price</p>
+                    <p class="apex-wpanel__card-text">A fixed price per item, ex GST. Orders from {{ minimum_cents | money_without_trailing_zeros }} + GST</p>
+                  </div>
+                  <div class="apex-wpanel__card">
+                    <p class="apex-wpanel__card-label">Freight</p>
+                    <p class="apex-wpanel__card-value">Added to every order</p>
+                    <p class="apex-wpanel__card-text">Not counted towards the minimum order</p>
+                  </div>
+                  <div class="apex-wpanel__card">
+                    <p class="apex-wpanel__card-label">Retail</p>
+                    <p class="apex-wpanel__card-value">RRP</p>
+                    <p class="apex-wpanel__card-text">What your customers pay, inc GST</p>
+                  </div>
+                </div>
+              </div>
+
+              {%- comment -%}
+                Quick order: the items from the last order (ready to reorder), else the first products
+                of the quick order collection.
+              {%- endcomment -%}
+              <apex-wholesale-order class="apex-account__card apex-account__card--wide apex-wq" data-minimum="{{ minimum_ex_cents }}" data-in-cart="{{ cart_cents }}" data-money-format="{{ shop.money_format | strip_html | escape }}">
+                <div class="apex-account__card-top">
+                  <h2 class="apex-account__h3">Quick order</h2>
+                  <a class="apex-account__link" href="?tab=price-list" data-apex-go="price-list">Download price list</a>
+                </div>
+                {%- if customer.last_order -%}
+                  <p class="apex-account__small apex-account__muted">From your last order, {{ customer.last_order.name | escape }}. Change the quantities or <a class="apex-account__link" href="?tab=quick-order" data-apex-go="quick-order">order anything else</a>.</p>
+                {%- endif -%}
+                <div class="apex-wq__table">
+                  {{ table_head }}
+                  {%- assign shown = 0 -%}
+                  {%- if customer.last_order -%}
+                    {%- for line_item in customer.last_order.line_items -%}
+                      {%- if line_item.variant and shown < 8 -%}
+                        {%- liquid
+                          assign v = line_item.variant
+                          assign carton = v.metafields.custom.carton_qty.value | default: v.product.metafields.custom.carton_qty.value | default: 1 | plus: 0
+                          if carton < 1
+                            assign carton = 1
+                          endif
+                          assign cartons = line_item.quantity | plus: carton | minus: 1 | divided_by: carton
+                          assign shown = shown | plus: 1
+                        -%}
+                        {%- render 'apex-wholesale-row', variant: v, qty: cartons, key: 'dash', contact_email: contact_email -%}
+                      {%- endif -%}
+                    {%- endfor -%}
+                  {%- endif -%}
+                  {%- if shown == 0 -%}
+                    {%- for product in order_collection.products limit: 5 -%}
+                      {%- render 'apex-wholesale-row', variant: product.selected_or_first_available_variant, qty: 0, key: 'dash', contact_email: contact_email -%}
+                    {%- endfor -%}
+                  {%- endif -%}
+                </div>
+                {{ order_footer }}
+              </apex-wholesale-order>
+
+              {%- comment -%} New for your store (Figma "Recommended") {%- endcomment -%}
+              {%- assign rec = section.settings.recommended_collection -%}
+              {%- assign rec_count = section.settings.recommended_count | plus: 0 -%}
+              {%- if rec != blank and rec.products_count > 0 -%}
+                <div class="apex-account__card apex-account__card--wide">
+                  <div class="apex-account__card-top">
+                    <h2 class="apex-account__h3">{{ section.settings.recommended_heading | escape }}</h2>
+                    <a class="apex-account__link" href="{{ rec.url }}">Shop at wholesale prices</a>
+                  </div>
+                  <div class="apex-wrec">
+                    {%- for product in rec.products limit: rec_count -%}
+                      {%- liquid
+                        assign v = product.selected_or_first_available_variant
+                        capture wp
+                          render 'apex-wholesale-price', variant: v
+                        endcapture
+                        assign wp = wp | strip
+                        assign carton = v.metafields.custom.carton_qty.value | default: product.metafields.custom.carton_qty.value | default: 1 | plus: 0
+                        if carton < 1
+                          assign carton = 1
+                        endif
+                        assign image = v.featured_media.preview_image | default: product.featured_media.preview_image
+                      -%}
+                      <article class="apex-wrec__item">
+                        <a class="apex-wrec__image" href="{{ product.url }}" tabindex="-1" aria-hidden="true">
+                          {%- if image -%}
+                            {{ image | image_url: width: 480 | image_tag: loading: 'lazy', widths: '240, 360, 480', sizes: '(min-width: 990px) 260px, 90vw', alt: '' }}
+                          {%- else -%}
+                            {{ 'product-1' | placeholder_svg_tag }}
+                          {%- endif -%}
+                          <span class="apex-account__status apex-account__status--dark apex-wrec__pill">Wholesale price</span>
+                        </a>
+                        <a class="apex-wrec__title" href="{{ product.url }}">{{ product.title | escape }}</a>
+                        <p class="apex-wrec__price">
+                          {%- if wp != '' -%}
+                            <span>{{ wp | plus: 0 | money }} <span class="apex-wrec__rrp">ex GST</span></span>
+                            <span class="apex-wrec__rrp">{{ wp | plus: 0 | times: 1.1 | round | money }} inc GST</span>
+                          {%- else -%}
+                            <span>Price on request</span>
+                          {%- endif -%}
+                        </p>
+                        {%- if wp != '' -%}
+                          <p class="apex-wrec__carton">
+                            {%- if carton > 1 -%}
+                              Carton of {{ carton }} units&nbsp;&nbsp;·&nbsp;&nbsp;{{ wp | plus: 0 | times: carton | money }} ex GST
+                            {%- else -%}
+                              Sold singly&nbsp;&nbsp;·&nbsp;&nbsp;ex GST
+                            {%- endif -%}
+                          </p>
+                        {%- endif -%}
+                        {%- capture wrec_enquiry -%}{%- render 'apex-enquiry-only', product: product -%}{%- endcapture -%}
+                        {%- if wrec_enquiry contains 'true' -%}
+                          <a class="apex-button apex-account__button--outline apex-wrec__button" href="mailto:{{ settings.apex_enquiry_ws_email | default: contact_email | strip }}?subject={{ 'Frozen wholesale order: ' | append: product.title | url_encode }}">Email to order</a>
+                        {%- elsif v.available and wp != '' -%}
+                          <form class="apex-wrec__form" action="{{ routes.cart_add_url }}" method="post">
+                            <input type="hidden" name="id" value="{{ v.id }}">
+                            <input type="hidden" name="quantity" value="{{ carton }}">
+                            <button type="submit" class="apex-button apex-account__button--moss apex-wrec__button">{% if carton > 1 %}Add carton{% else %}Add to cart{% endif %}</button>
+                          </form>
+                        {%- elsif v.available == false -%}
+                          <span class="apex-button apex-account__button--outline apex-wrec__button" aria-disabled="true">Out of stock</span>
+                        {%- else -%}
+                          <a class="apex-button apex-account__button--outline apex-wrec__button" href="mailto:{{ contact_email }}?subject={{ 'Wholesale price: ' | append: product.title | url_encode }}">Ask us</a>
+                        {%- endif -%}
+                      </article>
+                    {%- endfor -%}
+                  </div>
+                </div>
+              {%- endif -%}
+
+              {%- comment -%} Recent orders + Account and terms {%- endcomment -%}
+              {%- liquid
+                assign unpaid_cents = 0
+                assign first_unpaid = nil
+                for order in customer.orders
+                  if order.cancelled == false
+                    if order.financial_status == 'pending' or order.financial_status == 'partially_paid' or order.financial_status == 'authorized'
+                      assign unpaid_cents = unpaid_cents | plus: order.total_price
+                      if first_unpaid == nil
+                        assign first_unpaid = order
+                      endif
+                    endif
+                  endif
+                endfor
+              -%}
+              <div class="apex-account__pair">
+                <div class="apex-account__card apex-account__card--side">
+                  <h2 class="apex-account__h4">Recent orders</h2>
+                  {%- if customer.orders_count > 0 -%}
+                    <ul class="apex-wrecent" role="list">
+                      {%- for order in customer.orders limit: 3 -%}
+                        <li>
+                          <a class="apex-wrecent__order" href="?order={{ order.id }}" data-apex-go="order-{{ order.id }}">
+                            <span>
+                              <span class="apex-wrecent__name">{{ order.name | escape }}</span>
+                              <span class="apex-wrecent__meta">{{ order.created_at | date: '%-d %b' }}&nbsp;&nbsp;·&nbsp;&nbsp;{{ order.total_price | money }}</span>
+                            </span>
+                            {%- render 'apex-account-status', order: order -%}
+                          </a>
+                        </li>
+                      {%- endfor -%}
+                    </ul>
+                    <a class="apex-account__link" href="?tab=orders" data-apex-go="orders">View all orders</a>
+                  {%- else -%}
+                    <p class="apex-account__empty">No orders yet. Your first wholesale order will show here.</p>
+                    <a class="apex-account__link" href="?tab=quick-order" data-apex-go="quick-order">Start a quick order</a>
+                  {%- endif -%}
+                </div>
+
+                <div class="apex-account__card apex-account__card--side">
+                  <h2 class="apex-account__h4">Account and terms</h2>
+                  <dl class="apex-wterms">
+                    <div><dt>Payment terms</dt><dd>{{ payment_terms | escape }}</dd></div>
+                    {%- if credit_limit != blank -%}
+                      <div><dt>Credit limit</dt><dd>{{ credit_limit | times: 100 | round | money }}</dd></div>
+                    {%- endif -%}
+                    <div><dt>Unpaid orders</dt><dd>{% if unpaid_cents > 0 %}{{ unpaid_cents | money }}{% else %}None{% endif %}</dd></div>
+                    <div><dt>Minimum order</dt><dd>{{ minimum_cents | money_without_trailing_zeros }} + GST</dd></div>
+                    <div><dt>Freight</dt><dd>Added to every order</dd></div>
+                    <div><dt>Your contact</dt><dd><a href="mailto:{{ contact_email }}">{{ contact_email }}</a></dd></div>
+                  </dl>
+                  {%- if first_unpaid -%}
+                    <a class="apex-account__link" href="{{ first_unpaid.order_status_url }}">Pay {{ first_unpaid.name | escape }}</a>
+                  {%- else -%}
+                    <a class="apex-account__link" href="?tab=terms" data-apex-go="terms">See your terms</a>
+                  {%- endif -%}
+                </div>
+              </div>
+            </div>
+
+            {%- comment -%} ============ Quick order (everything) ============ {%- endcomment -%}
+            <div class="apex-account__view" data-apex-view="quick-order" hidden>
+              <apex-wholesale-order class="apex-account__card apex-account__card--wide apex-wq" data-minimum="{{ minimum_ex_cents }}" data-in-cart="{{ cart_cents }}" data-money-format="{{ shop.money_format | strip_html | escape }}">
+                <div class="apex-account__card-top">
+                  <h2 class="apex-account__h3">All products</h2>
+                  <a class="apex-account__link" href="?tab=price-list" data-apex-go="price-list">Download price list</a>
+                </div>
+                <div class="apex-wq__table">
+                  {{ table_head }}
+                  {%- for product in order_collection.products limit: 50 -%}
+                    {%- for variant in product.variants -%}
+                      {%- render 'apex-wholesale-row', variant: variant, qty: 0, key: 'all', contact_email: contact_email -%}
+                    {%- endfor -%}
+                  {%- else -%}
+                    <p class="apex-account__empty">No products to show yet.</p>
+                  {%- endfor -%}
+                </div>
+                {{ order_footer }}
+              </apex-wholesale-order>
+            </div>
+
+            {%- comment -%} ============ Order history ============ {%- endcomment -%}
+            <div class="apex-account__view" data-apex-view="orders" hidden>
+              <div class="apex-account__card apex-account__card--wide">
+                <h2 class="apex-account__h3">Your orders</h2>
+                {%- if customer.orders_count > 0 -%}
+                  {%- render 'apex-account-orders-table', orders: customer.orders, limit: 20 -%}
+                  {%- if paginate.pages > 1 -%}
+                    <nav class="apex-account__pager" aria-label="Order pages">
+                      {%- if paginate.previous -%}
+                        <a class="apex-account__link" href="?tab=orders&amp;page={{ paginate.current_page | minus: 1 }}">Newer orders</a>
+                      {%- endif -%}
+                      <span class="apex-account__small">Page {{ paginate.current_page }} of {{ paginate.pages }}</span>
+                      {%- if paginate.next -%}
+                        <a class="apex-account__link" href="?tab=orders&amp;page={{ paginate.current_page | plus: 1 }}">Older orders</a>
+                      {%- endif -%}
+                    </nav>
+                  {%- endif -%}
+                  <p class="apex-account__small apex-account__muted">{{ section.settings.invoice_note | escape }}</p>
+                {%- else -%}
+                  <p class="apex-account__empty">You haven't placed any wholesale orders yet.</p>
+                  <a class="apex-account__link" href="?tab=quick-order" data-apex-go="quick-order">Start a quick order</a>
+                {%- endif -%}
+              </div>
+            </div>
+
+            {%- for order in customer.orders -%}
+              <div class="apex-account__view" data-apex-view="order-{{ order.id }}" hidden>
+                {%- render 'apex-account-order', order: order -%}
+              </div>
+            {%- endfor -%}
+
+            {%- comment -%} ============ Price list (prints on its own) ============ {%- endcomment -%}
+            <div class="apex-account__view apex-wpl" data-apex-view="price-list" hidden>
+              <div class="apex-account__card apex-account__card--wide">
+                <div class="apex-account__card-top">
+                  <div>
+                    <h2 class="apex-account__h3">Wholesale price list</h2>
+                    <p class="apex-account__small apex-account__muted apex-wpl__meta">{{ settings.apex_legal_name | default: shop.name | escape }}{% if settings.apex_abn != blank %} (ABN {{ settings.apex_abn | escape }}){% endif %}&nbsp;&nbsp;·&nbsp;&nbsp;{{ business_name | escape }}&nbsp;&nbsp;·&nbsp;&nbsp;{{ 'now' | date: '%-d %B %Y' }}</p>
+                  </div>
+                  <button
+                    type="button"
+                    class="apex-button apex-account__button--outline apex-wpl__print"
+                    data-apex-print-list
+                    data-shop="{{ shop.name | escape }}"
+                    {% if settings.logo != blank %}data-logo="{{ settings.logo | image_url: width: 480 }}"{% endif %}
+                  >
+                    Print or save as PDF
+                  </button>
+                </div>
+                <table class="apex-wpl__table" data-apex-print-table>
+                  <thead>
+                    <tr>
+                      <th scope="col">Product</th>
+                      <th scope="col">Carton</th>
+                      <th scope="col" class="apex-wpl__num">RRP inc GST</th>
+                      <th scope="col" class="apex-wpl__num">Your price ex GST</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {%- for product in order_collection.products limit: 50 -%}
+                      {%- for variant in product.variants -%}
+                        {%- liquid
+                          capture wp
+                            render 'apex-wholesale-price', variant: variant
+                          endcapture
+                          assign wp = wp | strip
+                          assign carton = variant.metafields.custom.carton_qty.value | default: product.metafields.custom.carton_qty.value | default: 1 | plus: 0
+                        -%}
+                        <tr>
+                          <th scope="row">
+                            {{ product.title | escape }}
+                            {%- unless product.has_only_default_variant -%}<span class="apex-wpl__variant">{{ variant.title | replace: ' / ', ', ' | escape }}</span>{%- endunless -%}
+                          </th>
+                          <td>{% if carton > 1 %}{{ carton }} units{% else %}Single{% endif %}</td>
+                          <td class="apex-wpl__num">{{ variant.price | money }}</td>
+                          <td class="apex-wpl__num">{% if wp != '' %}{{ wp | plus: 0 | money }}{% else %}On request{% endif %}</td>
+                        </tr>
+                      {%- endfor -%}
+                    {%- endfor -%}
+                  </tbody>
+                </table>
+                <p class="apex-account__small apex-account__muted" data-apex-print-note>{{ section.settings.price_list_note | escape }}</p>
+              </div>
+            </div>
+
+            {%- comment -%} ============ Business details ============ {%- endcomment -%}
+            <div class="apex-account__view" data-apex-view="business" hidden>
+              <div class="apex-account__card apex-account__card--wide">
+                <div class="apex-account__card-top">
+                  <h2 class="apex-account__h3">Your business</h2>
+                  <a class="apex-button apex-account__button--outline" href="{{ profile_url }}">Edit contact and addresses</a>
+                </div>
+                <dl class="apex-account__facts">
+                  <div><dt>Business name</dt><dd>{{ business_name | escape }}</dd></div>
+                  {%- if abn != blank -%}
+                    <div><dt>ABN</dt><dd>{{ abn | escape }}</dd></div>
+                  {%- endif -%}
+                  <div><dt>Contact name</dt><dd>{{ customer.name | default: 'Not added yet' | escape }}</dd></div>
+                  <div><dt>Email</dt><dd>{{ customer.email | escape }}</dd></div>
+                  {%- if customer.phone != blank -%}
+                    <div><dt>Phone</dt><dd>{{ customer.phone | escape }}</dd></div>
+                  {%- endif -%}
+                  {%- if customer.default_address -%}
+                    <div>
+                      <dt>Delivery address</dt>
+                      <dd class="apex-account__lines">{%- render 'apex-account-address-lines', address: customer.default_address, show_name: false -%}</dd>
+                    </div>
+                  {%- endif -%}
+                </dl>
+                <p class="apex-account__small apex-account__muted">
+                  {{ section.settings.business_note | escape }}
+                  <a class="apex-account__link" href="mailto:{{ contact_email }}?subject={{ 'Wholesale account change: ' | append: business_name | url_encode }}">Email us</a>
+                </p>
+              </div>
+            </div>
+
+            {%- comment -%} ============ Terms and Retailer Agreement ============ {%- endcomment -%}
+            <div class="apex-account__view" data-apex-view="terms" hidden>
+              <div class="apex-account__card apex-account__card--wide">
+                <h2 class="apex-account__h3">Your terms</h2>
+                <dl class="apex-account__facts">
+                  <div><dt>Payment terms</dt><dd>{{ payment_terms | escape }}</dd></div>
+                  {%- if credit_limit != blank -%}
+                    <div><dt>Credit limit</dt><dd>{{ credit_limit | times: 100 | round | money }}</dd></div>
+                  {%- endif -%}
+                  <div><dt>Minimum order</dt><dd>{{ minimum_cents | money_without_trailing_zeros }} + GST, before freight</dd></div>
+                  <div><dt>Prices</dt><dd>A fixed wholesale price per item, ex GST. GST is added to your invoice. No volume discounts.</dd></div>
+                  <div><dt>Freight</dt><dd>Charged on every order, on top of wholesale prices. No free shipping on wholesale orders.</dd></div>
+                </dl>
+                {%- if section.settings.terms_text != blank -%}
+                  <div class="apex-wterms__text">{{ section.settings.terms_text }}</div>
+                {%- endif -%}
+              </div>
+
+              <div class="apex-account__card apex-account__card--wide">
+                <h2 class="apex-account__h3">{{ section.settings.agreement_heading | escape }}</h2>
+                <p class="apex-account__lead">{{ section.settings.agreements_text | escape }}</p>
+                <div class="apex-wterms__actions">
+                  {%- assign agreement_url = section.settings.agreement_url | default: '/pages/retailer-agreement' -%}
+                  <a class="apex-button apex-account__button--outline" href="{{ agreement_url }}">Read the Retailer Agreement</a>
+                  <a class="apex-account__link" href="mailto:{{ contact_email }}?subject={{ 'Question about the Retailer Agreement: ' | append: business_name | url_encode }}">Ask a question</a>
+                </div>
+              </div>
+            </div>
+
+            {%- comment -%} ============ Wishlist (same list as my account, saved in this browser) ============ {%- endcomment -%}
+            <div class="apex-account__view" data-apex-view="wishlist" hidden>
+              <apex-wishlist-list class="apex-account__card apex-account__card--wide apex-wishlist">
+                <div class="apex-account__card-top">
+                  <div class="apex-wishlist__intro">
+                    <h2 class="apex-account__h3">Saved items (<span data-wishlist-count>0</span>)</h2>
+                    <p class="apex-account__small apex-account__muted">{{ section.settings.wishlist_text | escape }}</p>
+                  </div>
+                  <button type="button" class="apex-button apex-account__button--outline" data-wishlist-add-all hidden>Add all to cart</button>
+                </div>
+                <p class="apex-account__small" data-wishlist-status role="status"></p>
+                <div class="apex-wishlist__grid" data-wishlist-grid hidden></div>
+                <div class="apex-wishlist__empty" data-wishlist-empty>
+                  <p class="apex-account__empty">{{ section.settings.wishlist_empty | escape }}</p>
+                  <a class="apex-account__link" href="?tab=quick-order" data-apex-go="quick-order">Go to quick order</a>
+                </div>
+              </apex-wishlist-list>
+            </div>
+          </div>
+        </div>
+      {%- endpaginate -%}
+    </div>
+  </apex-wholesale-account>
+{%- endif -%}
+
+{% stylesheet %}
+  /* Wholesale dashboard: builds on the .apex-account styles (sections/apex-account.liquid) */
+
+  /* Pricing panel (Figma "Pricing tier": burrow card, sandstone text) */
+  .apex-wpanel {
+    gap: 32px;
+  }
+
+  .apex-wpanel__top {
+    display: grid;
+    grid-template-columns: minmax(0, 432px) minmax(0, 340px);
+    justify-content: space-between;
+    gap: 48px;
+    width: 100%;
+  }
+
+  .apex-wpanel__eyebrow {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1rem;
+    text-transform: uppercase;
+    color: var(--apex-sandstone);
+  }
+
+  .apex-wpanel__eyebrow--small {
+    font-size: 0.625rem;
+    font-weight: 600;
+    line-height: 0.875rem;
+    letter-spacing: 0.5px;
+  }
+
+  .apex-wpanel__title {
+    margin: 12px 0 0;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 4rem;
+    line-height: 0.95;
+    text-transform: uppercase;
+    color: var(--apex-sandstone);
+  }
+
+  .apex-wpanel__text {
+    margin: 12px 0 0;
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-wpanel__bar {
+    height: 8px;
+    margin-top: 12px;
+    overflow: hidden;
+    border-radius: var(--apex-radius-pill);
+    background: var(--apex-onyx);
+  }
+
+  .apex-wpanel__bar span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--apex-amber);
+  }
+
+  .apex-wpanel__amount {
+    margin: 12px 0 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+  }
+
+  .apex-wpanel__note {
+    margin: 12px 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+  }
+
+  .apex-wpanel__note a {
+    color: inherit !important;
+    font-weight: 700;
+    transition: color 0.2s var(--ease-out-cubic, ease-out);
+  }
+
+  .apex-wpanel__note a:is(:hover, :focus-visible) {
+    color: var(--apex-amber) !important;
+  }
+
+  .apex-wpanel__cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    width: 100%;
+  }
+
+  .apex-wpanel__card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px 20px;
+    border: 1px solid var(--apex-dried-moss);
+    border-radius: var(--apex-radius-md);
+  }
+
+  .apex-wpanel__card p {
+    margin: 0;
+  }
+
+  .apex-wpanel__card-label {
+    font-size: 0.625rem;
+    font-weight: 600;
+    line-height: 0.875rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .apex-wpanel__card-value {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+  }
+
+  .apex-wpanel__card-text {
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+  }
+
+  .apex-wpanel__card--current {
+    border-color: var(--apex-amber);
+    background: var(--apex-amber);
+    color: var(--apex-stone-100);
+  }
+
+  /* Quick order table (Figma columns 300 / 90 / 100 / 90 / 120, 24px gaps) */
+  .apex-wq__table {
+    width: 100%;
+  }
+
+  .apex-wq__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 90px 100px 90px 120px;
+    gap: 24px;
+    align-items: center;
+    padding-block: 12px;
+    min-height: 68px;
+    border-block-end: 1px solid var(--apex-border-grey);
+  }
+
+  .apex-wq__row--head {
+    min-height: 0;
+    padding-block: 16px;
+    font-size: 0.625rem;
+    font-weight: 600;
+    line-height: 0.875rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-wq__product {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .apex-wq__title {
+    font-size: 0.9375rem;
+    font-weight: 800;
+    line-height: 1.25rem;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--apex-olive) !important;
+  }
+
+  .apex-wq__variant,
+  .apex-wq__carton,
+  .apex-wq__rrp {
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+  }
+
+  .apex-wq__variant,
+  .apex-wq__rrp,
+  .apex-wq__muted {
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-wq__price {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+  }
+
+  .apex-wq__label {
+    display: none;
+  }
+
+  .apex-wq__stepper {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) 36px;
+    align-items: center;
+    width: 120px;
+    height: 42px;
+    border: 1px solid var(--apex-dried-moss);
+    border-radius: var(--apex-radius-sm);
+    background: var(--apex-bg-page, #fff);
+  }
+
+  .apex-wq__step {
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 1rem;
+    color: var(--apex-burrow);
+    cursor: pointer;
+  }
+
+  .apex-wq__input {
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.9375rem;
+    text-align: center;
+    color: var(--apex-burrow);
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+
+  .apex-wq__input::-webkit-outer-spin-button,
+  .apex-wq__input::-webkit-inner-spin-button {
+    margin: 0;
+    -webkit-appearance: none;
+  }
+
+  .apex-wq__input:focus {
+    outline: none;
+  }
+
+  .apex-wq__stepper:focus-within {
+    border-color: var(--apex-burrow);
+  }
+
+  .apex-wq__footer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px 24px;
+    width: 100%;
+    padding-top: 16px;
+  }
+
+  .apex-wq__terms {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-wq__total {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 24px;
+  }
+
+  .apex-wq__total-text {
+    margin: 0;
+    min-width: 200px;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .apex-wq__total-text [data-wq-total] {
+    margin-left: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .apex-wq__discount {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 400;
+    line-height: 1.25rem;
+    color: var(--apex-olive);
+  }
+
+  /* Amber with burrow text (Ell: Add to cart buttons are amber) */
+  .apex-wq__submit {
+    min-width: 160px;
+    color: var(--apex-burrow) !important;
+  }
+
+  .apex-wq__status {
+    grid-column: 1 / -1;
+    text-align: right;
+  }
+
+  .apex-wq__status:empty {
+    display: none;
+  }
+
+  .apex-wq [data-wq-submit]:disabled {
+    opacity: 0.6;
+    cursor: default;
+    scale: none;
+  }
+
+  /* New for your store */
+  .apex-wrec {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    width: 100%;
+    margin-top: 16px;
+  }
+
+  .apex-wrec__item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .apex-wrec__image {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 220px;
+    padding: 25px;
+    border-radius: var(--apex-radius-lg);
+    background: var(--apex-bg-page, #fff);
+  }
+
+  .apex-wrec__image img,
+  .apex-wrec__image svg {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .apex-wrec__pill {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+  }
+
+  .apex-wrec__title {
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.25rem;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--apex-olive) !important;
+  }
+
+  .apex-wrec__price {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+  }
+
+  .apex-wrec__rrp {
+    font-size: 0.8125rem;
+    font-weight: 400;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-wrec__carton {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-wrec__form,
+  .apex-wrec__button {
+    width: 100%;
+    margin-top: auto;
+  }
+
+  /* Recent orders */
+  .apex-wrecent {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .apex-wrecent__order {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    text-decoration: none;
+  }
+
+  .apex-wrecent__order > span:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .apex-wrecent__name {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+  }
+
+  .apex-wrecent__order:hover .apex-wrecent__name {
+    color: var(--apex-olive);
+  }
+
+  .apex-wrecent__meta {
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: var(--apex-dried-moss);
+  }
+
+  /* Account and terms list */
+  .apex-wterms {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    margin: 0;
+  }
+
+  .apex-wterms div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+  }
+
+  .apex-wterms dt {
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-wterms dd {
+    margin: 0;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  .apex-wterms__text {
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+  }
+
+  .apex-wterms__text > * {
+    margin: 0 0 12px;
+  }
+
+  .apex-wterms__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 32px;
+  }
+
+  /* Price list */
+  .apex-wpl__meta {
+    margin-top: 8px;
+  }
+
+  .apex-wpl__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+
+  .apex-wpl__table th,
+  .apex-wpl__table td {
+    padding: 12px 12px 12px 0;
+    border-bottom: 1px solid var(--apex-border-grey);
+    text-align: left;
+    vertical-align: top;
+    font-weight: 400;
+  }
+
+  .apex-wpl__table thead th {
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-wpl__table tbody th {
+    font-weight: 600;
+  }
+
+  .apex-wpl__variant {
+    display: block;
+    font-weight: 400;
+    color: var(--apex-dried-moss);
+  }
+
+  .apex-wpl__table .apex-wpl__num {
+    padding-right: 0;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  /* The price list prints from its own clean page (see printPriceList) */
+  @media print {
+    .apex-wpl__print {
+      display: none !important;
+    }
+  }
+
+  @media screen and (max-width: 1199px) {
+    .apex-wpanel__top {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 32px;
+    }
+
+    .apex-wpanel__progress {
+      max-width: 420px;
+    }
+  }
+
+  @media screen and (max-width: 989px) {
+    .apex-wq__row {
+      grid-template-columns: minmax(0, 1fr) 70px 80px 120px;
+    }
+
+    .apex-wq__carton,
+    .apex-wq__row--head span:nth-child(4) {
+      display: none;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .apex-wpanel__title {
+      font-size: 3rem;
+    }
+
+    .apex-wpanel__cards,
+    .apex-wrec {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .apex-wrec {
+      gap: 40px;
+    }
+
+    /* Quick order rows: product on top, then price / RRP / carton on the left, stepper on the right */
+    .apex-wq__row--head {
+      display: none;
+    }
+
+    .apex-wq__row {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas:
+        'product product'
+        'price qty'
+        'rrp qty'
+        'carton qty';
+      gap: 2px 16px;
+      padding-block: 16px;
+    }
+
+    .apex-wq__product { grid-area: product; margin-bottom: 8px; }
+    .apex-wq__price { grid-area: price; }
+    .apex-wq__rrp { grid-area: rrp; }
+    .apex-wq__qty { grid-area: qty; align-self: center; }
+
+    .apex-wq__carton {
+      display: block;
+      grid-area: carton;
+      color: var(--apex-dried-moss);
+    }
+
+    .apex-wq__rrp .apex-wq__label,
+    .apex-wq__carton .apex-wq__label {
+      display: inline;
+      margin-right: 4px;
+    }
+
+    .apex-wq__footer {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .apex-wq__total {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+
+    .apex-wq__total-text {
+      min-width: 0;
+      text-align: left;
+      white-space: normal;
+    }
+
+    .apex-wq__total .apex-button {
+      width: 100%;
+    }
+
+    .apex-wq__status {
+      text-align: left;
+    }
+
+    .apex-wpl__table thead th:nth-child(2),
+    .apex-wpl__table tbody td:nth-child(2) {
+      display: none;
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  /* Runs once the element's contents are on the page (the script can load before them). */
+  const apexWhenParsed = (el, fn) => {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => fn.call(el), { once: true });
+    else fn.call(el);
+  };
+
+  /* Prices in the store's own money format (shop.money_format). */
+  const APEX_DEFAULT_MONEY = '$' + '{' + '{amount}' + '}';
+  const apexFormatMoney = (cents, format) => {
+    const value = Math.round(cents) / 100;
+    const withSep = (n, dec, thou, decSep) =>
+      n.toFixed(dec).replace(/\B(?=(\d{3})+(?!\d))/g, thou).replace(/\.(\d+)$/, `${decSep}$1`);
+    const fmt = format || APEX_DEFAULT_MONEY;
+    const match = fmt.match(/\{\{\s*(\w+)\s*\}\}/);
+    const key = match ? match[1] : 'amount';
+    let out;
+    switch (key) {
+      case 'amount_no_decimals': out = withSep(value, 0, ',', '.'); break;
+      case 'amount_with_comma_separator': out = withSep(value, 2, '.', ','); break;
+      case 'amount_no_decimals_with_comma_separator': out = withSep(value, 0, '.', ','); break;
+      default: out = withSep(value, 2, ',', '.');
+    }
+    return match ? fmt.replace(match[0], out) : out;
+  };
+
+  /* Wholesale account views: same behaviour as <apex-account>, using ?tab= so Shopify doesn't
+     read the address as a template name. */
+  if (!customElements.get('apex-wholesale-account')) {
+    class ApexWholesaleAccount extends HTMLElement {
+      connectedCallback() {
+        this.onClick = this.onClick.bind(this);
+        this.onPop = () => this.show(this.viewFromUrl(), false);
+        this.addEventListener('click', this.onClick);
+        window.addEventListener('popstate', this.onPop);
+        apexWhenParsed(this, function () {
+          this.querySelectorAll('[data-apex-reorder]').forEach((button) => {
+            button.addEventListener('click', () => this.reorder(button));
+          });
+          this.querySelectorAll('[data-apex-print-list]').forEach((button) => {
+            button.addEventListener('click', () => this.printPriceList(button));
+          });
+          this.show(this.viewFromUrl(), false);
+        });
+      }
+
+      disconnectedCallback() {
+        this.removeEventListener('click', this.onClick);
+        window.removeEventListener('popstate', this.onPop);
+      }
+
+      /* Prints only the price list: logo, title, details and table on a plain white page. */
+      printPriceList(button) {
+        const view = button.closest('.apex-wpl');
+        const table = view && view.querySelector('[data-apex-print-table]');
+        if (!table) {
+          window.print();
+          return;
+        }
+        const esc = (text) => String(text || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+        const meta = view.querySelector('.apex-wpl__meta');
+        const note = view.querySelector('[data-apex-print-note]');
+        const shop = button.dataset.shop || '';
+        const logo = button.dataset.logo
+          ? `<img class="logo" src="${esc(button.dataset.logo)}" alt="${esc(shop)}">`
+          : `<div class="logo-text">${esc(shop)}</div>`;
+        const css = `
+          @page { size: A4; margin: 16mm 14mm; }
+          * { box-sizing: border-box; }
+          body { margin: 0; font-family: "DM Sans", Arial, Helvetica, sans-serif; color: #1f211d; font-size: 11pt; background: #fff; }
+          header { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; padding-bottom: 12px; border-bottom: 2px solid #40443D; margin-bottom: 18px; }
+          .logo { display: block; height: 44px; width: auto; }
+          .logo-text { font-size: 20pt; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+          h1 { margin: 0; font-size: 18pt; letter-spacing: .03em; text-transform: uppercase; text-align: right; }
+          .meta { margin: 4px 0 0; font-size: 9.5pt; color: #5b5f56; text-align: right; }
+          table { width: 100%; border-collapse: collapse; }
+          thead { display: table-header-group; }
+          th, td { padding: 7px 8px; text-align: left; vertical-align: top; border-bottom: 1px solid #d9d6cf; }
+          thead th { font-size: 8.5pt; text-transform: uppercase; letter-spacing: .06em; color: #5b5f56; border-bottom: 1.5px solid #40443D; }
+          tbody th { font-weight: 600; }
+          tr { break-inside: avoid; }
+          .apex-wpl__variant { display: block; font-weight: 400; font-size: 9.5pt; color: #5b5f56; }
+          .apex-wpl__num { text-align: right; white-space: nowrap; }
+          .note { margin-top: 14px; font-size: 9pt; color: #5b5f56; }
+        `;
+        const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(shop)} wholesale price list</title><style>${css}</style></head><body>
+          <header><div>${logo}</div><div><h1>Wholesale price list</h1>${meta ? `<p class="meta">${meta.innerHTML}</p>` : ''}</div></header>
+          ${table.outerHTML}
+          ${note && note.textContent.trim() ? `<p class="note">${esc(note.textContent.trim())}</p>` : ''}
+        </body></html>`;
+
+        const old = document.getElementById('apex-print-frame');
+        if (old) old.remove();
+        const frame = document.createElement('iframe');
+        frame.id = 'apex-print-frame';
+        frame.setAttribute('aria-hidden', 'true');
+        frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
+        document.body.appendChild(frame);
+        const doc = frame.contentWindow.document;
+        doc.open();
+        doc.write(html);
+        doc.close();
+        const go = () => {
+          frame.contentWindow.focus();
+          frame.contentWindow.print();
+        };
+        const img = doc.querySelector('img');
+        if (img && !img.complete) {
+          img.addEventListener('load', go, { once: true });
+          img.addEventListener('error', go, { once: true });
+        } else {
+          setTimeout(go, 50);
+        }
+      }
+
+      viewFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('order')) return `order-${params.get('order')}`;
+        return params.get('tab') || params.get('view') || 'overview';
+      }
+
+      show(view, scroll) {
+        if (!this.querySelector(`[data-apex-view="${CSS.escape(view)}"]`)) view = 'overview';
+        this.querySelectorAll('[data-apex-view]').forEach((el) => {
+          el.hidden = el.dataset.apexView !== view;
+        });
+        const menuKey = view.startsWith('order-') ? 'orders' : view;
+        this.querySelectorAll('[data-apex-menu]').forEach((el) => {
+          if (el.dataset.apexMenu === menuKey) el.setAttribute('aria-current', 'page');
+          else el.removeAttribute('aria-current');
+        });
+        if (scroll) this.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      }
+
+      onClick(event) {
+        const link = event.target.closest('a[data-apex-go]');
+        if (!link || event.metaKey || event.ctrlKey || event.shiftKey) return;
+        const view = link.dataset.apexGo;
+        if (!this.querySelector(`[data-apex-view="${CSS.escape(view)}"]`)) return;
+        event.preventDefault();
+        const url = new URL(window.location.href);
+        url.search = '';
+        if (view.startsWith('order-')) url.searchParams.set('order', view.slice(6));
+        else if (view !== 'overview') url.searchParams.set('tab', view);
+        history.pushState({}, '', url);
+        this.show(view, true);
+      }
+
+      async reorder(button) {
+        let items = [];
+        try {
+          items = JSON.parse(button.dataset.apexReorder || '[]');
+        } catch (e) {
+          items = [];
+        }
+        if (!items.length) return;
+        button.disabled = true;
+        const status = button.parentElement.querySelector('[data-apex-reorder-status]');
+        try {
+          const root = (window.Shopify && window.Shopify.routes && window.Shopify.routes.root) || '/';
+          const res = await fetch(`${root}cart/add.js`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ items }),
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.description || data.message || 'Some items could not be added.');
+          }
+          window.location.href = `${root}cart`;
+        } catch (error) {
+          button.disabled = false;
+          if (status) status.textContent = error.message;
+        }
+      }
+    }
+    customElements.define('apex-wholesale-account', ApexWholesaleAccount);
+  }
+
+  if (!customElements.get('apex-wholesale-order')) {
+    class ApexWholesaleOrder extends HTMLElement {
+      connectedCallback() {
+        this.minimum = Number(this.dataset.minimum || 0);
+        this.inCart = Number(this.dataset.inCart || 0);
+        this.moneyFormat = this.dataset.moneyFormat || APEX_DEFAULT_MONEY;
+        this.addEventListener('click', (event) => {
+          const step = event.target.closest('[data-wq-step]');
+          if (step) {
+            const input = step.closest('[data-wq-row]').querySelector('[data-wq-input]');
+            input.value = Math.max(0, Math.min(999, (parseInt(input.value, 10) || 0) + Number(step.dataset.wqStep)));
+            this.update();
+          }
+          if (event.target.closest('[data-wq-submit]')) this.addToCart();
+        });
+        this.addEventListener('input', () => this.update());
+        apexWhenParsed(this, this.update);
+      }
+
+      get submit() {
+        return this.querySelector('[data-wq-submit]');
+      }
+
+      get status() {
+        return this.querySelector('[data-wq-status]');
+      }
+
+      money(cents) {
+        return apexFormatMoney(cents, this.moneyFormat);
+      }
+
+      lines() {
+        return [...this.querySelectorAll('[data-wq-row]')]
+          .map((row) => {
+            const input = row.querySelector('[data-wq-input]');
+            const cartons = input ? Math.max(0, parseInt(input.value, 10) || 0) : 0;
+            const carton = Number(row.dataset.carton) || 1;
+            return { id: Number(row.dataset.variant), cartons, quantity: cartons * carton, price: Number(row.dataset.price) || 0 };
+          })
+          .filter((line) => line.quantity > 0);
+      }
+
+      update() {
+        const lines = this.lines();
+        const total = lines.reduce((sum, line) => sum + line.price * line.quantity, 0);
+        // The minimum counts what's already in the cart too (ex GST).
+        const combined = total + this.inCart;
+        const totalEl = this.querySelector('[data-wq-total]');
+        if (totalEl) totalEl.textContent = this.money(total);
+        if (this.submit) this.submit.disabled = lines.length === 0;
+        if (this.status && !this.busy) {
+          let message = '';
+          if (lines.length && combined < this.minimum) {
+            message = `Add ${this.money(this.minimum - combined)} ex GST more to reach the minimum order.`;
+          }
+          if (message && this.inCart) message += ` This counts the ${this.money(this.inCart)} already in your cart.`;
+          this.status.textContent = message;
+        }
+      }
+
+      async addToCart() {
+        const items = this.lines().map(({ id, quantity }) => ({ id, quantity }));
+        if (!items.length) return;
+        this.busy = true;
+        this.submit.disabled = true;
+        if (this.status) this.status.textContent = 'Adding to your cart…';
+        try {
+          const root = (window.Shopify && window.Shopify.routes && window.Shopify.routes.root) || '/';
+          const res = await fetch(`${root}cart/add.js`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ items }),
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.description || data.message || 'Some items could not be added.');
+          }
+          window.location.href = `${root}cart`;
+        } catch (error) {
+          this.busy = false;
+          this.submit.disabled = false;
+          if (this.status) this.status.textContent = error.message;
+        }
+      }
+    }
+    customElements.define('apex-wholesale-order', ApexWholesaleOrder);
+  }
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "APEX wholesale account",
+  "tag": "section",
+  "class": "apex-wholesale-account-section",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Shows only to signed-in customers with the wholesale tag (Theme settings > APEX Feeds > Wholesale). Wholesale prices come from the variant metafield custom.wholesale_price (Decimal, ex GST); carton sizes from custom.carton_qty (Integer)."
+    },
+    { "type": "text", "id": "title", "label": "Title", "default": "Wholesale account" },
+    {
+      "type": "header",
+      "content": "Pricing panel"
+    },
+    { "type": "text", "id": "pricing_eyebrow", "label": "Eyebrow", "default": "Your pricing" },
+    { "type": "text", "id": "pricing_title", "label": "Heading", "default": "Wholesale stockist" },
+    {
+      "type": "textarea",
+      "id": "pricing_text",
+      "label": "Text",
+      "default": "Prices you see while signed in are your wholesale prices, ex GST: one fixed price per item, with no volume discounts. Freight is added to every order."
+    },
+    {
+      "type": "paragraph",
+      "content": "The minimum order is set in Theme settings > APEX Feeds > Wholesale."
+    },
+    {
+      "type": "header",
+      "content": "Quick order and price list"
+    },
+    {
+      "type": "collection",
+      "id": "quick_order_collection",
+      "label": "Products",
+      "info": "Shows every variant of the first 50 products. Defaults to all products. The dashboard starts from the customer's last order."
+    },
+    {
+      "type": "text",
+      "id": "price_list_note",
+      "label": "Price list note",
+      "default": "Wholesale prices exclude GST and freight, and may change. Confidential: for approved Apex Feeds stockists only."
+    },
+    {
+      "type": "header",
+      "content": "New for your store"
+    },
+    { "type": "collection", "id": "recommended_collection", "label": "Collection", "info": "Leave empty to hide this card." },
+    { "type": "text", "id": "recommended_heading", "label": "Heading", "default": "New for your store" },
+    {
+      "type": "select",
+      "id": "recommended_count",
+      "label": "Products",
+      "options": [
+        { "value": "3", "label": "3" },
+        { "value": "6", "label": "6" }
+      ],
+      "default": "3"
+    },
+    {
+      "type": "header",
+      "content": "Terms and account"
+    },
+    {
+      "type": "text",
+      "id": "contact_email",
+      "label": "Wholesale contact email",
+      "info": "Defaults to the store's sender email."
+    },
+    {
+      "type": "text",
+      "id": "default_terms",
+      "label": "Payment terms (default)",
+      "default": "Payment before dispatch",
+      "info": "A customer's own terms (customer metafield custom.payment_terms) replace this."
+    },
+    {
+      "type": "richtext",
+      "id": "terms_text",
+      "label": "Terms summary",
+      "default": "<p>New wholesale accounts pay in full, including freight, before an order is dispatched. After six months and six orders you can apply for credit terms (up to $1,000 on 14 days from invoice, if approved).</p><p>Freight is charged separately and doesn't count towards the minimum order. Please check deliveries and report any shortage or damage within 3 days.</p>"
+    },
+    { "type": "text", "id": "agreement_heading", "label": "Retailer Agreement heading", "default": "Retailer Agreement" },
+    {
+      "type": "text",
+      "id": "agreements_text",
+      "label": "Retailer Agreement text",
+      "default": "The Authorised Retailer Agreement & Brand Standards covers how wholesale accounts order, store, sell and advertise Apex Feeds products. It's the same for every stockist."
+    },
+    { "type": "url", "id": "agreement_url", "label": "Retailer Agreement link", "info": "Defaults to /pages/retailer-agreement (page template retailer-agreement)." },
+    {
+      "type": "text",
+      "id": "business_note",
+      "label": "Business details note",
+      "default": "Business name or ABN changed? Let us know and we'll update your account."
+    },
+    {
+      "type": "text",
+      "id": "invoice_note",
+      "label": "Order history note",
+      "default": "Your tax invoice is emailed with each order confirmation."
+    },
+    {
+      "type": "header",
+      "content": "Wishlist"
+    },
+    {
+      "type": "text",
+      "id": "wishlist_text",
+      "label": "Wishlist text",
+      "default": "Saved items stay here until you remove them. Tap the heart on any product to add it."
+    },
+    {
+      "type": "text",
+      "id": "wishlist_empty",
+      "label": "Empty wishlist text",
+      "default": "Nothing saved yet. Tap the heart on any product to save it here."
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    { "type": "range", "id": "padding_top", "label": "Space above", "info": "Phones use half.", "min": 0, "max": 200, "step": 4, "unit": "px", "default": 84 },
+    { "type": "range", "id": "padding_bottom", "label": "Space below", "info": "Phones use half.", "min": 0, "max": 240, "step": 4, "unit": "px", "default": 160 }
+  ],
+  "presets": [{ "name": "APEX wholesale account" }]
+}
+{% endschema %}

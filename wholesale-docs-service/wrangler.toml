@@ -1,0 +1,25 @@
+name = "apex-wholesale-docs"
+main = "src/index.js"
+compatibility_date = "2026-08-01"
+
+# The private storage folder. Create it once with:  npx wrangler r2 bucket create apex-wholesale-docs
+[[r2_buckets]]
+binding = "DOCS"
+bucket_name = "apex-wholesale-docs"
+
+[vars]
+# Web addresses allowed to upload (the store's own domains, comma separated, no trailing slash).
+ALLOWED_ORIGINS = "https://apex-feeds-dev.myshopify.com"
+# This service's own address, used in the links emailed to James. Fill in after the first deploy.
+PUBLIC_URL = ""
+# The store's myshopify address.
+SHOPIFY_SHOP = "apex-feeds-dev.myshopify.com"
+# Filled in during setup (see SETUP.md):
+SHOPIFY_API_KEY = ""
+ACCESS_TEAM_DOMAIN = ""
+ACCESS_AUD = ""
+ADMIN_EMAILS = ""
+
+# Secrets are NOT stored here. Set them with:
+#   npx wrangler secret put SHOPIFY_API_SECRET
+#   npx wrangler secret put DOWNLOAD_SECRET

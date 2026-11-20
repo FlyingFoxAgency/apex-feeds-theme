@@ -42,7 +42,11 @@
   {% endif %}
   {{ block.shopify_attributes }}
 >
-  {%- if product != blank -%}
+  {%- capture apex_enquiry_only -%}{%- if product != blank -%}{%- render 'apex-enquiry-only', product: product -%}{%- endif -%}{%- endcapture -%}
+  {%- if apex_enquiry_only contains 'true' -%}
+    {%- comment -%} APEX: frozen / enquiry-only products: enquiry panel (retail) or order by email (wholesale), no Add to cart {%- endcomment -%}
+    {%- render 'apex-enquiry-panel', product: product -%}
+  {%- elsif product != blank -%}
     {%- assign product_form_id = 'BuyButtons-ProductForm-' | append: section.id -%}
     <product-form-component
       data-section-id="{{ section.id }}"

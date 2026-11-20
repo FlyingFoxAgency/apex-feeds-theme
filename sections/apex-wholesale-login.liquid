@@ -8,6 +8,11 @@
     anyone else is told their account isn't approved for wholesale yet.
 {% endcomment %}
 {%- liquid
+  # Approved wholesalers see the wholesale dashboard section (apex-wholesale-account) instead.
+  capture shows_dashboard
+    render 'apex-wholesale-check'
+  endcapture
+  assign shows_dashboard = shows_dashboard | strip
   assign wholesale_tag = section.settings.wholesale_tag | default: 'wholesale' | strip | downcase
   assign is_wholesale = false
   if customer
@@ -22,6 +27,7 @@
   assign apply_url = section.settings.apply_page.url | default: '/pages/wholesale-application'
   assign return_to = request.path | default: '/pages/wholesale'
 -%}
+{%- unless shows_dashboard == 'true' and section.settings.hide_for_wholesale -%}
 <div class="apex-wlogin">
   <div class="apex-container apex-wlogin__grid">
     <div class="apex-wlogin__intro">
@@ -80,6 +86,7 @@
     </div>
   </div>
 </div>
+{%- endunless -%}
 
 {% stylesheet %}
   .apex-wlogin {
@@ -389,6 +396,13 @@
       "label": "Wholesale customer tag",
       "default": "wholesale",
       "info": "Approved wholesalers have this tag on their customer profile."
+    },
+    {
+      "type": "checkbox",
+      "id": "hide_for_wholesale",
+      "label": "Hide for signed-in wholesalers",
+      "info": "They see the wholesale account dashboard instead (tag set in Theme settings > APEX Feeds > Wholesale).",
+      "default": true
     }
   ],
   "presets": [{ "name": "APEX wholesale login" }]

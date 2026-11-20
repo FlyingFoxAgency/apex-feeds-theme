@@ -2123,6 +2123,24 @@
     "settings": [
       {
         "type": "header",
+        "content": "Legal business details"
+      },
+      {
+        "type": "text",
+        "id": "apex_legal_name",
+        "label": "Legal business name",
+        "default": "APEX FEEDS AUST PTY LTD",
+        "info": "Shown in the footer copyright line and on the printed wholesale price list. Marketing copy keeps the store name (Apex Feeds)."
+      },
+      {
+        "type": "text",
+        "id": "apex_abn",
+        "label": "ABN",
+        "default": "37 678 568 501",
+        "info": "Leave empty to hide."
+      },
+      {
+        "type": "header",
         "content": "Page background"
       },
       {
@@ -2185,6 +2203,85 @@
         "id": "apex_account_page",
         "label": "My account page",
         "info": "The page using the my-account template. When set, the header's person icon goes there instead of Shopify's account pop-up."
+      },
+      {
+        "type": "header",
+        "content": "Bulk enquiry products"
+      },
+      {
+        "type": "checkbox",
+        "id": "apex_enquiry_frozen",
+        "label": "Frozen products are enquiry-only",
+        "default": true,
+        "info": "Products with Food type (format) = Frozen, and any product tagged enquiry-only, show an enquiry panel instead of Add to cart. Retail shoppers enquire through the contact form; wholesalers order by email (Retailer Agreement 7.5)."
+      },
+      {
+        "type": "paragraph",
+        "content": "Retail shoppers"
+      },
+      { "type": "text", "id": "apex_enquiry_title", "label": "Heading", "default": "Bulk orders only" },
+      {
+        "type": "textarea",
+        "id": "apex_enquiry_text",
+        "label": "Text",
+        "default": "Our frozen range is sold in bulk and shipped by arrangement. Send us an enquiry and we'll come back to you with bulk pricing and delivery details."
+      },
+      { "type": "text", "id": "apex_enquiry_button", "label": "Button label", "default": "Enquire for bulk pricing" },
+      { "type": "page", "id": "apex_enquiry_page", "label": "Enquiry page", "info": "Defaults to /pages/contact. The product name is filled into the message." },
+      {
+        "type": "paragraph",
+        "content": "Signed-in wholesalers"
+      },
+      { "type": "text", "id": "apex_enquiry_ws_title", "label": "Wholesale heading", "default": "Frozen orders by email" },
+      {
+        "type": "textarea",
+        "id": "apex_enquiry_ws_text",
+        "label": "Wholesale text",
+        "default": "Frozen wholesale orders are placed directly by email. We'll confirm stock and quote freight for your order before it's dispatched."
+      },
+      { "type": "text", "id": "apex_enquiry_ws_button", "label": "Wholesale button label", "default": "Email your order" },
+      { "type": "text", "id": "apex_enquiry_ws_email", "label": "Wholesale order email", "default": "sales@apexfeeds.com.au" },
+      {
+        "type": "header",
+        "content": "Wholesale"
+      },
+      {
+        "type": "page",
+        "id": "apex_wholesale_page",
+        "label": "Wholesale page",
+        "info": "The wholesale login and dashboard page. Defaults to /pages/wholesale. Signed-in wholesalers' person icon goes there."
+      },
+      {
+        "type": "text",
+        "id": "apex_wholesale_tag",
+        "label": "Wholesale customer tag",
+        "default": "wholesale",
+        "info": "Approved wholesalers have this tag on their customer profile."
+      },
+      {
+        "type": "number",
+        "id": "apex_wholesale_minimum",
+        "label": "Wholesale minimum order ($ ex GST)",
+        "default": 250,
+        "info": "Excludes GST, as in the Retailer Agreement: 250 means $250 + GST. Freight doesn't count. Below this, wholesalers can't check out from the cart or cart drawer, and the wholesale dashboard shows it. Express checkout buttons (Shop Pay, Buy it now) are hidden for wholesalers. 0 = no minimum."
+      },
+      {
+        "type": "range",
+        "id": "apex_wholesale_fallback_discount",
+        "label": "Wholesale discount off RRP",
+        "info": "Used when a variant has no wholesale price of its own (custom.wholesale_price, ex GST). Checkout must charge the same: set up a matching discount for the wholesale customers, or the dashboard will show prices checkout doesn't charge.",
+        "min": 0,
+        "max": 60,
+        "step": 1,
+        "unit": "%",
+        "default": 0
+      },
+      {
+        "type": "checkbox",
+        "id": "apex_wholesale_prices_include_gst",
+        "label": "Retail prices include GST",
+        "info": "The dashboard shows wholesalers prices without GST, so GST comes off the RRP.",
+        "default": true
       },
       {
         "type": "header",
